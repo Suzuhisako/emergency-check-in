@@ -93,8 +93,14 @@
       </div>
 
       <div class="mb-3">
-        <label for="statusNote" class="form-label small text-secondary">Optional Short Note / Location</label>
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <label for="statusNote" class="form-label small text-secondary mb-0">Optional Short Note / Location</label>
+            <button type="button" id="gpsBtn" class="btn btn-sm btn-outline-success py-0 px-2 fw-bold" onclick="getGPSLocation()">
+            📍 Auto-GPS
+            </button>
+        </div>
         <input type="text" class="form-control bg-dark text-light border-secondary" id="statusNote" placeholder="e.g. At Chigasaki Primary Shelter">
+        <div id="gpsStatus" class="form-text text-success small d-none">GPS coordinates captured!</div>
       </div>
 
       <button type="button" class="btn btn-primary w-100 py-2 fw-bold" onclick="broadcastStatus()">
@@ -241,30 +247,31 @@
         localStorage.setItem("family_board_status", JSON.stringify(familyData));
     }
 
+    let currentCoords = null; // Stores { lat, lon } when GPS is captured
+
     function updatePayload() {
       const noteText = document.getElementById("statusNote").value || "No note";
-      const phoneInput = document.getElementById("smsRecipient").value.trim();
-      const cleanPhone = phoneInput.replace(/[^0-9+]/g, '');
 
-        // 1. Update JSON preview box
+      // Build full technical payload including GPS
       const payload = {
         uid: "usr_self_01",
         status: currentStatus,
         bat: 85,
+        gps: currentCoords ? `${currentCoords.lat},${currentCoords.lon}` : "N/A",
         ts: new Date().toISOString().substring(11, 19) + "Z",
         note: noteText
       };
       document.getElementById("rawPayload").innerText = JSON.stringify(payload, null, 2);
 
-        // 2. Build single-line SMS link
-      const smsBody = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: 85% | Note: ${noteText}`;
-      const encodedBody = encodeURIComponent(smsBody);
-
-      const smsBtn = document.getElementById("smsBtn");
-       if (cleanPhone) {
-        smsBtn.href = `sms:${cleanPhone}?body=${encodedBody}`;
-      } else {
-        smsBtn.href = "javascript:alert('Please enter a phone number first.');";
+      // Update SMS link target if present
+      const phoneInput = document.getElementById("smsRecipient");
+      if (phoneInput) {
+        const cleanPhone = phoneInput.value.trim().replace(/[^0-9+]/g, '');
+        const smsBody = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: 85% | Note: ${noteText}`;
+        const smsBtn = document.getElementById("smsBtn");
+        if (smsBtn) {
+        smsBtn.href = cleanPhone ? `sms:${cleanPhone}?body=${encodeURIComponent(smsBody)}` : `sms:?body=${encodeURIComponent(smsBody)}`;
+        }
       }
     }
 
@@ -280,6 +287,70 @@
         saveData();
       });
     });
+
+    function getGPSLocation() {
+      const gpsBtn = document.getElementById("gpsBtn");
+      const noteInput = document.getElementById("statusNote");
+      const gpsStatus = document.getElementById("gpsStatus");
+
+      if (!('geolocation' in navigator)) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+      }
+
+      // Provide immediate visual feedback
+      gpsBtn.disabled = true;
+      gpsBtn.innerText = "⏳ Locating...";
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude.toFixed(4);
+          const lon = position.coords.longitude.toFixed(4);
+
+          // Save to global state for JSON payload
+          currentCoords = { lat, lon };
+
+          // Append or insert GPS coordinates into note input field
+          const gpsString = `GPS: ${lat},${lon}`;
+          const cleanExistingNote = noteInput.value.replace(/\(?GPS: [-?\d.]+,[-?\d.]+\)?/g, '').trim();
+      
+          noteInput.value = cleanExistingNote ? `${cleanExistingNote} (${gpsString})` : gpsString;
+
+          // Reset button and update storage
+          gpsBtn.disabled = false;
+          gpsBtn.innerText = "📍 Auto-GPS";
+        
+          updatePayload();
+          saveData();
+
+          // Show brief confirmation badge
+          if (gpsStatus) {
+            gpsStatus.classList.remove("d-none");
+            setTimeout(() => gpsStatus.classList.add("d-none"), 3000);
+          }
+        },
+        (error) => {
+          gpsBtn.disabled = false;
+          gpsBtn.innerText = "📍 Auto-GPS";
+
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              alert("Location access was denied. Please allow location permissions in browser settings.");
+              break;
+            case error.POSITION_UNAVAILABLE:
+              alert("Location unavailable. Make sure Location/GPS is turned on on your phone.");
+              break;
+            case error.TIMEOUT:
+              alert("Location request timed out. Try again.");
+              break;
+            default:
+              alert("Could not fetch location.");
+              break;
+          }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
 
     function copyAndOpenSMS() {
       const noteText = document.getElementById("statusNote").value || "No note";
