@@ -67,7 +67,9 @@
         <span class="badge badge-mesh rounded-pill px-2 py-1 mb-1 d-inline-flex align-items-center">
           <span class="pulse-dot"></span>BLE Mesh Ready
         </span>
-        <div class="small text-secondary">🔋 Battery: <span class="text-light fw-bold" id="batteryLevel">85%</span></div>
+        <div class="small text-secondary">
+         🔋 Battery: <span id="displayBattery" class="text-light fw-bold">Detecting...</span>
+        </div>
       </div>
     </header>
 
@@ -252,22 +254,22 @@
     function updatePayload() {
       const noteText = document.getElementById("statusNote").value || "No note";
 
-      // Build full technical payload including GPS
       const payload = {
         uid: "usr_self_01",
         status: currentStatus,
-        bat: 85,
+        bat: liveBattery, // Uses live battery percentage
         gps: currentCoords ? `${currentCoords.lat},${currentCoords.lon}` : "N/A",
         ts: new Date().toISOString().substring(11, 19) + "Z",
         note: noteText
       };
       document.getElementById("rawPayload").innerText = JSON.stringify(payload, null, 2);
 
-      // Update SMS link target if present
+      // Update SMS text with live battery
+      const smsBody = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: ${liveBattery}% | Note: ${noteText}`;
+    
       const phoneInput = document.getElementById("smsRecipient");
       if (phoneInput) {
         const cleanPhone = phoneInput.value.trim().replace(/[^0-9+]/g, '');
-        const smsBody = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: 85% | Note: ${noteText}`;
         const smsBtn = document.getElementById("smsBtn");
         if (smsBtn) {
         smsBtn.href = cleanPhone ? `sms:${cleanPhone}?body=${encodeURIComponent(smsBody)}` : `sms:?body=${encodeURIComponent(smsBody)}`;
@@ -277,16 +279,58 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         loadData();
+        initBatteryAPI(); // Starts live battery monitoring
 
       document.getElementById("statusNote").addEventListener("input", () => {
         updatePayload();
         saveData();
       });
 
-      document.getElementById("smsRecipient").addEventListener("input", () => {
-        saveData();
-      });
+      const smsRecipient = document.getElementById("smsRecipient");
+        if (smsRecipient) {
+          smsRecipient.addEventListener("input", () => {
+            saveData();
+            updatePayload();
+          });
+        }
     });
+
+    let liveBattery = 85; // Fallback value
+
+    function initBatteryAPI() {
+      if ('getBattery' in navigator) {
+        navigator.getBattery().then(battery => {
+        // 1. Initial battery update
+        updateBatteryUI(battery);
+
+        // 2. Listen for battery percentage changes
+        battery.addEventListener('levelchange', () => updateBatteryUI(battery));
+        
+        // 3. Listen for charger plugging/unplugging
+        battery.addEventListener('chargingchange', () => updateBatteryUI(battery));
+        }).catch(err => {
+        console.log("Battery API error or blocked:", err);
+        document.getElementById("displayBattery").innerText = "85% (Default)";
+        });
+      } else {
+        // Fallback for browsers that don't support getBattery
+        document.getElementById("displayBattery").innerText = "85% (N/A)";
+      }
+    }
+
+    function updateBatteryUI(battery) {
+      liveBattery = Math.round(battery.level * 100);
+      const chargingIcon = battery.charging ? " ⚡" : "";
+
+      // Update header UI
+      const display = document.getElementById("displayBattery");
+      if (display) {
+        display.innerText = `${liveBattery}%${chargingIcon}`;
+      }
+
+      // Update JSON payload with live reading
+      updatePayload();
+    }
 
     function getGPSLocation() {
       const gpsBtn = document.getElementById("gpsBtn");
@@ -528,7 +572,7 @@
         }
 
         updatePayload();
-        }
+    }
 
     function broadcastStatus() {
       updatePayload();
@@ -537,7 +581,6 @@
       alert.classList.remove("d-none");
       setTimeout(() => alert.classList.add("d-none"), 2500);
     }
-
   
     function simulateIncomingPacket() {
       const idx = familyData.findIndex(m => m.id === "ken");
