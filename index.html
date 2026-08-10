@@ -109,12 +109,12 @@
       <div class="mb-2">
         <label for="smsRecipient" class="form-label small text-secondary">Family Mobile Number (for SMS)</label>
         <input type="tel" class="form-control bg-dark text-light border-secondary" id="smsRecipient" placeholder="e.g. 09012345678">
-        </div>
+      </div>
 
-        <!-- Updated to a button with an onclick trigger -->
-        <button type="button" class="btn btn-outline-info w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2" onclick="sendSMS()">
+       <!-- Real hyperlink that Chrome will allow -->
+      <a id="smsBtn" href="#" class="btn btn-outline-info w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
           💬 Send via SMS Text (Low-Bandwidth)
-        </button>
+      </a>
 
        
       <div id="broadcastAlert" class="alert alert-success mt-2 py-2 small d-none" role="alert">
@@ -236,30 +236,30 @@
     }
 
     function updatePayload() {
+      const noteText = document.getElementById("statusNote").value || "No note";
+      const phoneInput = document.getElementById("smsRecipient").value.trim();
+      const cleanPhone = phoneInput.replace(/[^0-9+]/g, '');
+    
+      // 1. Update JSON preview box
       const payload = {
         uid: "usr_self_01",
         status: currentStatus,
         bat: 85,
         ts: new Date().toISOString().substring(11, 19) + "Z",
-        note: document.getElementById("statusNote").value || "No note"
+        note: noteText
       };
-        document.getElementById("rawPayload").innerText = JSON.stringify(payload, null, 2);
-    }
-
-    function sendSMS() {
-      const phoneInput = document.getElementById("smsRecipient").value.trim();
-      const noteText = document.getElementById("statusNote").value || "No note";
-
-      if (!phoneInput) {
-        alert("Please enter a family phone number first.");
-        return;
-      }
-
-      const cleanPhone = phoneInput.replace(/[^0-9+]/g, '');
+      document.getElementById("rawPayload").innerText = JSON.stringify(payload, null, 2);
+    
+      // 2. Build single-line SMS link
       const smsBody = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: 85% | Note: ${noteText}`;
       const encodedBody = encodeURIComponent(smsBody);
-
-      window.location.href = `sms:${cleanPhone}?body=${encodedBody}`;
+    
+      const smsBtn = document.getElementById("smsBtn");
+      if (cleanPhone) {
+        smsBtn.href = `sms:${cleanPhone}?body=${encodedBody}`;
+      } else {
+        smsBtn.href = "javascript:alert('Please enter a phone number first.');";
+      }
     }
 
     document.addEventListener("DOMContentLoaded", () => {
