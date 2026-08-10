@@ -73,7 +73,7 @@
 
     <!-- Step 1: Your Current Status Broadcast -->
     <section class="card-dark rounded-3 p-3 mb-3">
-      <h2 class="h6 text-uppercase text-secondary fw-bold mb-3">1. Broadcast Your Status</h2>
+      <h2 class="h6 text-uppercase text-secondary fw-bold mb-3">1. Broadcast Your Status</h2>     
       
       <div class="d-grid gap-2 mb-3">
         <button id="btn-safe" type="button" class="btn btn-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center" onclick="selectStatus('SAFE')">
@@ -100,6 +100,16 @@
       <button type="button" class="btn btn-primary w-100 py-2 fw-bold" onclick="broadcastStatus()">
         📡 Save & Broadcast Status Packet
       </button>
+
+       <!-- Save & Localstorage Button -->
+      <button type="button" class="btn btn-primary w-100 py-2 fw-bold mb-2" onclick="broadcastStatus()">
+        📡 Save Status Packet (Offline)
+      </button>
+
+        <!-- NEW: One-Tap SMS Fallback Button -->
+      <a id="smsLink" href="#" class="btn btn-outline-info w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+        💬 Send via SMS Text (Low-Bandwidth)
+      </a>
 
       <div id="broadcastAlert" class="alert alert-success mt-2 py-2 small d-none" role="alert">
         Status saved to offline LocalStorage!
@@ -266,15 +276,27 @@
         }
 
     function updatePayload() {
-      const payload = {
-        uid: "usr_self_01",
-        status: currentStatus,
-        bat: 85,
-        ts: new Date().toISOString().substring(11, 19) + "Z",
-        note: document.getElementById("statusNote").value || "No note"
-      };
-      document.getElementById("rawPayload").innerText = JSON.stringify(payload, null, 2);
-    }
+        const noteText = document.getElementById("statusNote").value || "No note";
+        
+        // 1. Build JSON Payload preview
+        const payload = {
+            uid: "usr_self_01",
+            status: currentStatus,
+            bat: 85,
+            ts: new Date().toISOString().substring(11, 19) + "Z",
+            note: noteText
+        };
+        document.getElementById("rawPayload").innerText = JSON.stringify(payload, null, 2);
+
+        // 2. Build Compressed SMS Text
+        const smsBody = `[EMERGENCY CHECK-IN]\nStatus: ${currentStatus}\nBattery: 85%\nNote: ${noteText}\nTime: ${payload.ts}`;
+
+        // 3. Update the sms: href attribute
+        // (Uses '?' for Android/Standard SMS scheme)
+        const encodedBody = encodeURIComponent(smsBody);
+        const smsLink = document.getElementById("smsLink");
+        smsLink.href = `sms:?body=${encodedBody}`;
+        }
 
     function broadcastStatus() {
       updatePayload();
