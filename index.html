@@ -106,6 +106,15 @@
         📡 Save Status Packet (Offline)
       </button>
 
+      <div class="mb-2">
+        <label for="smsRecipient" class="form-label small text-secondary">Family Mobile Number (for SMS)</label>
+        <input type="tel" class="form-control bg-dark text-light border-secondary" id="smsRecipient" placeholder="e.g. 09012345678">
+        </div>
+
+        <a id="smsLink" href="#" class="btn btn-outline-info w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
+        💬 Send via SMS Text (Low-Bandwidth)
+        </a>
+
         <!-- NEW: One-Tap SMS Fallback Button -->
       <a id="smsLink" href="#" class="btn btn-outline-info w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
         💬 Send via SMS Text (Low-Bandwidth)
@@ -277,8 +286,8 @@
 
     function updatePayload() {
         const noteText = document.getElementById("statusNote").value || "No note";
+        const phoneNumber = document.getElementById("smsRecipient").value.trim();
         
-        // 1. Build JSON Payload preview
         const payload = {
             uid: "usr_self_01",
             status: currentStatus,
@@ -288,14 +297,17 @@
         };
         document.getElementById("rawPayload").innerText = JSON.stringify(payload, null, 2);
 
-        // 2. Build Compressed SMS Text
-        const smsBody = `[EMERGENCY CHECK-IN]\nStatus: ${currentStatus}\nBattery: 85%\nNote: ${noteText}\nTime: ${payload.ts}`;
-
-        // 3. Update the sms: href attribute
-        // (Uses '?' for Android/Standard SMS scheme)
+        // Build SMS draft body
+        const smsBody = `[EMERGENCY CHECK-IN]\nStatus: ${currentStatus}\nBattery: 85%\nNote: ${noteText}`;
         const encodedBody = encodeURIComponent(smsBody);
+
+        // Attach phone number if entered
         const smsLink = document.getElementById("smsLink");
-        smsLink.href = `sms:?body=${encodedBody}`;
+        if (phoneNumber) {
+            smsLink.href = `sms:${phoneNumber}?body=${encodedBody}`;
+        } else {
+            smsLink.href = `sms:?body=${encodedBody}`;
+        }
         }
 
     function broadcastStatus() {
