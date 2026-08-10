@@ -76,19 +76,19 @@
       <h2 class="h6 text-uppercase text-secondary fw-bold mb-3">1. Broadcast Your Status</h2>
       
       <div class="d-grid gap-2 mb-3">
-        <button type="button" class="btn btn-outline-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center" onclick="selectStatus('SAFE')">
+        <button id="btn-safe" type="button" class="btn btn-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center" onclick="selectStatus('SAFE')">
           <span>🟢 I AM SAFE</span>
-          <span class="fs-6 text-muted fw-normal">Tap to set</span>
+          <span class="fs-6 text-muted fw-normal" id="label-safe">SELECTED</span>
         </button>
 
-        <button type="button" class="btn btn-outline-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center" onclick="selectStatus('NEED HELP')">
+        <button id="btn-help" type="button" class="btn btn-outline-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center" onclick="selectStatus('NEED HELP')">
           <span>🔴 I NEED HELP</span>
-          <span class="fs-6 text-muted fw-normal">Tap to set</span>
+          <span class="fs-6 text-muted fw-normal" id="label-help">Tap to set</span>
         </button>
 
-        <button type="button" class="btn btn-outline-warning status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center" onclick="selectStatus('IN TRANSIT')">
+        <button id="btn-transit" type="button" class="btn btn-outline-warning status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center" onclick="selectStatus('IN TRANSIT')">
           <span>🟡 IN TRANSIT / RELOCATING</span>
-          <span class="fs-6 text-muted fw-normal">Tap to set</span>
+          <span class="fs-6 text-muted fw-normal" id="label-transit">Tap to set</span>
         </button>
       </div>
 
@@ -235,9 +235,35 @@
     }
 
     function selectStatus(status) {
-      currentStatus = status;
-      updatePayload();
-    }
+        currentStatus = status;
+
+        // Reset all buttons to outline style
+        const btnSafe = document.getElementById('btn-safe');
+        const btnHelp = document.getElementById('btn-help');
+        const btnTransit = document.getElementById('btn-transit');
+
+        btnSafe.className = 'btn btn-outline-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+        btnHelp.className = 'btn btn-outline-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+        btnTransit.className = 'btn btn-outline-warning status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+
+        document.getElementById('label-safe').innerText = 'Tap to set';
+        document.getElementById('label-help').innerText = 'Tap to set';
+        document.getElementById('label-transit').innerText = 'Tap to set';
+
+        // Highlight selected button with solid fill
+        if (status === 'SAFE') {
+            btnSafe.className = 'btn btn-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+            document.getElementById('label-safe').innerText = 'SELECTED';
+        } else if (status === 'NEED HELP') {
+            btnHelp.className = 'btn btn-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+            document.getElementById('label-help').innerText = 'SELECTED';
+        } else if (status === 'IN TRANSIT') {
+            btnTransit.className = 'btn btn-warning text-dark status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+            document.getElementById('label-transit').innerText = 'SELECTED';
+        }
+
+        updatePayload();
+        }
 
     function updatePayload() {
       const payload = {
