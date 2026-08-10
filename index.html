@@ -110,12 +110,13 @@
         <label for="smsRecipient" class="form-label small text-secondary">Family Mobile Number (for SMS)</label>
         <input type="tel" class="form-control bg-dark text-light border-secondary" id="smsRecipient" placeholder="e.g. 09012345678">
         </div>
-        
-        <!-- NEW: One-Tap SMS Fallback Button -->
-      <a id="smsLink" href="#" class="btn btn-outline-info w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
-        💬 Send via SMS Text (Low-Bandwidth)
-      </a>
 
+        <!-- Updated to a button with an onclick trigger -->
+        <button type="button" class="btn btn-outline-info w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2" onclick="sendSMS()">
+          💬 Send via SMS Text (Low-Bandwidth)
+        </button>
+
+       
       <div id="broadcastAlert" class="alert alert-success mt-2 py-2 small d-none" role="alert">
         Status saved to offline LocalStorage!
       </div>
@@ -211,26 +212,68 @@
       const savedStatus = localStorage.getItem("my_emergency_status");
       if (savedStatus) {
         const parsed = JSON.parse(savedStatus);
-        currentStatus = parsed.status;
+        currentStatus = parsed.status || "SAFE";
         document.getElementById("statusNote").value = parsed.note || "";
+        document.getElementById("smsRecipient").value = parsed.phone || "";
       }
 
       const savedFamily = localStorage.getItem("family_board_status");
       familyData = savedFamily ? JSON.parse(savedFamily) : [...DEFAULT_FAMILY];
 
+      selectStatus(currentStatus);
       renderBoard();
-      updatePayload();
     }
 
     function saveData() {
       const myPayload = {
         status: currentStatus,
         note: document.getElementById("statusNote").value,
+        phone: document.getElementById("smsRecipient").value,
         timestamp: new Date().toISOString()
       };
-      localStorage.setItem("my_emergency_status", JSON.stringify(myPayload));
-      localStorage.setItem("family_board_status", JSON.stringify(familyData));
+        localStorage.setItem("my_emergency_status", JSON.stringify(myPayload));
+        localStorage.setItem("family_board_status", JSON.stringify(familyData));
     }
+
+    function updatePayload() {
+      const payload = {
+        uid: "usr_self_01",
+        status: currentStatus,
+        bat: 85,
+        ts: new Date().toISOString().substring(11, 19) + "Z",
+        note: document.getElementById("statusNote").value || "No note"
+      };
+        document.getElementById("rawPayload").innerText = JSON.stringify(payload, null, 2);
+    }
+
+    function sendSMS() {
+      const phoneInput = document.getElementById("smsRecipient").value.trim();
+      const noteText = document.getElementById("statusNote").value || "No note";
+
+      if (!phoneInput) {
+        alert("Please enter a family phone number first.");
+        return;
+      }
+
+      const cleanPhone = phoneInput.replace(/[^0-9+]/g, '');
+      const smsBody = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: 85% | Note: ${noteText}`;
+      const encodedBody = encodeURIComponent(smsBody);
+
+      window.location.href = `sms:${cleanPhone}?body=${encodedBody}`;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadData();
+
+      document.getElementById("statusNote").addEventListener("input", () => {
+        updatePayload();
+        saveData();
+      });
+
+      document.getElementById("smsRecipient").addEventListener("input", () => {
+        saveData();
+      });
+    });
 
     function renderBoard() {
       const list = document.getElementById("familyList");
@@ -280,32 +323,6 @@
         updatePayload();
         }
 
-    function updatePayload() {
-        const noteText = document.getElementById("statusNote").value || "No note";
-        const phoneNumber = document.getElementById("smsRecipient").value.trim();
-        
-        const payload = {
-            uid: "usr_self_01",
-            status: currentStatus,
-            bat: 85,
-            ts: new Date().toISOString().substring(11, 19) + "Z",
-            note: noteText
-        };
-        document.getElementById("rawPayload").innerText = JSON.stringify(payload, null, 2);
-
-        // Build SMS draft body
-        const smsBody = `[EMERGENCY CHECK-IN]\nStatus: ${currentStatus}\nBattery: 85%\nNote: ${noteText}`;
-        const encodedBody = encodeURIComponent(smsBody);
-
-        // Attach phone number if entered
-        const smsLink = document.getElementById("smsLink");
-        if (phoneNumber) {
-            smsLink.href = `sms:${phoneNumber}?body=${encodedBody}`;
-        } else {
-            smsLink.href = `sms:?body=${encodedBody}`;
-        }
-        }
-
     function broadcastStatus() {
       updatePayload();
       saveData();
@@ -314,6 +331,7 @@
       setTimeout(() => alert.classList.add("d-none"), 2500);
     }
 
+  
     function simulateIncomingPacket() {
       const idx = familyData.findIndex(m => m.id === "ken");
       if (idx !== -1) {
