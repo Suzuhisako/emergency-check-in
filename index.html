@@ -111,10 +111,14 @@
         <input type="tel" class="form-control bg-dark text-light border-secondary" id="smsRecipient" placeholder="e.g. 09012345678">
       </div>
 
-       <!-- Real hyperlink that Chrome will allow -->
-      <a id="smsBtn" href="#" class="btn btn-outline-info w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2">
-          💬 Send via SMS Text (Low-Bandwidth)
-      </a>
+        <!-- Copy Button Optimized for +メッセージ / LINE -->
+      <button type="button" class="btn btn-info w-100 py-2 fw-bold mb-2" onclick="copyAndOpenSMS()">
+        📋 Copy Status & Open +メッセージ
+      </button>
+
+      <div id="copyAlert" class="alert alert-success mt-2 py-1 small d-none text-center" role="alert">
+        Copied to clipboard! Long-press in +メッセージ or LINE to paste.
+      </div>
 
        
       <div id="broadcastAlert" class="alert alert-success mt-2 py-2 small d-none" role="alert">
@@ -239,8 +243,8 @@
       const noteText = document.getElementById("statusNote").value || "No note";
       const phoneInput = document.getElementById("smsRecipient").value.trim();
       const cleanPhone = phoneInput.replace(/[^0-9+]/g, '');
-    
-      // 1. Update JSON preview box
+
+        // 1. Update JSON preview box
       const payload = {
         uid: "usr_self_01",
         status: currentStatus,
@@ -249,13 +253,13 @@
         note: noteText
       };
       document.getElementById("rawPayload").innerText = JSON.stringify(payload, null, 2);
-    
-      // 2. Build single-line SMS link
+
+        // 2. Build single-line SMS link
       const smsBody = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: 85% | Note: ${noteText}`;
       const encodedBody = encodeURIComponent(smsBody);
-    
+
       const smsBtn = document.getElementById("smsBtn");
-      if (cleanPhone) {
+       if (cleanPhone) {
         smsBtn.href = `sms:${cleanPhone}?body=${encodedBody}`;
       } else {
         smsBtn.href = "javascript:alert('Please enter a phone number first.');";
@@ -274,6 +278,34 @@
         saveData();
       });
     });
+
+    function copyAndOpenSMS() {
+      const noteText = document.getElementById("statusNote").value || "No note";
+      const phoneInput = document.getElementById("smsRecipient").value.trim();
+      const cleanPhone = phoneInput.replace(/[^0-9+]/g, '');
+
+      const textToCopy = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: 85% | Note: ${noteText}`;
+
+      // 1. Copy formatted text to device clipboard
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        // 2. Show green confirmation feedback
+        const alert = document.getElementById("copyAlert");
+        alert.classList.remove("d-none");
+        setTimeout(() => alert.classList.add("d-none"), 3000);
+
+        // 3. Launch +メッセージ app directly to the contact
+        setTimeout(() => {
+          if (cleanPhone) {
+            window.location.href = `sms:${cleanPhone}`;
+          } else {
+              window.location.href = `sms:`;
+          }
+        }, 400);
+      }).catch(err => {
+        // Fallback if clipboard permission is denied
+         alert("Text: " + textToCopy);
+      });
+   }
 
     function renderBoard() {
       const list = document.getElementById("familyList");
