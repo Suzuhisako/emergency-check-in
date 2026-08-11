@@ -73,6 +73,23 @@
       </div>
     </header>
 
+    <!-- Emergency Sound Beacon Section -->
+    <section class="card-dark rounded-3 p-3 mb-3 border border-danger">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h6 text-uppercase text-danger fw-bold m-0">🚨 Acoustic Beacon</h2>
+        <span class="badge bg-danger">Search & Rescue</span>
+      </div>
+      <p class="small text-secondary mb-3">Emits a high-pitched 2-tone siren to signal rescuers if trapped under rubble or in low visibility.</p>
+      
+      <button id="sirenBtn" type="button" class="btn btn-danger w-100 py-3 fw-bold fs-5 shadow d-flex align-items-center justify-content-center gap-2" onclick="toggleSiren()">
+        🔊 START EMERGENCY ALARM
+      </button>
+      
+      <div id="sirenStatus" class="form-text text-danger text-center fw-bold small mt-2 d-none">
+        ⚠️ ALARM ACTIVE: Turn phone media volume to maximum!
+      </div>
+    </section>
+
     <!-- Step 1: Your Current Status Broadcast -->
     <section class="card-dark rounded-3 p-3 mb-3">
       <h2 class="h6 text-uppercase text-secondary fw-bold mb-3">1. Broadcast Your Status</h2>     
@@ -101,7 +118,7 @@
             📍 Auto-GPS
             </button>
         </div>
-        <input type="text" class="form-control bg-dark text-light border-secondary" id="statusNote" placeholder="e.g. At Sapporo Primary Shelter">
+        <input type="text" class="form-control bg-dark text-light border-secondary" id="statusNote" placeholder="e.g. At Chigasaki Primary Shelter">
         <div id="gpsStatus" class="form-text text-success small d-none">GPS coordinates captured!</div>
       </div>
 
@@ -219,6 +236,84 @@
       { id: "mom", name: "Hanako (Mom)", status: "IN TRANSIT", badgeClass: "bg-warning text-dark", time: "10:05 AM", location: "📍 Moving toward Station", battery: "41%", via: "Received via: Mesh Hop #3", viaClass: "text-warning" },
       { id: "ken", name: "Ken (Brother)", status: "NO SIGNAL", badgeClass: "bg-secondary", time: "08:30 AM", location: "📍 Last known: Home", battery: "95%", via: "Awaiting broadcast...", viaClass: "text-secondary" }
     ];
+
+    // Web Audio API State
+    let audioCtx = null;
+    let oscillator = null;
+    let gainNode = null;
+    let sirenInterval = null;
+    let isSirenActive = false;
+
+    function toggleSiren() {
+      if (isSirenActive) {
+        stopSiren();
+      } else {
+        startSiren();
+      }
+    }
+
+    function startSiren() {
+      // 1. Initialize AudioContext on user gesture
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+      } else if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      // 2. Create audio nodes (Sawtooth wave for penetrating acoustic clarity)
+      oscillator = audioCtx.createOscillator();
+      gainNode = audioCtx.createGain();
+
+      oscillator.type = 'sawtooth';
+      gainNode.gain.setValueAtTime(0.8, audioCtx.currentTime);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.start();
+      isSirenActive = true;
+
+      // 3. Alternate frequency between 800 Hz and 1200 Hz every 350ms
+      let highTone = false;
+      sirenInterval = setInterval(() => {
+        if (!oscillator || !audioCtx) return;
+        const targetFreq = highTone ? 800 : 1200;
+        oscillator.frequency.setValueAtTime(targetFreq, audioCtx.currentTime);
+        highTone = !highTone;
+      }, 350);
+
+      // 4. Update UI to Active State
+      const btn = document.getElementById("sirenBtn");
+      const status = document.getElementById("sirenStatus");
+      btn.classList.remove("btn-danger");
+      btn.classList.add("btn-warning", "text-dark", "pulse-animation");
+      btn.innerText = "🛑 STOP ALARM";
+      if (status) status.classList.remove("d-none");
+    }
+
+    function stopSiren() {
+      if (sirenInterval) {
+        clearInterval(sirenInterval);
+        sirenInterval = null;
+      }
+
+      if (oscillator) {
+        oscillator.stop();
+        oscillator.disconnect();
+        oscillator = null;
+      }
+
+      isSirenActive = false;
+
+      // Reset UI to Inactive State
+      const btn = document.getElementById("sirenBtn");
+      const status = document.getElementById("sirenStatus");
+      btn.classList.remove("btn-warning", "text-dark", "pulse-animation");
+      btn.classList.add("btn-danger");
+      btn.innerText = "🔊 START EMERGENCY ALARM";
+      if (status) status.classList.add("d-none");
+    }
 
     let currentStatus = "SAFE";
     let familyData = [];
