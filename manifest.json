@@ -9,22 +9,32 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f6a8.png",
-      "sizes": "72x72",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/ thumb/8/84/Rotating_light_emoji.png/192px-Rotating_light_emoji.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f6a8.svg",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
-      "purpose": "any"
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Rotating_light_emoji.png/512px-Rotating_light_emoji.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Rotating_light_emoji.png/512px-Rotating_light_emoji.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile Emergency Check-In"
     },
     {
-      "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f6a8.svg",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Rotating_light_emoji.png/512px-Rotating_light_emoji.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Desktop Emergency Check-In"
     }
   ]
 }
