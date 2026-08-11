@@ -1,4 +1,5 @@
 {
+  "id": "/emergency-check-in/index.html",
   "name": "Disaster Emergency Check-In",
   "short_name": "Emergency",
   "start_url": "./index.html",
@@ -8,16 +9,22 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f6a8.png",
-      "sizes": "192x192",
+      "src": "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f6a8.png",
+      "sizes": "72x72",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f6a8.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f6a8.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f6a8.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }
