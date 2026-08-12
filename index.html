@@ -621,15 +621,20 @@
     }
   
     function openEditModal(id) {
-      const member = familyData.find(m => m.id === id);
-      if (!member) return;
-  
+      // Convert both to strings to ensure match
+      const member = familyData.find(m => String(m.id) === String(id));
+      
+      if (!member) {
+        console.warn("Member not found for ID:", id);
+        return;
+      }
+    
       document.getElementById("modalTitle").innerText = "Edit Family Member";
       document.getElementById("modalMemberId").value = member.id;
       document.getElementById("modalMemberName").value = member.name;
       document.getElementById("modalMemberStatus").value = member.status;
       document.getElementById("modalMemberLocation").value = member.location || "";
-  
+    
       if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(document.getElementById('familyModal'));
       familyModalInstance.show();
     }
