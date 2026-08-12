@@ -210,78 +210,72 @@
 
   </div>
 
-  <script>
-    // Service Worker Registration (Using physical sw.js file)
+   <script>
+    // Service Worker Registration
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker Registered successfully:', reg.scope))
-          .catch(err => console.log('Service Worker Registration failed:', err));
+          .then(reg => console.log('Service Worker registered:', reg.scope))
+          .catch(err => console.log('Service Worker registration failed:', err));
       });
     }
-
-    // ------------------------------------------------------------------
-    // C. APP DATA LOGIC (LOCALSTORAGE)
-    // ------------------------------------------------------------------
+  
+    // State Management
     const DEFAULT_FAMILY = [
       { id: "dad", name: "Taro (Dad)", status: "SAFE", badgeClass: "bg-success", time: "10:18 AM", location: "📍 Chigasaki Elem. Shelter", battery: "88%", via: "Received via: Direct BLE", viaClass: "text-success" },
       { id: "mom", name: "Hanako (Mom)", status: "IN TRANSIT", badgeClass: "bg-warning text-dark", time: "10:05 AM", location: "📍 Moving toward Station", battery: "41%", via: "Received via: Mesh Hop #3", viaClass: "text-warning" },
       { id: "ken", name: "Ken (Brother)", status: "NO SIGNAL", badgeClass: "bg-secondary", time: "08:30 AM", location: "📍 Last known: Home", battery: "95%", via: "Awaiting broadcast...", viaClass: "text-secondary" }
     ];
-
-    // Web Audio API State
+  
     let audioCtx = null;
     let oscillator = null;
     let gainNode = null;
     let sirenInterval = null;
     let isSirenActive = false;
-
+    let currentStatus = "SAFE";
+    let familyData = [];
+    let liveBattery = 85;
+    let currentCoords = null;
+    let familyModalInstance = null;
+  
+    // ------------------------------------------------------------------
+    // 1. Emergency Siren & Strobe Controls
+    // ------------------------------------------------------------------
     function toggleSiren() {
-      if (isSirenActive) {
-        stopSiren();
-      } else {
-        startSiren();
-      }
+      isSirenActive ? stopSiren() : startSiren();
     }
-
+  
     function startSiren() {
-      // 1. Initialize AudioContext
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!audioCtx) {
         audioCtx = new AudioContext();
       } else if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
-
-      // 2. Create audio nodes (Sawtooth wave for penetrating sound)
+  
       oscillator = audioCtx.createOscillator();
       gainNode = audioCtx.createGain();
-
+  
       oscillator.type = 'sawtooth';
       gainNode.gain.setValueAtTime(0.8, audioCtx.currentTime);
-
+  
       oscillator.connect(gainNode);
       gainNode.connect(audioCtx.destination);
-
+  
       oscillator.start();
       isSirenActive = true;
-
-      // 3. Alternate siren frequency between 800 Hz and 1200 Hz
+  
       let highTone = false;
       sirenInterval = setInterval(() => {
         if (!oscillator || !audioCtx) return;
-        const targetFreq = highTone ? 800 : 1200;
-        oscillator.frequency.setValueAtTime(targetFreq, audioCtx.currentTime);
+        oscillator.frequency.setValueAtTime(highTone ? 800 : 1200, audioCtx.currentTime);
         highTone = !highTone;
       }, 350);
-
-      // 4. Trigger Strobe Effect (if enabled)
-      const enableStrobe = document.getElementById("strobeToggle")?.checked;
-      if (enableStrobe) {
+  
+      if (document.getElementById("strobeToggle")?.checked) {
         document.body.classList.add("strobe-active");
       }
-
-      // 5. Update UI state
+  
       const btn = document.getElementById("sirenBtn");
       const status = document.getElementById("sirenStatus");
       btn.classList.remove("btn-danger");
@@ -289,25 +283,13 @@
       btn.innerText = "🛑 STOP ALARM";
       if (status) status.classList.remove("d-none");
     }
-
+  
     function stopSiren() {
-      if (sirenInterval) {
-        clearInterval(sirenInterval);
-        sirenInterval = null;
-      }
-
-      if (oscillator) {
-        oscillator.stop();
-        oscillator.disconnect();
-        oscillator = null;
-      }
-
+      if (sirenInterval) { clearInterval(sirenInterval); sirenInterval = null; }
+      if (oscillator) { oscillator.stop(); oscillator.disconnect(); oscillator = null; }
       isSirenActive = false;
-
-      // Stop Strobe Effect
+  
       document.body.classList.remove("strobe-active");
-
-      // Reset UI state
       const btn = document.getElementById("sirenBtn");
       const status = document.getElementById("sirenStatus");
       btn.classList.remove("btn-warning", "text-dark", "pulse-animation");
@@ -315,228 +297,61 @@
       btn.innerText = "🔊 START EMERGENCY ALARM";
       if (status) status.classList.add("d-none");
     }
-
-    let currentStatus = "SAFE";
-    let familyData = [];
-
-    function loadData() {
-      const savedStatus = localStorage.getItem("my_emergency_status");
-      if (savedStatus) {
-        const parsed = JSON.parse(savedStatus);
-        currentStatus = parsed.status || "SAFE";
-        document.getElementById("statusNote").value = parsed.note || "";
-        document.getElementById("smsRecipient").value = parsed.phone || "";
-      }
-
-      const savedFamily = localStorage.getItem("family_board_status");
-      familyData = savedFamily ? JSON.parse(savedFamily) : [...DEFAULT_FAMILY];
-
-      selectStatus(currentStatus);
-      renderBoard();
-    }
-
-    function saveData() {
-      const myPayload = {
-        status: currentStatus,
-        note: document.getElementById("statusNote").value,
-        phone: document.getElementById("smsRecipient").value,
-        timestamp: new Date().toISOString()
-      };
-        localStorage.setItem("my_emergency_status", JSON.stringify(myPayload));
-        localStorage.setItem("family_board_status", JSON.stringify(familyData));
-    }
-
-    let currentCoords = null; // Stores { lat, lon } when GPS is captured
-
-    function updatePayload() {
-      const noteText = document.getElementById("statusNote").value || "No note";
-
-      const payload = {
-        uid: "usr_self_01",
-        status: currentStatus,
-        bat: liveBattery, // Uses live battery percentage
-        gps: currentCoords ? `${currentCoords.lat},${currentCoords.lon}` : "N/A",
-        ts: new Date().toISOString().substring(11, 19) + "Z",
-        note: noteText
-      };
-      document.getElementById("rawPayload").innerText = JSON.stringify(payload, null, 2);
-
-      // Update SMS text with live battery
-      const smsBody = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: ${liveBattery}% | Note: ${noteText}`;
-    
-      const phoneInput = document.getElementById("smsRecipient");
-      if (phoneInput) {
-        const cleanPhone = phoneInput.value.trim().replace(/[^0-9+]/g, '');
-        const smsBtn = document.getElementById("smsBtn");
-        if (smsBtn) {
-        smsBtn.href = cleanPhone ? `sms:${cleanPhone}?body=${encodeURIComponent(smsBody)}` : `sms:?body=${encodeURIComponent(smsBody)}`;
-        }
-      }
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-        loadData();
-        initBatteryAPI(); // Starts live battery monitoring
-
-      document.getElementById("statusNote").addEventListener("input", () => {
-        updatePayload();
-        saveData();
-      });
-
-      const smsRecipient = document.getElementById("smsRecipient");
-        if (smsRecipient) {
-          smsRecipient.addEventListener("input", () => {
-            saveData();
-            updatePayload();
-          });
-        }
-    });
-
-    let liveBattery = 85; // Fallback value
-
+  
+    // ------------------------------------------------------------------
+    // 2. Hardware APIs (Battery & GPS)
+    // ------------------------------------------------------------------
     function initBatteryAPI() {
       if ('getBattery' in navigator) {
         navigator.getBattery().then(battery => {
-        // 1. Initial battery update
-        updateBatteryUI(battery);
-
-        // 2. Listen for battery percentage changes
-        battery.addEventListener('levelchange', () => updateBatteryUI(battery));
-        
-        // 3. Listen for charger plugging/unplugging
-        battery.addEventListener('chargingchange', () => updateBatteryUI(battery));
-        }).catch(err => {
-        console.log("Battery API error or blocked:", err);
-        document.getElementById("displayBattery").innerText = "85% (Default)";
+          updateBatteryUI(battery);
+          battery.addEventListener('levelchange', () => updateBatteryUI(battery));
+          battery.addEventListener('chargingchange', () => updateBatteryUI(battery));
+        }).catch(() => {
+          document.getElementById("displayBattery").innerText = `${liveBattery}% (Default)`;
         });
       } else {
-        // Fallback for browsers that don't support getBattery
-        document.getElementById("displayBattery").innerText = "85% (N/A)";
+        document.getElementById("displayBattery").innerText = `${liveBattery}% (N/A)`;
       }
     }
-
+  
     function updateBatteryUI(battery) {
       liveBattery = Math.round(battery.level * 100);
       const chargingIcon = battery.charging ? " ⚡" : "";
-
-      // Update header UI
       const display = document.getElementById("displayBattery");
-      if (display) {
-        display.innerText = `${liveBattery}%${chargingIcon}`;
-      }
-
-      // Update JSON payload with live reading
+      if (display) display.innerText = `${liveBattery}%${chargingIcon}`;
       updatePayload();
     }
-
-    async function importFromClipboard() {
-      try {
-        // 1. Read text directly from smartphone clipboard
-        const text = await navigator.clipboard.readText();
-        
-        if (!text.includes("[EMERGENCY CHECK-IN]")) {
-        const manualText = prompt("Clipboard didn't contain a valid status. Paste the received SMS text here:");
-        if (manualText) parseSMSPayload(manualText);
-        return;
-        }
-
-        parseSMSPayload(text);
-      } catch (err) {
-        // Fallback if browser blocks clipboard access
-        const manualText = prompt("Paste the received SMS text here:");
-        if (manualText) parseSMSPayload(manualText);
-      }
-    }
-
-    function parseSMSPayload(text) {
-      // Regex pattern matching for status, battery, and notes
-      const statusMatch = text.match(/Status:\s*([A-Z\s]+?)(?=\s*\||$)/i);
-      const battMatch = text.match(/Batt:\s*(\d+)%/i);
-      const noteMatch = text.match(/Note:\s*(.+?)(?=\s*\||$)/i);
-
-      if (!statusMatch) {
-        alert("Could not parse emergency check-in status from this text.");
-        return;
-      }
-
-      const extractedStatus = statusMatch[1].trim();
-      const extractedBatt = battMatch ? `${battMatch[1]}%` : "N/A";
-      const extractedNote = noteMatch ? noteMatch[1].trim() : "No details provided";
-
-      // Prompt to associate message with a family member
-      const senderName = prompt(`Parsed Status:\n• Status: ${extractedStatus}\n• Battery: ${extractedBatt}\n• Note: ${extractedNote}\n\nWho sent this message? (e.g. Mom, Hanako):`);
-
-      if (!senderName) return;
-
-      // Search if member already exists in familyData
-      const existingIdx = familyData.findIndex(m => m.name.toLowerCase() === senderName.toLowerCase().trim());
-      const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
- 
-      if (existingIdx !== -1) {
-        // Update existing member's card
-        familyData[existingIdx].status = extractedStatus;
-        familyData[existingIdx].badgeClass = getBadgeClass(extractedStatus);
-        familyData[existingIdx].battery = extractedBatt;
-        familyData[existingIdx].location = `📍 ${extractedNote}`;
-        familyData[existingIdx].time = currentTime;
-        familyData[existingIdx].via = "Via SMS";
-        familyData[existingIdx].viaClass = "text-warning";
-      } else {
-        // Add new member entry
-        familyData.push({
-        id: "mem_" + Date.now(),
-        name: senderName.trim(),
-        status: extractedStatus,
-        badgeClass: getBadgeClass(extractedStatus),
-        battery: extractedBatt,
-        location: `📍 ${extractedNote}`,
-        time: currentTime,
-        via: "Via SMS",
-        viaClass: "text-warning"
-        });
-      }
-
-      saveData();
-      renderBoard();
-      alert(`Updated ${senderName}'s status on your Family Board!`);
-    }
-
+  
     function getGPSLocation() {
       const gpsBtn = document.getElementById("gpsBtn");
       const noteInput = document.getElementById("statusNote");
       const gpsStatus = document.getElementById("gpsStatus");
-
+  
       if (!('geolocation' in navigator)) {
         alert("Geolocation is not supported by your browser.");
         return;
       }
-
-      // Provide immediate visual feedback
+  
       gpsBtn.disabled = true;
       gpsBtn.innerText = "⏳ Locating...";
-
+  
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const lat = position.coords.latitude.toFixed(4);
           const lon = position.coords.longitude.toFixed(4);
-
-          // Save to global state for JSON payload
           currentCoords = { lat, lon };
-
-          // Append or insert GPS coordinates into note input field
+  
           const gpsString = `GPS: ${lat},${lon}`;
           const cleanExistingNote = noteInput.value.replace(/\(?GPS: [-?\d.]+,[-?\d.]+\)?/g, '').trim();
-      
           noteInput.value = cleanExistingNote ? `${cleanExistingNote} (${gpsString})` : gpsString;
-
-          // Reset button and update storage
+  
           gpsBtn.disabled = false;
           gpsBtn.innerText = "📍 Auto-GPS";
-        
+  
           updatePayload();
           saveData();
-
-          // Show brief confirmation badge
+  
           if (gpsStatus) {
             gpsStatus.classList.remove("d-none");
             setTimeout(() => gpsStatus.classList.add("d-none"), 3000);
@@ -545,70 +360,97 @@
         (error) => {
           gpsBtn.disabled = false;
           gpsBtn.innerText = "📍 Auto-GPS";
-
-          switch(error.code) {
-            case error.PERMISSION_DENIED:
-              alert("Location access was denied. Please allow location permissions in browser settings.");
-              break;
-            case error.POSITION_UNAVAILABLE:
-              alert("Location unavailable. Make sure Location/GPS is turned on on your phone.");
-              break;
-            case error.TIMEOUT:
-              alert("Location request timed out. Try again.");
-              break;
-            default:
-              alert("Could not fetch location.");
-              break;
-          }
+          alert(`Location Error: ${error.message}`);
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     }
-
+  
+    // ------------------------------------------------------------------
+    // 3. App State & Payload Updates
+    // ------------------------------------------------------------------
+    function updatePayload() {
+      const noteText = document.getElementById("statusNote")?.value || "No note";
+  
+      const payload = {
+        uid: "usr_self_01",
+        status: currentStatus,
+        bat: `${liveBattery}%`,
+        gps: currentCoords ? `${currentCoords.lat},${currentCoords.lon}` : "N/A",
+        ts: new Date().toISOString().substring(11, 19) + "Z",
+        note: noteText
+      };
+      
+      const payloadElem = document.getElementById("rawPayload");
+      if (payloadElem) payloadElem.innerText = JSON.stringify(payload, null, 2);
+    }
+  
+    function selectStatus(status) {
+      currentStatus = status;
+  
+      const btnSafe = document.getElementById('btn-safe');
+      const btnHelp = document.getElementById('btn-help');
+      const btnTransit = document.getElementById('btn-transit');
+  
+      btnSafe.className = 'btn btn-outline-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+      btnHelp.className = 'btn btn-outline-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+      btnTransit.className = 'btn btn-outline-warning status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+  
+      document.getElementById('label-safe').innerText = 'Tap to set';
+      document.getElementById('label-help').innerText = 'Tap to set';
+      document.getElementById('label-transit').innerText = 'Tap to set';
+  
+      if (status === 'SAFE') {
+        btnSafe.className = 'btn btn-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+        document.getElementById('label-safe').innerText = 'SELECTED';
+      } else if (status === 'NEED HELP') {
+        btnHelp.className = 'btn btn-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+        document.getElementById('label-help').innerText = 'SELECTED';
+      } else if (status === 'IN TRANSIT') {
+        btnTransit.className = 'btn btn-warning text-dark status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+        document.getElementById('label-transit').innerText = 'SELECTED';
+      }
+  
+      updatePayload();
+    }
+  
     function copyAndOpenSMS() {
       const noteText = document.getElementById("statusNote").value || "No note";
       const phoneInput = document.getElementById("smsRecipient").value.trim();
       const cleanPhone = phoneInput.replace(/[^0-9+]/g, '');
-
-      const textToCopy = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: 85% | Note: ${noteText}`;
-
-      // 1. Copy formatted text to device clipboard
+  
+      const textToCopy = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: ${liveBattery}% | Note: ${noteText}`;
+  
       navigator.clipboard.writeText(textToCopy).then(() => {
-        // 2. Show green confirmation feedback
-        const alert = document.getElementById("copyAlert");
-        alert.classList.remove("d-none");
-        setTimeout(() => alert.classList.add("d-none"), 3000);
-
-        // 3. Launch +メッセージ app directly to the contact
+        const alertElem = document.getElementById("copyAlert");
+        alertElem.classList.remove("d-none");
+        setTimeout(() => alertElem.classList.add("d-none"), 3000);
+  
         setTimeout(() => {
-          if (cleanPhone) {
-            window.location.href = `sms:${cleanPhone}`;
-          } else {
-              window.location.href = `sms:`;
-          }
+          window.location.href = cleanPhone ? `sms:${cleanPhone}` : `sms:`;
         }, 400);
-      }).catch(err => {
-        // Fallback if clipboard permission is denied
-         alert("Text: " + textToCopy);
+      }).catch(() => {
+        alert("Text: " + textToCopy);
       });
     }
-
-    let familyModalInstance = null;
-
+  
+    // ------------------------------------------------------------------
+    // 4. Family Board Logic
+    // ------------------------------------------------------------------
     function getBadgeClass(status) {
       if (status === 'SAFE') return 'bg-success';
       if (status === 'NEED HELP') return 'bg-danger';
       if (status === 'IN TRANSIT') return 'bg-warning text-dark';
       return 'bg-secondary';
     }
-
+  
     function renderBoard() {
       const list = document.getElementById("familyList");
       if (!familyData || familyData.length === 0) {
         list.innerHTML = `<div class="text-secondary small py-2 text-center">No family members added yet. Tap <strong>+ Add</strong> above.</div>`;
         return;
       }
-
+  
       list.innerHTML = familyData.map(m => `
         <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2">
           <div class="d-flex justify-content-between align-items-start">
@@ -626,84 +468,102 @@
         </div>
       `).join('');
     }
-
+  
+    function loadData() {
+      const savedStatus = localStorage.getItem("my_emergency_status");
+      if (savedStatus) {
+        const parsed = JSON.parse(savedStatus);
+        currentStatus = parsed.status || "SAFE";
+        document.getElementById("statusNote").value = parsed.note || "";
+        document.getElementById("smsRecipient").value = parsed.phone || "";
+      }
+  
+      const savedFamily = localStorage.getItem("family_board_status");
+      familyData = savedFamily ? JSON.parse(savedFamily) : [...DEFAULT_FAMILY];
+  
+      selectStatus(currentStatus);
+      renderBoard();
+    }
+  
+    function saveData() {
+      const myPayload = {
+        status: currentStatus,
+        note: document.getElementById("statusNote").value,
+        phone: document.getElementById("smsRecipient").value,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem("my_emergency_status", JSON.stringify(myPayload));
+      localStorage.setItem("family_board_status", JSON.stringify(familyData));
+    }
+  
+    function broadcastStatus() {
+      updatePayload();
+      saveData();
+      const alertElem = document.getElementById("broadcastAlert");
+      alertElem.classList.remove("d-none");
+      setTimeout(() => alertElem.classList.add("d-none"), 2500);
+    }
+  
     function openAddModal() {
       document.getElementById("modalTitle").innerText = "Add Family Member";
       document.getElementById("modalMemberId").value = "";
       document.getElementById("modalMemberName").value = "";
       document.getElementById("modalMemberStatus").value = "SAFE";
       document.getElementById("modalMemberLocation").value = "";
-
-      if (!familyModalInstance) {
-        familyModalInstance = new bootstrap.Modal(document.getElementById('familyModal'));
-      }
+  
+      if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(document.getElementById('familyModal'));
       familyModalInstance.show();
     }
-
+  
     function openEditModal(id) {
       const member = familyData.find(m => m.id === id);
       if (!member) return;
-
+  
       document.getElementById("modalTitle").innerText = "Edit Family Member";
       document.getElementById("modalMemberId").value = member.id;
       document.getElementById("modalMemberName").value = member.name;
       document.getElementById("modalMemberStatus").value = member.status;
       document.getElementById("modalMemberLocation").value = member.location || "";
-
-      if (!familyModalInstance) {
-        familyModalInstance = new bootstrap.Modal(document.getElementById('familyModal'));
-      }
+  
+      if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(document.getElementById('familyModal'));
       familyModalInstance.show();
     }
-
+  
     function saveFamilyMember() {
       const id = document.getElementById("modalMemberId").value;
       const name = document.getElementById("modalMemberName").value.trim();
       const status = document.getElementById("modalMemberStatus").value;
       const location = document.getElementById("modalMemberLocation").value.trim();
-
-      if (!name) {
-        alert("Please enter a name.");
-        return;
-      }
-
+  
+      if (!name) return alert("Please enter a name.");
+  
       const badgeClass = getBadgeClass(status);
       const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
+  
       if (id) {
-        // Update existing member
         const idx = familyData.findIndex(m => m.id === id);
         if (idx !== -1) {
-          familyData[idx] = {
-            ...familyData[idx],
-            name,
-            status,
-            badgeClass,
-            location: location || "📍 Updated status",
-            time: currentTime
-          };
+          familyData[idx] = { ...familyData[idx], name, status, badgeClass, location: location || "📍 Updated status", time: currentTime };
         }
       } else {
-        // Add new member
-        const newMember = {
-        id: "mem_" + Date.now(),
-        name,
-        status,
-        badgeClass,
-        location: location || "📍 Location unknown",
-        battery: "100%",
-        time: currentTime,
-        via: "Local Entry",
-        viaClass: "text-info"
-        };
-        familyData.push(newMember);
+        familyData.push({
+          id: "mem_" + Date.now(),
+          name,
+          status,
+          badgeClass,
+          location: location || "📍 Location unknown",
+          battery: "100%",
+          time: currentTime,
+          via: "Local Entry",
+          viaClass: "text-info"
+        });
       }
-
+  
       saveData();
       renderBoard();
       if (familyModalInstance) familyModalInstance.hide();
     }
-
+  
     function deleteFamilyMember(id) {
       if (confirm("Remove this contact from your board?")) {
         familyData = familyData.filter(m => m.id !== id);
@@ -711,110 +571,27 @@
         renderBoard();
       }
     }
-
-    function selectStatus(status) {
-        currentStatus = status;
-
-        // Reset all buttons to outline style
-        const btnSafe = document.getElementById('btn-safe');
-        const btnHelp = document.getElementById('btn-help');
-        const btnTransit = document.getElementById('btn-transit');
-
-        btnSafe.className = 'btn btn-outline-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-        btnHelp.className = 'btn btn-outline-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-        btnTransit.className = 'btn btn-outline-warning status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-
-        document.getElementById('label-safe').innerText = 'Tap to set';
-        document.getElementById('label-help').innerText = 'Tap to set';
-        document.getElementById('label-transit').innerText = 'Tap to set';
-
-        // Highlight selected button with solid fill
-        if (status === 'SAFE') {
-            btnSafe.className = 'btn btn-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-            document.getElementById('label-safe').innerText = 'SELECTED';
-        } else if (status === 'NEED HELP') {
-            btnHelp.className = 'btn btn-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-            document.getElementById('label-help').innerText = 'SELECTED';
-        } else if (status === 'IN TRANSIT') {
-            btnTransit.className = 'btn btn-warning text-dark status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-            document.getElementById('label-transit').innerText = 'SELECTED';
-        }
-
-        updatePayload();
-    }
-
-    function broadcastStatus() {
-      updatePayload();
-      saveData();
-      const alert = document.getElementById("broadcastAlert");
-      alert.classList.remove("d-none");
-      setTimeout(() => alert.classList.add("d-none"), 2500);
-    }
   
-    function simulateIncomingPacket() {
-      const idx = familyData.findIndex(m => m.id === "ken");
-      if (idx !== -1) {
-        familyData[idx] = {
-          id: "ken",
-          name: "Ken (Brother)",
-          status: "NEED HELP",
-          badgeClass: "bg-danger",
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          location: "📍 Near North Gate",
-          battery: "12%",
-          via: "Received via: Mesh Hop #2",
-          viaClass: "text-info"
-        };
-        saveData();
-        renderBoard();
-      }
-    }
-
+    // ------------------------------------------------------------------
+    // 5. Single DOM Initialization
+    // ------------------------------------------------------------------
     document.addEventListener("DOMContentLoaded", () => {
       loadData();
+      initBatteryAPI();
+  
       document.getElementById("statusNote").addEventListener("input", () => {
         updatePayload();
         saveData();
       });
+  
+      const smsRecipient = document.getElementById("smsRecipient");
+      if (smsRecipient) {
+        smsRecipient.addEventListener("input", () => {
+          saveData();
+          updatePayload();
+        });
+      }
     });
   </script>
-  <!-- Bootstrap 5 JS Bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  
-  <!-- Add/Edit Contact Modal -->
-    <div class="modal fade" id="familyModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content card-dark text-light border-secondary">
-          <div class="modal-header border-secondary py-2">
-            <h5 class="modal-title h6 fw-bold" id="modalTitle">Add Family Member</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body py-3">
-            <input type="hidden" id="modalMemberId">
-            <div class="mb-3">
-              <label for="modalMemberName" class="form-label small text-secondary">Name / Relationship</label>
-              <input type="text" class="form-control bg-dark text-light border-secondary" id="modalMemberName" placeholder="e.g. Hanako (Mom)">
-            </div>
-            <div class="mb-3">
-              <label for="modalMemberStatus" class="form-label small text-secondary">Status</label>
-              <select class="form-select bg-dark text-light border-secondary" id="modalMemberStatus">
-                <option value="SAFE">🟢 SAFE</option>
-                <option value="IN TRANSIT">🟡 IN TRANSIT</option>
-                <option value="NEED HELP">🔴 NEED HELP</option>
-                <option value="NO SIGNAL">⚪ NO SIGNAL</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="modalMemberLocation" class="form-label small text-secondary">Location / Note</label>
-              <input type="text" class="form-control bg-dark text-light border-secondary" id="modalMemberLocation" placeholder="e.g. 📍 At Home / Station">
-            </div>
-          </div>
-          <div class="modal-footer border-secondary py-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-sm btn-success fw-bold" onclick="saveFamilyMember()">Save Member</button>
-          </div>
-        </div>
-      </div>
-    </div>
 </body>
 </html>
