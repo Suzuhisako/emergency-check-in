@@ -1,5 +1,5 @@
 {
-  "id": "/emergency-check-in/index.html",
+  "id": "./index.html",
   "name": "Disaster Emergency Check-In",
   "short_name": "Emergency",
   "start_url": "./index.html",
