@@ -216,30 +216,30 @@
      if ('serviceWorker' in navigator) {
       let refreshing = false;
     
-      // Listen for controllerchange to reload the page when the new SW activates
+      // Only reload the page once the new Service Worker has actually claimed control
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
-          refreshing = true;
-          window.location.reload();
-        }
+        if (refreshing) return;
+        refreshing = true;
+        window.location.reload();
       });
     
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').then((registration) => {
           
-          // 1. Check if a new version is already waiting to activate
+          // If a worker is already waiting (e.g. user revisited the page later)
           if (registration.waiting) {
             showUpdatePrompt(registration.waiting);
+            return;
           }
     
-          // 2. Listen for new service workers installing in the background
+          // Detect when a new service worker begins installing
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
             if (!newWorker) return;
     
             newWorker.addEventListener('statechange', () => {
+              // Only show prompt when installation is COMPLETE and ready in waiting state
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // New version installed and ready!
                 showUpdatePrompt(newWorker);
               }
             });
@@ -248,9 +248,7 @@
       });
     }
     
-    // Function to prompt the user
     function showUpdatePrompt(worker) {
-      // Check if a prompt already exists
       if (document.getElementById('pwa-update-toast')) return;
     
       const toast = document.createElement('div');
