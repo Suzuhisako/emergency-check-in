@@ -1,4 +1,4 @@
-const CACHE_NAME = 'emergency-checkin-v2'; // Changed from v1 to v2
+const CACHE_NAME = 'emergency-checkin-v1';
 
 // Only pre-cache local core files. 
 // Do NOT put CDN URLs here to prevent install failures from network hiccups.
