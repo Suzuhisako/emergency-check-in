@@ -1,4 +1,4 @@
-const CACHE_NAME = 'emergency-checkin-v3';
+const CACHE_NAME = 'emergency-checkin-v4';
 
 // Only pre-cache local core files. 
 // Do NOT put CDN URLs here to prevent install failures from network hiccups.
@@ -15,7 +15,6 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(STATIC_ASSETS))
-      .then(() => self.skipWaiting())
   );
 });
 
