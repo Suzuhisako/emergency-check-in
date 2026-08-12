@@ -212,7 +212,7 @@
   </div>
 
    <!-- Family Member Modal -->
-    <div class="modal fade" id="familyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="familyModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-light border-secondary">
           <div class="modal-header border-secondary">
@@ -671,6 +671,7 @@
   
       saveData();
       renderBoard();
+      if (document.activeElement) document.activeElement.blur();
       if (familyModalInstance) familyModalInstance.hide();
     }
   
