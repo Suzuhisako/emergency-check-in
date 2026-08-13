@@ -1,5 +1,4 @@
-const CACHE_NAME = 'emergency-checkin-v6';
-
+const CACHE_NAME = 'family-board-v7';
 
 const STATIC_ASSETS = [
   './',
