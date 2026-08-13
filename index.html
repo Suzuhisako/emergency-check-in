@@ -328,23 +328,9 @@
             }
           });
         }
-      });
-    
-      // 4. Handle "Update Now" button tap
-      const updateBtn = document.getElementById('updateAppBtn');
-      if (updateBtn) {
-        updateBtn.addEventListener('click', () => {
-          if (waitingWorker) {
-            waitingWorker.postMessage({ type: 'SKIP_WAITING' });
-          }
-        });
-      }
-    });
-    
-    function showUpdateBanner() {
-      const banner = document.getElementById('updateBanner');
-      if (banner) banner.classList.remove('d-none');
+      });   
     }
+      
     
     function showUpdatePrompt(worker) {
       if (document.getElementById('pwa-update-toast')) return;
