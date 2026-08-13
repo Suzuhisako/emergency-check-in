@@ -298,40 +298,37 @@
         window.location.reload();
       });
     
-     window.addEventListener('load', () => {
-      let waitingWorker = null;
-    
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').then((registration) => {
-    
-          // 1. Check if a new SW is already waiting in the background
-          if (registration.waiting) {
-            waitingWorker = registration.waiting;
-            showUpdateBanner();
-          }
-    
-          // 2. Listen for updates discovered while app is running
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing;
-            
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                waitingWorker = newWorker;
-                showUpdateBanner();
-              }
+      window.addEventListener('load', () => {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('./sw.js').then((registration) => {
+      
+            // 1. Check if a worker is already waiting in the background
+            if (registration.waiting) {
+              showUpdatePrompt(registration.waiting);
+            }
+      
+            // 2. Listen for newly discovered updates
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  showUpdatePrompt(newWorker);
+                }
+              });
             });
           });
-        });
-    
-        // 3. Auto-reload page once the new Service Worker activates
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
-            refreshing = true;
-            window.location.reload();
-          }
-        });
-      }
+      
+          // 3. Automatically refresh the page once the new SW activates
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+              refreshing = true;
+              window.location.reload();
+            }
+          });
+        }
+      });
     
       // 4. Handle "Update Now" button tap
       const updateBtn = document.getElementById('updateAppBtn');
@@ -933,10 +930,6 @@
       }
     }
    
-  </script> 
-
-  🚀 A new update is ready!
-    Update Now
-  
+  </script>  
 </body>
 </html>
