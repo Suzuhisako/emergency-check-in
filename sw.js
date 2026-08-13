@@ -1,4 +1,4 @@
-const CACHE_NAME = 'emergency-checkin-v5';
+const CACHE_NAME = 'emergency-checkin-v6';
 
 
 const STATIC_ASSETS = [
