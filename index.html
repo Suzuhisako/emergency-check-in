@@ -194,7 +194,7 @@
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="h6 text-uppercase text-secondary fw-bold m-0">2. Family Board</h2>
         <div>
-          <button class="btn btn-sm btn-info py-0 px-2 me-1" onclick="importFromClipboard()">📥 Import SMS</button>
+          <button class="btn btn-sm btn-info py-0 px-2 me-1" onclick="openImportSMSModal()">📥 Import SMS</button>
           <button class="btn btn-sm btn-success py-0 px-2 me-1" onclick="openAddModal()">+ Add</button>
           <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="simulateIncomingPacket()">Mesh Hop</button>
         </div>
@@ -715,37 +715,42 @@
       return clean || phoneStr;
     }
 
-    function processIncomingSMS(rawSmsText, senderPhoneInput = "") {
-      if (!rawSmsText && !senderPhoneInput) {
-        return alert("Please paste SMS text or enter a sender phone number.");
-      }
     
-      // 1. Detect Phone Number (from input argument or extracted from raw SMS text)
+    // 1. Triggered by clicking the Import SMS button
+    function openImportSMSModal() {
+      const rawInput = prompt("Paste SMS text (e.g. 'From: 090-1234-5678 SAFE At Shibuya Station 85%'):");
+      if (rawInput && rawInput.trim() !== "") {
+        processIncomingSMS(rawInput);
+      }
+    }
+
+    // 2. Parses incoming SMS text and updates family members
+    function processIncomingSMS(rawSmsText, senderPhoneInput = "") {
       let detectedPhone = senderPhoneInput;
       const phonePattern = /(?:from|tel|phone)?\s*[:\-]?\s*(\+?\d[\d\s\-]{8,14}\d)/i;
       const extractedPhoneMatch = rawSmsText.match(phonePattern);
-    
+
       if (extractedPhoneMatch && !detectedPhone) {
         detectedPhone = extractedPhoneMatch[1];
       }
-    
+
       const cleanSenderPhone = normalizePhone(detectedPhone);
-    
+
       if (!cleanSenderPhone) {
-        return alert("Could not identify a valid sender phone number in the message.");
+        return alert("Could not find a valid phone number in the message.");
       }
-    
-      // 2. Find matching family member
+
+      // Find matching family member
       const memberIndex = familyData.findIndex(m => {
         return m.phone && normalizePhone(m.phone) === cleanSenderPhone;
       });
-    
+
       if (memberIndex === -1) {
-        return alert(`No registered family member found for phone number: ${detectedPhone}`);
+        return alert(`No registered family member found for number: ${detectedPhone}`);
       }
-    
-      // 3. Extract Status Keyword (SAFE, EVACUATED, NEED HELP, UNKNOWN)
-      let status = "SAFE"; // default fallback
+
+      // Detect Status
+      let status = "SAFE";
       const upperText = rawSmsText.toUpperCase();
       if (upperText.includes("EVACUATED") || upperText.includes("EVAC")) {
         status = "EVACUATED";
@@ -754,27 +759,26 @@
       } else if (upperText.includes("SAFE")) {
         status = "SAFE";
       }
-    
-      // 4. Extract Battery Level (e.g. "85%" or "battery 90%")
+
+      // Detect Battery
       let battery = null;
       const batteryMatch = rawSmsText.match(/(\d{1,3})\s*%/);
       if (batteryMatch) {
         battery = `${batteryMatch[1]}%`;
       }
-    
-      // 5. Clean up Location / Note
+
+      // Extract Location / Note
       let cleanNote = rawSmsText
         .replace(phonePattern, "")
         .replace(/SAFE|EVACUATED|NEED HELP|HELP|SOS|UNKNOWN/gi, "")
         .replace(/\d{1,3}\s*%/g, "")
         .replace(/[^\w\s\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uffef\u4e00-\u9faf,.-]/gi, "")
         .trim();
-    
+
       if (!cleanNote) cleanNote = "📍 Updated via SMS";
-    
-      // 6. Update Family Member Data
+
+      // Update record
       const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      
       familyData[memberIndex].status = status;
       familyData[memberIndex].badgeClass = getBadgeClass(status);
       familyData[memberIndex].location = cleanNote;
@@ -782,19 +786,10 @@
       familyData[memberIndex].via = "Imported SMS";
       familyData[memberIndex].viaClass = "text-warning";
       if (battery) familyData[memberIndex].battery = battery;
-    
-      // Save changes & re-render UI
+
       saveData();
       renderBoard();
-    
-      alert(`Successfully updated status for ${familyData[memberIndex].name}!`);
-    }
-
-    function openImportSMSModal() {
-      const rawInput = prompt("Paste raw SMS text or format (e.g., 'From: 09012345678 SAFE At Shibuya Station 85%'):");
-      if (rawInput) {
-        processIncomingSMS(rawInput);
-      }
+      alert(`Updated ${familyData[memberIndex].name}'s status to ${status}!`);
     }
   
     function deleteFamilyMember(id) {
