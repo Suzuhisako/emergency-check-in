@@ -298,29 +298,55 @@
         window.location.reload();
       });
     
-      window.addEventListener('load', () => {
+     window.addEventListener('load', () => {
+      let waitingWorker = null;
+    
+      if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').then((registration) => {
-          
-          // If a worker is already waiting (e.g. user revisited the page later)
+    
+          // 1. Check if a new SW is already waiting in the background
           if (registration.waiting) {
-            showUpdatePrompt(registration.waiting);
-            return;
+            waitingWorker = registration.waiting;
+            showUpdateBanner();
           }
     
-          // Detect when a new service worker begins installing
+          // 2. Listen for updates discovered while app is running
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
-            if (!newWorker) return;
-    
+            
             newWorker.addEventListener('statechange', () => {
-              // Only show prompt when installation is COMPLETE and ready in waiting state
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                showUpdatePrompt(newWorker);
+                waitingWorker = newWorker;
+                showUpdateBanner();
               }
             });
           });
         });
-      });
+    
+        // 3. Auto-reload page once the new Service Worker activates
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
+      }
+    
+      // 4. Handle "Update Now" button tap
+      const updateBtn = document.getElementById('updateAppBtn');
+      if (updateBtn) {
+        updateBtn.addEventListener('click', () => {
+          if (waitingWorker) {
+            waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      }
+    });
+    
+    function showUpdateBanner() {
+      const banner = document.getElementById('updateBanner');
+      if (banner) banner.classList.remove('d-none');
     }
     
     function showUpdatePrompt(worker) {
@@ -908,6 +934,9 @@
     }
    
   </script> 
+
+  🚀 A new update is ready!
+    Update Now
   
 </body>
 </html>
