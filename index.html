@@ -211,6 +211,10 @@
     </section>
   </div>
 
+  <button type="button" class="btn btn-sm btn-outline-secondary mt-3" onclick="forceAppUpdate()">
+    🔄 Force Reset App Cache
+  </button>
+
    <!-- Family Member Modal -->
     <div class="modal fade" id="familyModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
@@ -881,6 +885,24 @@
         });
       }
     });
+
+    function forceAppUpdate() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (let registration of registrations) {
+            registration.unregister(); // Delete active SW
+          }
+          caches.keys().then((names) => {
+            for (let name of names) caches.delete(name); // Delete all caches
+          }).then(() => {
+            alert("App cache cleared! Reloading...");
+            window.location.reload(true); // Hard reload from network
+          });
+        });
+      } else {
+        window.location.reload(true);
+      }
+    }
    
   </script> 
   
