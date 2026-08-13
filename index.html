@@ -226,6 +226,11 @@
               <label class="form-label">Name</label>
               <input type="text" id="modalMemberName" class="form-control bg-dark text-light border-secondary" placeholder="e.g. Taro">
             </div>
+
+            <div class="mb-3">
+              <label class="form-label">Phone Number</label>
+              <input type="tel" id="modalMemberPhone" class="form-control bg-dark text-light border-secondary" placeholder="e.g. 09012345678">
+            </div>
             
             <div class="mb-3">
               <label class="form-label">Status</label>
@@ -568,7 +573,10 @@
               <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="deleteFamilyMember('${m.id}')">🗑️</button>
             </div>
           </div>
-          <div class="small text-secondary mt-1">${m.location || '📍 Location unknown'} • 🔋 ${m.battery || '100%'}</div>
+          <div class="small text-secondary mt-1">
+            ${m.phone ? `<a href="tel:${m.phone}" class="text-info me-2">📞 ${m.phone}</a> • ` : ''}
+            ${m.location || '📍 Location unknown'} • 🔋 ${m.battery || '100%'}
+          </div>
           <div class="small ${m.viaClass || 'text-secondary'} mt-1" style="font-size: 0.75rem;">${m.via || 'Direct contact'} • <span class="text-secondary">${m.time || ''}</span></div>
         </div>
       `).join('');
@@ -613,52 +621,59 @@
       document.getElementById("modalTitle").innerText = "Add Family Member";
       document.getElementById("modalMemberId").value = "";
       document.getElementById("modalMemberName").value = "";
+      document.getElementById("modalMemberPhone").value = ""; // Clear phone input
       document.getElementById("modalMemberStatus").value = "SAFE";
       document.getElementById("modalMemberLocation").value = "";
-  
+    
       if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(document.getElementById('familyModal'));
       familyModalInstance.show();
     }
-  
+    
     function openEditModal(id) {
-      // Convert both to strings to ensure match
       const member = familyData.find(m => String(m.id) === String(id));
-      
-      if (!member) {
-        console.warn("Member not found for ID:", id);
-        return;
-      }
+      if (!member) return;
     
       document.getElementById("modalTitle").innerText = "Edit Family Member";
       document.getElementById("modalMemberId").value = member.id;
       document.getElementById("modalMemberName").value = member.name;
+      document.getElementById("modalMemberPhone").value = member.phone || ""; // Load phone number
       document.getElementById("modalMemberStatus").value = member.status;
       document.getElementById("modalMemberLocation").value = member.location || "";
     
       if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(document.getElementById('familyModal'));
       familyModalInstance.show();
     }
-  
+    
     function saveFamilyMember() {
       const id = document.getElementById("modalMemberId").value;
       const name = document.getElementById("modalMemberName").value.trim();
+      const phone = document.getElementById("modalMemberPhone").value.trim(); // Read phone number
       const status = document.getElementById("modalMemberStatus").value;
       const location = document.getElementById("modalMemberLocation").value.trim();
-  
+    
       if (!name) return alert("Please enter a name.");
-  
+    
       const badgeClass = getBadgeClass(status);
       const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
+    
       if (id) {
-        const idx = familyData.findIndex(m => m.id === id);
+        const idx = familyData.findIndex(m => String(m.id) === String(id));
         if (idx !== -1) {
-          familyData[idx] = { ...familyData[idx], name, status, badgeClass, location: location || "📍 Updated status", time: currentTime };
+          familyData[idx] = { 
+            ...familyData[idx], 
+            name, 
+            phone, 
+            status, 
+            badgeClass, 
+            location: location || "📍 Updated status", 
+            time: currentTime 
+          };
         }
       } else {
         familyData.push({
           id: "mem_" + Date.now(),
           name,
+          phone,
           status,
           badgeClass,
           location: location || "📍 Location unknown",
@@ -668,7 +683,7 @@
           viaClass: "text-info"
         });
       }
-  
+    
       saveData();
       renderBoard();
       if (document.activeElement) document.activeElement.blur();
