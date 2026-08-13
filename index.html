@@ -573,8 +573,9 @@
               <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="deleteFamilyMember('${m.id}')">🗑️</button>
             </div>
           </div>
+          // Inside familyData.map(m => ...
           <div class="small text-secondary mt-1">
-            ${m.phone ? `<a href="tel:${m.phone}" class="text-info me-2">📞 ${m.phone}</a> • ` : ''}
+            ${m.phone ? `<a href="tel:${normalizePhone(m.phone)}" class="text-info me-2" style="text-decoration:none;">📞 ${formatPhoneDisplay(m.phone)}</a> • ` : ''}
             ${m.location || '📍 Location unknown'} • 🔋 ${m.battery || '100%'}
           </div>
           <div class="small ${m.viaClass || 'text-secondary'} mt-1" style="font-size: 0.75rem;">${m.via || 'Direct contact'} • <span class="text-secondary">${m.time || ''}</span></div>
@@ -647,7 +648,8 @@
     function saveFamilyMember() {
       const id = document.getElementById("modalMemberId").value;
       const name = document.getElementById("modalMemberName").value.trim();
-      const phone = document.getElementById("modalMemberPhone").value.trim(); // Read phone number
+      const rawPhone = document.getElementById("modalMemberPhone").value.trim();
+      const phone = normalizePhone(rawPhone); // <--- Normalizes before saving
       const status = document.getElementById("modalMemberStatus").value;
       const location = document.getElementById("modalMemberLocation").value.trim();
     
@@ -699,6 +701,18 @@
         digits = "0" + digits.slice(2);
       }
       return digits;
+    }
+     
+    // Formats normalized digits into standard Japanese hyphenated layout
+    function formatPhoneDisplay(phoneStr) {
+      const clean = normalizePhone(phoneStr);
+      if (clean.length === 11) { // 090-1234-5678
+        return clean.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+      }
+      if (clean.length === 10) { // 03-1234-5678
+        return clean.replace(/(\d{2,3})(\d{3,4})(\d{4})/, '$1-$2-$3');
+      }
+      return clean || phoneStr;
     }
 
     function processIncomingSMS(rawSmsText, senderPhoneInput = "") {
