@@ -779,35 +779,37 @@
         return alert("Please paste SMS text or enter a sender phone number.");
       }
     
-      // 1. Detect Phone Number
-      const phoneHeaderPattern = /(?:from|tel|phone)?\s*[:\-]?\s*(\+?\d[\d\-]{8,14}\d|\+?\d{2,4}(?:[\s\-]\d{2,4}){2,4})/gi;
-      
-      let detectedPhone = senderPhoneInput;
-      const extractedPhoneMatches = rawSmsText.match(phoneHeaderPattern);
+      // 1. Normalize Japanese IME / Mobile Full-Width Characters
+      let text = rawSmsText
+        .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+        .replace(/：/g, ":")
+        .replace(/％/g, "%")
+        .replace(/ /g, " ")
+        .replace(/[ー−―–—]/g, "-");
     
-      if (extractedPhoneMatches && !detectedPhone) {
-        // Extract raw digits from the first match
-        detectedPhone = extractedPhoneMatches[0];
+      // 2. Extract Sender Phone Number
+      const phoneHeaderPattern = /(?:from|tel|phone)?\s*[:\-]?\s*(\+?\d[\d\-]{8,14}\d|\+?\d{2,4}(?:[\s\-]\d{2,4}){2,4})/gi;
+      let detectedPhone = senderPhoneInput;
+      const phoneMatches = text.match(phoneHeaderPattern);
+    
+      if (phoneMatches && !detectedPhone) {
+        detectedPhone = phoneMatches[0];
       }
     
       const cleanSenderPhone = normalizePhone(detectedPhone);
-    
       if (!cleanSenderPhone) {
         return alert("Could not identify a valid sender phone number in the message.");
       }
     
-      // 2. Find matching family member
-      const memberIndex = familyData.findIndex(m => {
-        return m.phone && normalizePhone(m.phone) === cleanSenderPhone;
-      });
-    
+      // 3. Find Matching Family Member
+      const memberIndex = familyData.findIndex(m => m.phone && normalizePhone(m.phone) === cleanSenderPhone);
       if (memberIndex === -1) {
         return alert(`No registered family member found for phone number: ${detectedPhone}`);
       }
     
-      // 3. Extract Status Keyword
+      // 4. Extract Status Keyword
       let status = "SAFE";
-      const upperText = rawSmsText.toUpperCase();
+      const upperText = text.toUpperCase();
       if (upperText.includes("EVACUATED") || upperText.includes("EVAC")) {
         status = "EVACUATED";
       } else if (upperText.includes("NEED HELP") || upperText.includes("HELP") || upperText.includes("SOS")) {
@@ -816,31 +818,30 @@
         status = "SAFE";
       }
     
-      // 4. Extract Battery Level (e.g. "65%", "battery 65%", "bat: 65")
+      // 5. Extract Battery Level
       let battery = null;
-      const batteryMatch = rawSmsText.match(/(?:battery|bat)?\s*[:\-]?\s*(\d{1,3})\s*%/i) || rawSmsText.match(/(\d{1,3})\s*%/);
+      const batteryMatch = text.match(/(\d{1,3})\s*%/);
       if (batteryMatch) {
         battery = `${batteryMatch[1]}%`;
       }
     
-      // 5. Clean Location Note (multi-pass wipe of phone, status, and battery tokens)
-      let cleanNote = rawSmsText
-        .replace(phoneHeaderPattern, "")                                              // Strip phone & headers (From:, Tel:)
-        .replace(/SAFE|EVACUATED|EVAC|NEED HELP|HELP|SOS|UNKNOWN/gi, "")              // Strip status keywords
-        .replace(/(?:battery|bat)?\s*[:\-]?\s*\d{1,3}\s*%/gi, "")                    // Strip battery text (e.g. 65%, battery 65%)
-        .replace(/^[^a-zA-Z0-9\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uffef\u4e00-\u9faf]+/g, "") // Strip leading symbols
-        .replace(/\s+/g, " ")                                                         // Collapse extra spaces
+      // 6. Multi-Pass Cleaning for Location/Note
+      let cleanNote = text
+        .replace(phoneHeaderPattern, "")                                   // Remove phone & "From:"
+        .replace(/SAFE|EVACUATED|EVAC|NEED HELP|HELP|SOS|UNKNOWN/gi, "")   // Remove status keywords
+        .replace(/\b\d{1,3}\s*%?/gi, "")                                   // Remove digits with or without % sign
+        .replace(/[:,\-]/g, " ")                                           // Remove standalone punctuation
+        .replace(/\s+/g, " ")                                              // Collapse duplicate spaces
         .trim();
     
-      // Fallback if no location text remains
+      // Handle fallback when no location is provided
       if (!cleanNote) {
         cleanNote = "📍 No location provided";
       } else {
-        // Avoid double pin icons
         cleanNote = cleanNote.startsWith("📍") ? cleanNote : `📍 ${cleanNote}`;
       }
     
-      // 6. Update Family Member Record
+      // 7. Update Record & Render UI
       const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
       familyData[memberIndex].status = status;
@@ -853,11 +854,10 @@
         familyData[memberIndex].battery = battery;
       }
     
-      // Save changes & re-render UI
       saveData();
       renderBoard();
     
-      alert(`Successfully updated ${familyData[memberIndex].name}!`);
+      alert(`Updated ${familyData[memberIndex].name}! Status: ${status}`);
     }
   
     function deleteFamilyMember(id) {
