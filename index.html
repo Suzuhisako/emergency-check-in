@@ -598,7 +598,7 @@
               <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="deleteFamilyMember('${m.id}')">🗑️</button>
             </div>
           </div>
-          // Inside familyData.map(m => ...
+          
           <div class="small text-secondary mt-1">
             ${m.phone ? `<a href="tel:${normalizePhone(m.phone)}" class="text-info me-2" style="text-decoration:none;">📞 ${formatPhoneDisplay(m.phone)}</a> • ` : ''}
             ${m.location || '📍 Location unknown'} • 🔋 ${m.battery || '100%'}
