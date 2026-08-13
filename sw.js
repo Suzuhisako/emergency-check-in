@@ -7,12 +7,19 @@ const STATIC_ASSETS = [
   './icon-512.png'
 ];
 
-// 1. Install Event: Cache core assets and take over immediately
+// In sw.js:
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
+  // NOTE: Omit self.skipWaiting() here so update waits for user click
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
   );
+});
+
+// Message listener triggered by "Update Now" button:
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // 2. Activate Event: Wipe legacy caches and take control of open pages
