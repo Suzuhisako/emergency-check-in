@@ -170,14 +170,17 @@
 
       <div class="mb-2">
         <label for="smsRecipient" class="form-label small text-secondary">Family Mobile Number (for SMS)</label>
-        <input type="tel" class="form-control bg-dark text-light border-secondary" id="smsRecipient" placeholder="e.g. 09012345678">
+        <select class="form-select bg-dark text-light border-secondary" id="smsRecipient">
+          <option value="">-- Select Family Member --</option>
+          <!-- Dynamic family member options will be populated here -->
+        </select>
       </div>
 
         <!-- Copy Button Optimized for +メッセージ / LINE -->
       <button type="button" class="btn btn-info w-100 py-2 fw-bold mb-2" onclick="copyAndOpenSMS()">
         📋 Copy Status & Open +メッセージ
       </button>
-
+      
       <div id="copyAlert" class="alert alert-success mt-2 py-1 small d-none text-center" role="alert">
         Copied to clipboard! Long-press in +メッセージ or LINE to paste.
       </div>
@@ -635,8 +638,43 @@
         </div>
       `).join('');
     }
+
+    // Function to populate the Outbound Family Mobile Number dropdown
+    function populateSmsRecipientDropdown() {
+      const select = document.getElementById('smsRecipient');
+      if (!select) return;
+    
+      // 1. Store currently selected phone number before clearing HTML
+      const currentSelection = select.value;
+    
+      // 2. Reset options
+      select.innerHTML = '<option value="">-- Select Family Member --</option>';
+    
+      // 3. Add options from familyData
+      familyData.forEach(member => {
+        if (member.phone) {
+          const option = document.createElement('option');
+          option.value = member.phone;
+          option.textContent = `👤 ${member.name} (${member.phone})`;
+          select.appendChild(option);
+        }
+      });
+    
+      // 4. Restore selected value if it still exists
+      if (currentSelection) {
+        select.value = currentSelection;
+      }
+    }
   
     function loadData() {
+      // Load family data first
+      const savedFamily = localStorage.getItem("family_board_status");
+      familyData = savedFamily ? JSON.parse(savedFamily) : [...DEFAULT_FAMILY];
+    
+      // FIX: Populate dropdown options FIRST so elements exist when setting .value below
+      populateSmsRecipientDropdown();
+    
+      // Load user status and previously selected phone recipient
       const savedStatus = localStorage.getItem("my_emergency_status");
       if (savedStatus) {
         const parsed = JSON.parse(savedStatus);
@@ -644,10 +682,7 @@
         document.getElementById("statusNote").value = parsed.note || "";
         document.getElementById("smsRecipient").value = parsed.phone || "";
       }
-  
-      const savedFamily = localStorage.getItem("family_board_status");
-      familyData = savedFamily ? JSON.parse(savedFamily) : [...DEFAULT_FAMILY];
-  
+    
       selectStatus(currentStatus);
       renderBoard();
     }
@@ -697,12 +732,12 @@
       if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(document.getElementById('familyModal'));
       familyModalInstance.show();
     }
-    
+        
     function saveFamilyMember() {
       const id = document.getElementById("modalMemberId").value;
       const name = document.getElementById("modalMemberName").value.trim();
       const rawPhone = document.getElementById("modalMemberPhone").value.trim();
-      const phone = normalizePhone(rawPhone); // <--- Normalizes before saving
+      const phone = normalizePhone(rawPhone); 
       const status = document.getElementById("modalMemberStatus").value;
       const location = document.getElementById("modalMemberLocation").value.trim();
     
@@ -741,6 +776,7 @@
     
       saveData();
       renderBoard();
+      populateSmsRecipientDropdown()
       if (document.activeElement) document.activeElement.blur();
       if (familyModalInstance) familyModalInstance.hide();
     }
@@ -924,11 +960,11 @@
     }
   
     function deleteFamilyMember(id) {
-      if (confirm("Remove this contact from your board?")) {
-        familyData = familyData.filter(m => m.id !== id);
-        saveData();
-        renderBoard();
-      }
+      if (!confirm("Are you sure you want to remove this member?")) return;
+      familyData = familyData.filter(m => String(m.id) !== String(id));
+      saveData();
+      renderBoard();
+      populateSmsRecipientDropdown(); // Refresh dropdown
     }
   
     // ------------------------------------------------------------------
