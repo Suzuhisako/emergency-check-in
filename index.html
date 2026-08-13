@@ -268,13 +268,28 @@
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
+            
+            <!-- Member Dropdown -->
             <div class="mb-3">
-              <label for="smsTextarea" class="form-label">Paste Raw SMS or Broadcast Message</label>
-              <textarea id="smsTextarea" class="form-control bg-dark text-light border-secondary" rows="4" placeholder="e.g. From: 090-1234-5678 SAFE At Shibuya Station 85%"></textarea>
-              <div class="form-text text-secondary mt-2">
-                The parser will auto-detect the sender's phone number, status, battery level, and location note.
+              <label for="smsSenderSelect" class="form-label text-light fw-bold">Select Family Member (Optional):</label>
+              <select id="smsSenderSelect" class="form-select bg-dark text-light border-secondary">
+                <option value="">-- Auto-detect from SMS text --</option>
+                <!-- JavaScript will insert registered family members here -->
+              </select>
+              <div class="form-text text-secondary mt-1">
+                Pick a member if your SMS text does not include "From: 090-XXXX-XXXX".
               </div>
             </div>
+    
+            <!-- Raw Textarea -->
+            <div class="mb-3">
+              <label for="smsTextarea" class="form-label text-light fw-bold">Paste Raw SMS or Broadcast Message:</label>
+              <textarea id="smsTextarea" class="form-control bg-dark text-light border-secondary" rows="4" placeholder="e.g. SAFE At Shibuya Station 85%"></textarea>
+              <div class="form-text text-secondary mt-2">
+                The parser will auto-detect the status, battery level, and location note.
+              </div>
+            </div>
+    
           </div>
           <div class="modal-footer border-secondary">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -867,6 +882,45 @@
       renderBoard();
     
       alert(`Updated ${familyData[memberIndex].name}! Status: ${status}`);
+    }
+
+    // Populate dropdown from familyData
+    function populateSenderDropdown() {
+      const select = document.getElementById('smsSenderSelect');
+      if (!select) return;
+    
+      select.innerHTML = '<option value="">-- Auto-detect from SMS text --</option>';
+    
+      familyData.forEach(member => {
+        if (member.phone) {
+          const option = document.createElement('option');
+          option.value = member.phone;
+          option.textContent = `👤 ${member.name} (${member.phone})`;
+          select.appendChild(option);
+        }
+      });
+    }
+    
+    // Automatically refresh dropdown when modal opens
+    const smsModalEl = document.getElementById('smsModal');
+    if (smsModalEl) {
+      smsModalEl.addEventListener('show.bs.modal', () => {
+        populateSenderDropdown();
+        document.getElementById('smsTextarea').value = ''; // Reset text
+      });
+    }
+    
+    // Submit function triggered by Parse & Update button
+    function submitImportSMS() {
+      const rawText = document.getElementById('smsTextarea').value;
+      const selectedPhone = document.getElementById('smsSenderSelect').value;
+    
+      // Pass selectedPhone into your parser
+      processIncomingSMS(rawText, selectedPhone);
+    
+      // Close modal
+      const modalInstance = bootstrap.Modal.getInstance(smsModalEl);
+      if (modalInstance) modalInstance.hide();
     }
   
     function deleteFamilyMember(id) {
