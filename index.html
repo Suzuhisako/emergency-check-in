@@ -744,9 +744,14 @@
     let smsModalInstance = null;
 
     function openImportSMSModal() {
-      document.getElementById("smsTextarea").value = ""; // Clear previous text
+      const modalEl = document.getElementById("smsModal");
+      if (!modalEl) {
+        return alert("Update pending! Please close and reopen the app to load the new SMS modal.");
+      }
+      
+      document.getElementById("smsTextarea").value = "";
       if (!smsModalInstance) {
-        smsModalInstance = new bootstrap.Modal(document.getElementById('smsModal'));
+        smsModalInstance = new bootstrap.Modal(modalEl);
       }
       smsModalInstance.show();
     }
