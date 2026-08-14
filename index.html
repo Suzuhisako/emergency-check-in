@@ -224,7 +224,7 @@
         </div>
       
         <!-- Hidden File Input for JSON Restore -->
-        <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importFamilyData(event)">
+        <input type="file" id="importFileInput" accept="*/*" style="display: none;" onchange="importFamilyData(event)">
       </div>
     </section>
 
@@ -1060,44 +1060,49 @@
       downloadAnchor.remove();
     }
 
-    function importFamilyData(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-    
-      const reader = new FileReader();
-    
-      reader.onload = function(e) {
-        try {
-          const importedData = JSON.parse(e.target.result);
-    
-          // Basic validation: ensure it's an array
-          if (!Array.isArray(importedData)) {
-            alert("Invalid backup file format. Expected a JSON list.");
-            return;
-          }
-    
-          if (confirm(`Replace family board with ${importedData.length} members from backup?`)) {
-            familyData = importedData;
-    
-            // Save to localStorage
-            localStorage.setItem("family_board_status", JSON.stringify(familyData));
-    
-            // Refresh UI and Dropdowns
-            renderBoard();
-            populateSmsRecipientDropdown();
-    
-            alert("Family board restored successfully!");
-          }
-        } catch (err) {
-          alert("Error reading backup file: " + err.message);
+   function importFamilyData(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+  
+    const reader = new FileReader();
+  
+    reader.onload = function(e) {
+      try {
+        const content = e.target.result;
+        const importedData = JSON.parse(content);
+  
+        // Verify that the JSON content is a valid array
+        if (!Array.isArray(importedData)) {
+          alert("Invalid backup file format. Expected a list of family members.");
+          return;
         }
-    
-        // Reset file input so user can re-import the same file if needed
-        event.target.value = '';
-      };
-    
-      reader.readAsText(file);
-    }
+  
+        // Prompt confirmation before replacing current data
+        if (confirm(`Replace family board with ${importedData.length} members from backup?`)) {
+          familyData = importedData;
+  
+          // Save to localStorage & refresh all UI elements
+          saveData();
+          renderBoard();
+          populateSmsRecipientDropdown();
+  
+          alert("Family board restored successfully!");
+        }
+      } catch (err) {
+        alert("Could not read backup file: " + err.message + "\nMake sure it is a valid JSON file.");
+      }
+  
+      // Reset file input value so the same file can be selected again if needed
+      event.target.value = '';
+    };
+  
+    reader.onerror = function() {
+      alert("Error reading file from storage.");
+      event.target.value = '';
+    };
+  
+    reader.readAsText(file);
+  }
    
   </script>  
 </body>
