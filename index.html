@@ -581,6 +581,14 @@
     }
   
     function copyAndOpenSMS() {
+      const recipientSelect = document.getElementById("smsRecipient");
+      const recipientPhone = recipientSelect ? recipientSelect.value : "";
+    
+      if (!recipientPhone) {
+        alert("Please select a family member from the dropdown first!");
+        return;
+      }
+      
       const noteText = document.getElementById("statusNote").value || "No note";
       const phoneInput = document.getElementById("smsRecipient").value.trim();
       const cleanPhone = phoneInput.replace(/[^0-9+]/g, '');
@@ -680,7 +688,7 @@
         const parsed = JSON.parse(savedStatus);
         currentStatus = parsed.status || "SAFE";
         document.getElementById("statusNote").value = parsed.note || "";
-        document.getElementById("smsRecipient").value = parsed.phone || "";
+        document.getElementById("smsRecipient").value = "";
       }
     
       selectStatus(currentStatus);
