@@ -163,7 +163,7 @@
         📡 Save & Broadcast Status Packet
       </button>
 
-       <!-- Save & Localstorage Button -->
+      <!-- Save & Localstorage Button -->
       <button type="button" class="btn btn-primary w-100 py-2 fw-bold mb-2" onclick="broadcastStatus()">
         📡 Save Status Packet (Offline)
       </button>
@@ -176,7 +176,7 @@
         </select>
       </div>
 
-        <!-- Copy Button Optimized for +メッセージ / LINE -->
+      <!-- Copy Button Optimized for +メッセージ / LINE -->
       <button type="button" class="btn btn-info w-100 py-2 fw-bold mb-2" onclick="copyAndOpenSMS()">
         📋 Copy Status & Open +メッセージ
       </button>
@@ -204,6 +204,28 @@
       </div>
 
       <div class="list-group list-group-flush" id="familyList"></div>
+      <!-- Data Management (Export / Import Backup) -->
+      <div class="card bg-dark text-light border-secondary my-3 p-3">
+        <h6 class="card-title fw-bold mb-1">💾 Data Management</h6>
+        <p class="small text-secondary mb-3">
+          Backup your family board setup to a file or restore it on a new device.
+        </p>
+        
+        <div class="d-flex gap-2">
+          <!-- Export Button -->
+          <button type="button" class="btn btn-outline-info btn-sm flex-fill fw-bold" onclick="exportFamilyData()">
+            📤 Export Backup
+          </button>
+          
+          <!-- Import Button -->
+          <button type="button" class="btn btn-outline-light btn-sm flex-fill fw-bold" onclick="document.getElementById('importFileInput').click()">
+            📥 Import Backup
+          </button>
+        </div>
+      
+        <!-- Hidden File Input for JSON Restore -->
+        <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importFamilyData(event)">
+      </div>
     </section>
 
     <!-- Technical Packet Preview -->
@@ -247,29 +269,6 @@
                 <option value="NEED HELP">NEED HELP</option>
                 <option value="UNKNOWN">UNKNOWN</option>
               </select>
-            </div>
-
-            <!-- Data Management (Export / Import Backup) -->
-            <div class="card bg-dark text-light border-secondary my-3 p-3">
-              <h6 class="card-title fw-bold mb-1">💾 Data Management</h6>
-              <p class="small text-secondary mb-3">
-                Backup your family board setup to a file or restore it on a new device.
-              </p>
-              
-              <div class="d-flex gap-2">
-                <!-- Export Button -->
-                <button type="button" class="btn btn-outline-info btn-sm flex-fill fw-bold" onclick="exportFamilyData()">
-                  📤 Export Backup
-                </button>
-                
-                <!-- Import Button -->
-                <button type="button" class="btn btn-outline-light btn-sm flex-fill fw-bold" onclick="document.getElementById('importFileInput').click()">
-                  📥 Import Backup
-                </button>
-              </div>
-            
-              <!-- Hidden File Input for JSON Restore -->
-              <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importFamilyData(event)">
             </div>
             
             <div class="mb-3">
