@@ -675,21 +675,23 @@
     }
   
     function loadData() {
-      // Load family data first
+      // 1. Load family data
       const savedFamily = localStorage.getItem("family_board_status");
       familyData = savedFamily ? JSON.parse(savedFamily) : [...DEFAULT_FAMILY];
     
-      // FIX: Populate dropdown options FIRST so elements exist when setting .value below
+      // 2. Build dropdown options (defaults to value="" naturally)
       populateSmsRecipientDropdown();
     
-      // Load user status and previously selected phone recipient
+      // 3. Load user's emergency status & notes
       const savedStatus = localStorage.getItem("my_emergency_status");
       if (savedStatus) {
         const parsed = JSON.parse(savedStatus);
         currentStatus = parsed.status || "SAFE";
         document.getElementById("statusNote").value = parsed.note || "";
-        document.getElementById("smsRecipient").value = "";
       }
+    
+      // 4. Force dropdown to blank on app open
+      document.getElementById("smsRecipient").value = "";
     
       selectStatus(currentStatus);
       renderBoard();
