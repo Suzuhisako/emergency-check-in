@@ -248,6 +248,29 @@
                 <option value="UNKNOWN">UNKNOWN</option>
               </select>
             </div>
+
+            <!-- Data Management (Export / Import Backup) -->
+            <div class="card bg-dark text-light border-secondary my-3 p-3">
+              <h6 class="card-title fw-bold mb-1">💾 Data Management</h6>
+              <p class="small text-secondary mb-3">
+                Backup your family board setup to a file or restore it on a new device.
+              </p>
+              
+              <div class="d-flex gap-2">
+                <!-- Export Button -->
+                <button type="button" class="btn btn-outline-info btn-sm flex-fill fw-bold" onclick="exportFamilyData()">
+                  📤 Export Backup
+                </button>
+                
+                <!-- Import Button -->
+                <button type="button" class="btn btn-outline-light btn-sm flex-fill fw-bold" onclick="document.getElementById('importFileInput').click()">
+                  📥 Import Backup
+                </button>
+              </div>
+            
+              <!-- Hidden File Input for JSON Restore -->
+              <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importFamilyData(event)">
+            </div>
             
             <div class="mb-3">
               <label class="form-label">Location / Note</label>
@@ -1014,6 +1037,67 @@
       } else {
         window.location.reload(true);
       }
+    }
+
+    function exportFamilyData() {
+      if (!familyData || familyData.length === 0) {
+        alert("No family data available to export.");
+        return;
+      }
+    
+      // Convert array to clean JSON string
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(familyData, null, 2));
+      
+      // Create temporary download link
+      const downloadAnchor = document.createElement('a');
+      const dateStr = new Date().toISOString().slice(0, 10); // e.g. "2026-08-14"
+      
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `family_board_backup_${dateStr}.json`);
+      document.body.appendChild(downloadAnchor);
+      
+      // Trigger download & clean up
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importFamilyData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+    
+      const reader = new FileReader();
+    
+      reader.onload = function(e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+    
+          // Basic validation: ensure it's an array
+          if (!Array.isArray(importedData)) {
+            alert("Invalid backup file format. Expected a JSON list.");
+            return;
+          }
+    
+          if (confirm(`Replace family board with ${importedData.length} members from backup?`)) {
+            familyData = importedData;
+    
+            // Save to localStorage
+            localStorage.setItem("family_board_status", JSON.stringify(familyData));
+    
+            // Refresh UI and Dropdowns
+            renderBoard();
+            populateSmsRecipientDropdown();
+    
+            alert("Family board restored successfully!");
+          }
+        } catch (err) {
+          alert("Error reading backup file: " + err.message);
+        }
+    
+        // Reset file input so user can re-import the same file if needed
+        event.target.value = '';
+      };
+    
+      reader.readAsText(file);
     }
    
   </script>  
