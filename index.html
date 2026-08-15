@@ -1086,5 +1086,42 @@
       }
     });
   </script>  
+
+  <!-- Inside index.html, before </body> -->
+  <script type="module">
+    import { saveCheckInLocally, getPendingCheckIns, markCheckInSynced } from './db.js';
+  
+    // Your form submission logic
+    async function handleUserCheckIn(formData) {
+      await saveCheckInLocally(formData);
+      alert('Status saved safely on device!');
+      attemptBackgroundSync();
+    }
+  
+    // Your sync logic
+    async function attemptBackgroundSync() {
+      if (!navigator.onLine) return;
+  
+      const pending = await getPendingCheckIns();
+      for (const item of pending) {
+        try {
+          const response = await fetch('/api/checkin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+  
+          if (response.ok) {
+            await markCheckInSynced(item.id);
+          }
+        } catch (err) {
+          console.log('Sync failed, retrying when back online');
+          break;
+        }
+      }
+    }
+  
+    window.addEventListener('online', attemptBackgroundSync);
+  </script>
 </body>
 </html>
