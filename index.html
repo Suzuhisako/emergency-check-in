@@ -16,7 +16,6 @@
   <!-- Manifest & Local Icons -->
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-  <meta name="theme-color" content="#0d6efd">
   <link rel="apple-touch-icon" href="./icon-192.png">
   
   <!-- Bootstrap 5 CSS -->
@@ -172,12 +171,7 @@
         <div id="gpsStatus" class="form-text text-success small d-none">GPS coordinates captured!</div>
       </div>
 
-      <button type="button" class="btn btn-primary w-100 py-2 fw-bold" onclick="broadcastStatus()">
-        📡 Save & Broadcast Status Packet
-      </button>
-
-      <!-- Save & Localstorage Button -->
-      <button type="button" class="btn btn-primary w-100 py-2 fw-bold mb-2" onclick="broadcastStatus()">
+      <button type="button" class="btn btn-primary w-100 py-2 fw-bold mb-3" onclick="broadcastStatus()">
         📡 Save Status Packet (Offline)
       </button>
 
@@ -340,10 +334,13 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   
   <script>  
+    // ------------------------------------------------------------------
+    // Service Worker Management
+    // ------------------------------------------------------------------
     if ('serviceWorker' in navigator) {
-    let refreshing = false;
+      let refreshing = false;
       
-      // Only reload the page once the new Service Worker has actually claimed control
+      // Global listener: Reload once new SW takes control
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (refreshing) return;
         refreshing = true;
@@ -351,39 +348,25 @@
       });
       
       window.addEventListener('load', () => {
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('./sw.js').then((registration) => {
+        navigator.serviceWorker.register('./sw.js').then((registration) => {
+          // 1. Worker waiting in background
+          if (registration.waiting) {
+            showUpdatePrompt(registration.waiting);
+          }
         
-            // 1. Check if a worker is already waiting in the background
-            if (registration.waiting) {
-              showUpdatePrompt(registration.waiting);
-            }
-        
-            // 2. Listen for newly discovered updates
-            registration.addEventListener('updatefound', () => {
-              const newWorker = registration.installing;
-                
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  showUpdatePrompt(newWorker);
-                }
-              });
+          // 2. Newly installed worker
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                showUpdatePrompt(newWorker);
+              }
             });
           });
-        
-          // 3. Automatically refresh the page once the new SW activates
-          let refreshing = false;
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) {
-              refreshing = true;
-              window.location.reload();
-            }
-          });
-        }
+        });
       });   
     }
       
-    
     function showUpdatePrompt(worker) {
       if (document.getElementById('pwa-update-toast')) return;
     
@@ -415,12 +398,13 @@
       document.body.appendChild(toast);
     
       document.getElementById('pwa-reload-btn').addEventListener('click', () => {
-        // Send message to SW to trigger skipWaiting()
         worker.postMessage({ type: 'SKIP_WAITING' });
       });
     } 
   
-    // State Management
+    // ------------------------------------------------------------------
+    // State Management & Constants
+    // ------------------------------------------------------------------
     const DEFAULT_FAMILY = [
       { id: "dad", name: "Taro (Dad)", status: "SAFE", badgeClass: "bg-success", time: "10:18 AM", location: "📍 Chigasaki Elem. Shelter", battery: "88%", via: "Received via: Direct BLE", viaClass: "text-success" },
       { id: "mom", name: "Hanako (Mom)", status: "IN TRANSIT", badgeClass: "bg-warning text-dark", time: "10:05 AM", location: "📍 Moving toward Station", battery: "41%", via: "Received via: Mesh Hop #3", viaClass: "text-warning" },
@@ -437,6 +421,7 @@
     let liveBattery = 85;
     let currentCoords = null;
     let familyModalInstance = null;
+    let smsModalInstance = null;
   
     // ------------------------------------------------------------------
     // 1. Emergency Siren & Strobe Controls
@@ -478,9 +463,11 @@
   
       const btn = document.getElementById("sirenBtn");
       const status = document.getElementById("sirenStatus");
-      btn.classList.remove("btn-danger");
-      btn.classList.add("btn-warning", "text-dark", "pulse-animation");
-      btn.innerText = "🛑 STOP ALARM";
+      if (btn) {
+        btn.classList.remove("btn-danger");
+        btn.classList.add("btn-warning", "text-dark", "pulse-animation");
+        btn.innerText = "🛑 STOP ALARM";
+      }
       if (status) status.classList.remove("d-none");
     }
   
@@ -492,9 +479,11 @@
       document.body.classList.remove("strobe-active");
       const btn = document.getElementById("sirenBtn");
       const status = document.getElementById("sirenStatus");
-      btn.classList.remove("btn-warning", "text-dark", "pulse-animation");
-      btn.classList.add("btn-danger");
-      btn.innerText = "🔊 START EMERGENCY ALARM";
+      if (btn) {
+        btn.classList.remove("btn-warning", "text-dark", "pulse-animation");
+        btn.classList.add("btn-danger");
+        btn.innerText = "🔊 START EMERGENCY ALARM";
+      }
       if (status) status.classList.add("d-none");
     }
   
@@ -508,10 +497,12 @@
           battery.addEventListener('levelchange', () => updateBatteryUI(battery));
           battery.addEventListener('chargingchange', () => updateBatteryUI(battery));
         }).catch(() => {
-          document.getElementById("displayBattery").innerText = `${liveBattery}% (Default)`;
+          const display = document.getElementById("displayBattery");
+          if (display) display.innerText = `${liveBattery}% (Default)`;
         });
       } else {
-        document.getElementById("displayBattery").innerText = `${liveBattery}% (N/A)`;
+        const display = document.getElementById("displayBattery");
+        if (display) display.innerText = `${liveBattery}% (N/A)`;
       }
     }
   
@@ -533,8 +524,10 @@
         return;
       }
   
-      gpsBtn.disabled = true;
-      gpsBtn.innerText = "⏳ Locating...";
+      if (gpsBtn) {
+        gpsBtn.disabled = true;
+        gpsBtn.innerText = "⏳ Locating...";
+      }
   
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -543,11 +536,15 @@
           currentCoords = { lat, lon };
   
           const gpsString = `GPS: ${lat},${lon}`;
-          const cleanExistingNote = noteInput.value.replace(/\(?GPS: [-?\d.]+,[-?\d.]+\)?/g, '').trim();
-          noteInput.value = cleanExistingNote ? `${cleanExistingNote} (${gpsString})` : gpsString;
+          if (noteInput) {
+            const cleanExistingNote = noteInput.value.replace(/\(?GPS: [-?\d.]+,[-?\d.]+\)?/g, '').trim();
+            noteInput.value = cleanExistingNote ? `${cleanExistingNote} (${gpsString})` : gpsString;
+          }
   
-          gpsBtn.disabled = false;
-          gpsBtn.innerText = "📍 Auto-GPS";
+          if (gpsBtn) {
+            gpsBtn.disabled = false;
+            gpsBtn.innerText = "📍 Auto-GPS";
+          }
   
           updatePayload();
           saveData();
@@ -558,8 +555,10 @@
           }
         },
         (error) => {
-          gpsBtn.disabled = false;
-          gpsBtn.innerText = "📍 Auto-GPS";
+          if (gpsBtn) {
+            gpsBtn.disabled = false;
+            gpsBtn.innerText = "📍 Auto-GPS";
+          }
           alert(`Location Error: ${error.message}`);
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -592,23 +591,27 @@
       const btnHelp = document.getElementById('btn-help');
       const btnTransit = document.getElementById('btn-transit');
   
-      btnSafe.className = 'btn btn-outline-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-      btnHelp.className = 'btn btn-outline-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-      btnTransit.className = 'btn btn-outline-warning status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+      if (btnSafe) btnSafe.className = 'btn btn-outline-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+      if (btnHelp) btnHelp.className = 'btn btn-outline-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+      if (btnTransit) btnTransit.className = 'btn btn-outline-warning status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
   
-      document.getElementById('label-safe').innerText = 'Tap to set';
-      document.getElementById('label-help').innerText = 'Tap to set';
-      document.getElementById('label-transit').innerText = 'Tap to set';
+      const lblSafe = document.getElementById('label-safe');
+      const lblHelp = document.getElementById('label-help');
+      const lblTransit = document.getElementById('label-transit');
   
-      if (status === 'SAFE') {
+      if (lblSafe) lblSafe.innerText = 'Tap to set';
+      if (lblHelp) lblHelp.innerText = 'Tap to set';
+      if (lblTransit) lblTransit.innerText = 'Tap to set';
+  
+      if (status === 'SAFE' && btnSafe) {
         btnSafe.className = 'btn btn-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-        document.getElementById('label-safe').innerText = 'SELECTED';
-      } else if (status === 'NEED HELP') {
+        if (lblSafe) lblSafe.innerText = 'SELECTED';
+      } else if (status === 'NEED HELP' && btnHelp) {
         btnHelp.className = 'btn btn-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-        document.getElementById('label-help').innerText = 'SELECTED';
-      } else if (status === 'IN TRANSIT') {
+        if (lblHelp) lblHelp.innerText = 'SELECTED';
+      } else if (status === 'IN TRANSIT' && btnTransit) {
         btnTransit.className = 'btn btn-warning text-dark status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-        document.getElementById('label-transit').innerText = 'SELECTED';
+        if (lblTransit) lblTransit.innerText = 'SELECTED';
       }
   
       updatePayload();
@@ -623,16 +626,17 @@
         return;
       }
       
-      const noteText = document.getElementById("statusNote").value || "No note";
-      const phoneInput = document.getElementById("smsRecipient").value.trim();
-      const cleanPhone = phoneInput.replace(/[^0-9+]/g, '');
+      const noteText = document.getElementById("statusNote")?.value || "No note";
+      const cleanPhone = recipientPhone.replace(/[^0-9+]/g, '');
   
       const textToCopy = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: ${liveBattery}% | Note: ${noteText}`;
   
       navigator.clipboard.writeText(textToCopy).then(() => {
         const alertElem = document.getElementById("copyAlert");
-        alertElem.classList.remove("d-none");
-        setTimeout(() => alertElem.classList.add("d-none"), 3000);
+        if (alertElem) {
+          alertElem.classList.remove("d-none");
+          setTimeout(() => alertElem.classList.add("d-none"), 3000);
+        }
   
         setTimeout(() => {
           window.location.href = cleanPhone ? `sms:${cleanPhone}` : `sms:`;
@@ -654,6 +658,8 @@
   
     function renderBoard() {
       const list = document.getElementById("familyList");
+      if (!list) return;
+  
       if (!familyData || familyData.length === 0) {
         list.innerHTML = `<div class="text-secondary small py-2 text-center">No family members added yet. Tap <strong>+ Add</strong> above.</div>`;
         return;
@@ -680,19 +686,14 @@
         </div>
       `).join('');
     }
-
-    // Function to populate the Outbound Family Mobile Number dropdown
+  
     function populateSmsRecipientDropdown() {
       const select = document.getElementById('smsRecipient');
       if (!select) return;
     
-      // 1. Store currently selected phone number before clearing HTML
       const currentSelection = select.value;
-    
-      // 2. Reset options
       select.innerHTML = '<option value="">-- Select Family Member --</option>';
     
-      // 3. Add options from familyData
       familyData.forEach(member => {
         if (member.phone) {
           const option = document.createElement('option');
@@ -702,30 +703,43 @@
         }
       });
     
-      // 4. Restore selected value if it still exists
       if (currentSelection) {
         select.value = currentSelection;
       }
     }
   
+    function populateSenderDropdown() {
+      const select = document.getElementById('smsSenderSelect');
+      if (!select) return;
+    
+      select.innerHTML = '<option value="">-- Auto-detect from SMS text --</option>';
+    
+      familyData.forEach(member => {
+        if (member.phone) {
+          const option = document.createElement('option');
+          option.value = member.phone;
+          option.textContent = `👤 ${member.name} (${member.phone})`;
+          select.appendChild(option);
+        }
+      });
+    }
+  
     function loadData() {
-      // 1. Load family data
       const savedFamily = localStorage.getItem("family_board_status");
       familyData = savedFamily ? JSON.parse(savedFamily) : [...DEFAULT_FAMILY];
     
-      // 2. Build dropdown options (defaults to value="" naturally)
       populateSmsRecipientDropdown();
     
-      // 3. Load user's emergency status & notes
       const savedStatus = localStorage.getItem("my_emergency_status");
       if (savedStatus) {
         const parsed = JSON.parse(savedStatus);
         currentStatus = parsed.status || "SAFE";
-        document.getElementById("statusNote").value = parsed.note || "";
+        const noteElem = document.getElementById("statusNote");
+        if (noteElem) noteElem.value = parsed.note || "";
       }
     
-      // 4. Force dropdown to blank on app open
-      document.getElementById("smsRecipient").value = "";
+      const smsRecipient = document.getElementById("smsRecipient");
+      if (smsRecipient) smsRecipient.value = "";
     
       selectStatus(currentStatus);
       renderBoard();
@@ -734,8 +748,8 @@
     function saveData() {
       const myPayload = {
         status: currentStatus,
-        note: document.getElementById("statusNote").value,
-        phone: document.getElementById("smsRecipient").value,
+        note: document.getElementById("statusNote")?.value || "",
+        phone: document.getElementById("smsRecipient")?.value || "",
         timestamp: new Date().toISOString()
       };
       localStorage.setItem("my_emergency_status", JSON.stringify(myPayload));
@@ -746,22 +760,27 @@
       updatePayload();
       saveData();
       const alertElem = document.getElementById("broadcastAlert");
-      alertElem.classList.remove("d-none");
-      setTimeout(() => alertElem.classList.add("d-none"), 2500);
+      if (alertElem) {
+        alertElem.classList.remove("d-none");
+        setTimeout(() => alertElem.classList.add("d-none"), 2500);
+      }
     }
   
     function openAddModal() {
       document.getElementById("modalTitle").innerText = "Add Family Member";
       document.getElementById("modalMemberId").value = "";
       document.getElementById("modalMemberName").value = "";
-      document.getElementById("modalMemberPhone").value = ""; // Clear phone input
+      document.getElementById("modalMemberPhone").value = "";
       document.getElementById("modalMemberStatus").value = "SAFE";
       document.getElementById("modalMemberLocation").value = "";
     
-      if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(document.getElementById('familyModal'));
-      familyModalInstance.show();
+      const modalEl = document.getElementById('familyModal');
+      if (modalEl && window.bootstrap) {
+        if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(modalEl);
+        familyModalInstance.show();
+      }
     }
-    
+      
     function openEditModal(id) {
       const member = familyData.find(m => String(m.id) === String(id));
       if (!member) return;
@@ -769,12 +788,15 @@
       document.getElementById("modalTitle").innerText = "Edit Family Member";
       document.getElementById("modalMemberId").value = member.id;
       document.getElementById("modalMemberName").value = member.name;
-      document.getElementById("modalMemberPhone").value = member.phone || ""; // Load phone number
+      document.getElementById("modalMemberPhone").value = member.phone || "";
       document.getElementById("modalMemberStatus").value = member.status;
       document.getElementById("modalMemberLocation").value = member.location || "";
     
-      if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(document.getElementById('familyModal'));
-      familyModalInstance.show();
+      const modalEl = document.getElementById('familyModal');
+      if (modalEl && window.bootstrap) {
+        if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(modalEl);
+        familyModalInstance.show();
+      }
     }
         
     function saveFamilyMember() {
@@ -820,70 +842,60 @@
     
       saveData();
       renderBoard();
-      populateSmsRecipientDropdown()
+      populateSmsRecipientDropdown();
       if (document.activeElement) document.activeElement.blur();
       if (familyModalInstance) familyModalInstance.hide();
     }
-
+  
     function normalizePhone(phoneStr) {
       if (!phoneStr) return "";
-      // Remove all non-digit characters
       let digits = phoneStr.replace(/\D/g, "");
-      // Convert Japanese country code (+81 90... -> 090...)
       if (digits.startsWith("81") && digits.length === 12) {
         digits = "0" + digits.slice(2);
       }
       return digits;
     }
-     
-    // Formats normalized digits into standard Japanese hyphenated layout
+      
     function formatPhoneDisplay(phoneStr) {
       const clean = normalizePhone(phoneStr);
-      if (clean.length === 11) { // 090-1234-5678
+      if (clean.length === 11) {
         return clean.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
       }
-      if (clean.length === 10) { // 03-1234-5678
+      if (clean.length === 10) {
         return clean.replace(/(\d{2,3})(\d{3,4})(\d{4})/, '$1-$2-$3');
       }
       return clean || phoneStr;
     }
-
-    
-    let smsModalInstance = null;
-
+  
     function openImportSMSModal() {
       const modalEl = document.getElementById("smsModal");
       if (!modalEl) {
-        return alert("Update pending! Please close and reopen the app to load the new SMS modal.");
+        return alert("Update pending! Please close and reopen the app to load the SMS modal.");
       }
       
       document.getElementById("smsTextarea").value = "";
-      if (!smsModalInstance) {
-        smsModalInstance = new bootstrap.Modal(modalEl);
+      if (window.bootstrap) {
+        if (!smsModalInstance) smsModalInstance = new bootstrap.Modal(modalEl);
+        smsModalInstance.show();
       }
-      smsModalInstance.show();
     }
-
+  
     function submitImportSMS() {
-      const rawText = document.getElementById("smsTextarea").value.trim();
-      if (!rawText) {
-        return alert("Please paste or type SMS text before importing.");
-      }
-
-      // Call existing SMS parser function
-      processIncomingSMS(rawText);
-
-      // Blur active element and hide modal on success
+      const rawText = document.getElementById('smsTextarea')?.value || "";
+      const selectedPhone = document.getElementById('smsSenderSelect')?.value || "";
+    
+      processIncomingSMS(rawText, selectedPhone);
+    
       if (document.activeElement) document.activeElement.blur();
       if (smsModalInstance) smsModalInstance.hide();
     }
-
+  
     function processIncomingSMS(rawSmsText, senderPhoneInput = "") {
       if (!rawSmsText && !senderPhoneInput) {
-        return alert("Please paste SMS text or enter a sender phone number.");
+        return alert("Please paste SMS text or select a sender.");
       }
     
-      // 1. Normalize Japanese IME / Mobile Full-Width Characters
+      // 1. Normalize Full-Width Japanese / IME Characters
       let text = rawSmsText
         .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
         .replace(/：/g, ":")
@@ -931,14 +943,13 @@
     
       // 6. Multi-Pass Cleaning for Location/Note
       let cleanNote = text
-        .replace(phoneHeaderPattern, "")                                   // Remove phone & "From:"
-        .replace(/SAFE|EVACUATED|EVAC|NEED HELP|HELP|SOS|UNKNOWN/gi, "")   // Remove status keywords
-        .replace(/\b\d{1,3}\s*%?/gi, "")                                   // Remove digits with or without % sign
-        .replace(/[:,\-]/g, " ")                                           // Remove standalone punctuation
-        .replace(/\s+/g, " ")                                              // Collapse duplicate spaces
+        .replace(phoneHeaderPattern, "")
+        .replace(/SAFE|EVACUATED|EVAC|NEED HELP|HELP|SOS|UNKNOWN/gi, "")
+        .replace(/\b\d{1,3}\s*%/gi, "") // Targets percentages specifically, leaving ordinary numbers intact
+        .replace(/[:,\-]/g, " ")
+        .replace(/\s+/g, " ")
         .trim();
     
-      // Handle fallback when no location is provided
       if (!cleanNote) {
         cleanNote = "📍 No location provided";
       } else {
@@ -963,115 +974,51 @@
     
       alert(`Updated ${familyData[memberIndex].name}! Status: ${status}`);
     }
-
-    // Populate dropdown from familyData
-    function populateSenderDropdown() {
-      const select = document.getElementById('smsSenderSelect');
-      if (!select) return;
-    
-      select.innerHTML = '<option value="">-- Auto-detect from SMS text --</option>';
-    
-      familyData.forEach(member => {
-        if (member.phone) {
-          const option = document.createElement('option');
-          option.value = member.phone;
-          option.textContent = `👤 ${member.name} (${member.phone})`;
-          select.appendChild(option);
-        }
-      });
-    }
-    
-    // Automatically refresh dropdown when modal opens
-    const smsModalEl = document.getElementById('smsModal');
-    if (smsModalEl) {
-      smsModalEl.addEventListener('show.bs.modal', () => {
-        populateSenderDropdown();
-        document.getElementById('smsTextarea').value = ''; // Reset text
-      });
-    }
-    
-    // Submit function triggered by Parse & Update button
-    function submitImportSMS() {
-      const rawText = document.getElementById('smsTextarea').value;
-      const selectedPhone = document.getElementById('smsSenderSelect').value;
-    
-      // Pass selectedPhone into your parser
-      processIncomingSMS(rawText, selectedPhone);
-    
-      // Close modal
-      const modalInstance = bootstrap.Modal.getInstance(smsModalEl);
-      if (modalInstance) modalInstance.hide();
-    }
   
     function deleteFamilyMember(id) {
       if (!confirm("Are you sure you want to remove this member?")) return;
       familyData = familyData.filter(m => String(m.id) !== String(id));
       saveData();
       renderBoard();
-      populateSmsRecipientDropdown(); // Refresh dropdown
+      populateSmsRecipientDropdown();
     }
   
-    // ------------------------------------------------------------------
-    // 5. Single DOM Initialization
-    // ------------------------------------------------------------------
-    document.addEventListener("DOMContentLoaded", () => {
-      loadData();
-      initBatteryAPI();
-  
-      document.getElementById("statusNote").addEventListener("input", () => {
-        updatePayload();
-        saveData();
-      });
-  
-      const smsRecipient = document.getElementById("smsRecipient");
-      if (smsRecipient) {
-        smsRecipient.addEventListener("input", () => {
-          saveData();
-          updatePayload();
-        });
-      }
-    });
-
     function forceAppUpdate() {
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then((registrations) => {
           for (let registration of registrations) {
-            registration.unregister(); // Delete active SW
+            registration.unregister();
           }
           caches.keys().then((names) => {
-            for (let name of names) caches.delete(name); // Delete all caches
+            for (let name of names) caches.delete(name);
           }).then(() => {
             alert("App cache cleared! Reloading...");
-            window.location.reload(true); // Hard reload from network
+            window.location.reload(true);
           });
         });
       } else {
         window.location.reload(true);
       }
     }
-
+  
     function exportFamilyData() {
       if (!familyData || familyData.length === 0) {
         alert("No family data available to export.");
         return;
       }
     
-      // Convert array to clean JSON string
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(familyData, null, 2));
-      
-      // Create temporary download link
       const downloadAnchor = document.createElement('a');
-      const dateStr = new Date().toISOString().slice(0, 10); // e.g. "2026-08-14"
+      const dateStr = new Date().toISOString().slice(0, 10);
       
       downloadAnchor.setAttribute("href", dataStr);
       downloadAnchor.setAttribute("download", `family_board_backup_${dateStr}.json`);
       document.body.appendChild(downloadAnchor);
       
-      // Trigger download & clean up
       downloadAnchor.click();
       downloadAnchor.remove();
     }
-
+  
     function importFamilyData(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
@@ -1083,17 +1030,14 @@
           const content = e.target.result;
           const importedData = JSON.parse(content);
     
-          // Verify that the JSON content is a valid array
           if (!Array.isArray(importedData)) {
             alert("Invalid backup file format. Expected a list of family members.");
             return;
           }
     
-          // Prompt confirmation before replacing current data
           if (confirm(`Replace family board with ${importedData.length} members from backup?`)) {
             familyData = importedData;
     
-            // Save to localStorage & refresh all UI elements
             saveData();
             renderBoard();
             populateSmsRecipientDropdown();
@@ -1104,7 +1048,6 @@
           alert("Could not read backup file: " + err.message + "\nMake sure it is a valid JSON file.");
         }
     
-        // Reset file input value so the same file can be selected again if needed
         event.target.value = '';
       };
     
@@ -1115,7 +1058,33 @@
     
       reader.readAsText(file);
     }
-   
+  
+    // ------------------------------------------------------------------
+    // 5. DOM Initialization & Event Listeners
+    // ------------------------------------------------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+      loadData();
+      initBatteryAPI();
+  
+      document.getElementById("statusNote")?.addEventListener("input", () => {
+        updatePayload();
+        saveData();
+      });
+  
+      document.getElementById("smsRecipient")?.addEventListener("input", () => {
+        saveData();
+        updatePayload();
+      });
+  
+      const smsModalEl = document.getElementById('smsModal');
+      if (smsModalEl) {
+        smsModalEl.addEventListener('show.bs.modal', () => {
+          populateSenderDropdown();
+          const textarea = document.getElementById('smsTextarea');
+          if (textarea) textarea.value = '';
+        });
+      }
+    });
   </script>  
 </body>
 </html>
