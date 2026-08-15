@@ -1,4 +1,4 @@
-const CACHE_NAME = 'family-board-v12';
+const CACHE_NAME = 'family-board-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',
