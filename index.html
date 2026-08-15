@@ -224,7 +224,7 @@
         </div>
       
         <!-- Hidden File Input for JSON Restore -->
-        <input type="file" id="importFileInput" accept="*/*" style="display: none;" onchange="importFamilyData(event)">
+        <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importFamilyData(event)">
       </div>
     </section>
 
@@ -236,121 +236,120 @@
     </section>
   </div>
 
-  <button type="button" class="btn btn-sm btn-outline-secondary mt-3" onclick="forceAppUpdate()">
+  <!-- <button type="button" class="btn btn-sm btn-outline-secondary mt-3" onclick="forceAppUpdate()">
     🔄 Force Reset App Cache
-  </button>
+  </button> -->
 
-   <!-- Family Member Modal -->
-    <div class="modal fade" id="familyModal" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-light border-secondary">
-          <div class="modal-header border-secondary">
-            <h5 class="modal-title" id="modalTitle">Add Family Member</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" id="modalMemberId">
+  <!-- Family Member Modal -->
+  <div class="modal fade" id="familyModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-light border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title" id="modalTitle">Add Family Member</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="modalMemberId">
             
-            <div class="mb-3">
-              <label class="form-label">Name</label>
-              <input type="text" id="modalMemberName" class="form-control bg-dark text-light border-secondary" placeholder="e.g. Taro">
-            </div>
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" id="modalMemberName" class="form-control bg-dark text-light border-secondary" placeholder="e.g. Taro">
+          </div>
 
-            <div class="mb-3">
-              <label class="form-label">Phone Number</label>
-              <input type="tel" id="modalMemberPhone" class="form-control bg-dark text-light border-secondary" placeholder="e.g. 09012345678">
-            </div>
-            
-            <div class="mb-3">
-              <label class="form-label">Status</label>
-              <select id="modalMemberStatus" class="form-select bg-dark text-light border-secondary">
-                <option value="SAFE">SAFE</option>
-                <option value="EVACUATED">EVACUATED</option>
-                <option value="NEED HELP">NEED HELP</option>
-                <option value="UNKNOWN">UNKNOWN</option>
-              </select>
-            </div>
-            
-            <div class="mb-3">
-              <label class="form-label">Location / Note</label>
-              <input type="text" id="modalMemberLocation" class="form-control bg-dark text-light border-secondary" placeholder="e.g. At home, Sheltering">
-            </div>
+          <div class="mb-3">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" id="modalMemberPhone" class="form-control bg-dark text-light border-secondary" placeholder="e.g. 09012345678">
           </div>
-          <div class="modal-footer border-secondary">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" onclick="saveFamilyMember()">Save</button>
+            
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select id="modalMemberStatus" class="form-select bg-dark text-light border-secondary">
+              <option value="SAFE">SAFE</option>
+              <option value="EVACUATED">EVACUATED</option>
+              <option value="NEED HELP">NEED HELP</option>
+              <option value="UNKNOWN">UNKNOWN</option>
+            </select>
+          </div>
+            
+          <div class="mb-3">
+            <label class="form-label">Location / Note</label>
+            <input type="text" id="modalMemberLocation" class="form-control bg-dark text-light border-secondary" placeholder="e.g. At home, Sheltering">
           </div>
         </div>
-      </div>
-    </div>  
-    
-    <!-- SMS Import Modal -->
-    <div class="modal fade" id="smsModal" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-light border-secondary">
-          <div class="modal-header border-secondary">
-            <h5 class="modal-title">📩 Import Emergency SMS</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            
-            <!-- Member Dropdown -->
-            <div class="mb-3">
-              <label for="smsSenderSelect" class="form-label text-light fw-bold">Select Family Member (Optional):</label>
-              <select id="smsSenderSelect" class="form-select bg-dark text-light border-secondary">
-                <option value="">-- Auto-detect from SMS text --</option>
-                <!-- JavaScript will insert registered family members here -->
-              </select>
-              <div class="form-text text-secondary mt-1">
-                Pick a member if your SMS text does not include "From: 090-XXXX-XXXX".
-              </div>
-            </div>
-    
-            <!-- Raw Textarea -->
-            <div class="mb-3">
-              <label for="smsTextarea" class="form-label text-light fw-bold">Paste Raw SMS or Broadcast Message:</label>
-              <textarea id="smsTextarea" class="form-control bg-dark text-light border-secondary" rows="4" placeholder="e.g. SAFE At Shibuya Station 85%"></textarea>
-              <div class="form-text text-secondary mt-2">
-                The parser will auto-detect the status, battery level, and location note.
-              </div>
-            </div>
-    
-          </div>
-          <div class="modal-footer border-secondary">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-info" onclick="submitImportSMS()">Parse & Update</button>
-          </div>
+        <div class="modal-footer border-secondary">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="saveFamilyMember()">Save</button>
         </div>
       </div>
     </div>
+  </div>  
+    
+  <!-- SMS Import Modal -->
+  <div class="modal fade" id="smsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-light border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title">📩 Import Emergency SMS</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">            
+          <!-- Member Dropdown -->
+          <div class="mb-3">
+            <label for="smsSenderSelect" class="form-label text-light fw-bold">Select Family Member (Optional):</label>
+            <select id="smsSenderSelect" class="form-select bg-dark text-light border-secondary">
+              <option value="">-- Auto-detect from SMS text --</option>
+              <!-- JavaScript will insert registered family members here -->
+            </select>
+            <div class="form-text text-secondary mt-1">
+              Pick a member if your SMS text does not include "From: 090-XXXX-XXXX".
+            </div>
+          </div>
+    
+          <!-- Raw Textarea -->
+          <div class="mb-3">
+            <label for="smsTextarea" class="form-label text-light fw-bold">Paste Raw SMS or Broadcast Message:</label>
+            <textarea id="smsTextarea" class="form-control bg-dark text-light border-secondary" rows="4" placeholder="e.g. SAFE At Shibuya Station 85%"></textarea>
+            <div class="form-text text-secondary mt-2">
+              The parser will auto-detect the status, battery level, and location note.
+            </div>
+          </div>
+    
+        </div>
+        <div class="modal-footer border-secondary">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-info" onclick="submitImportSMS()">Parse & Update</button>
+        </div>
+      </div>
+    </div>
+  </div>
   
    <!-- Required for Bootstrap Modals to work -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   
-    <script>  
-     if ('serviceWorker' in navigator) {
-      let refreshing = false;
-    
+  <script>  
+    if ('serviceWorker' in navigator) {
+    let refreshing = false;
+      
       // Only reload the page once the new Service Worker has actually claimed control
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (refreshing) return;
         refreshing = true;
         window.location.reload();
       });
-    
+      
       window.addEventListener('load', () => {
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.register('./sw.js').then((registration) => {
-      
+        
             // 1. Check if a worker is already waiting in the background
             if (registration.waiting) {
               showUpdatePrompt(registration.waiting);
             }
-      
+        
             // 2. Listen for newly discovered updates
             registration.addEventListener('updatefound', () => {
               const newWorker = registration.installing;
-              
+                
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   showUpdatePrompt(newWorker);
@@ -358,7 +357,7 @@
               });
             });
           });
-      
+        
           // 3. Automatically refresh the page once the new SW activates
           let refreshing = false;
           navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -1060,49 +1059,44 @@
       downloadAnchor.remove();
     }
 
-   function importFamilyData(event) {
-    const file = event.target.files && event.target.files[0];
-    if (!file) return;
-  
-    const reader = new FileReader();
-  
-    reader.onload = function(e) {
-      try {
-        const content = e.target.result;
-        const importedData = JSON.parse(content);
-  
-        // Verify that the JSON content is a valid array
-        if (!Array.isArray(importedData)) {
-          alert("Invalid backup file format. Expected a list of family members.");
-          return;
+    function importFamilyData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+    
+      const reader = new FileReader();
+    
+      reader.onload = function(e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+    
+          // Basic validation: ensure it's an array
+          if (!Array.isArray(importedData)) {
+            alert("Invalid backup file format. Expected a JSON list.");
+            return;
+          }
+    
+          if (confirm(`Replace family board with ${importedData.length} members from backup?`)) {
+            familyData = importedData;
+    
+            // Save to localStorage
+            localStorage.setItem("family_board_status", JSON.stringify(familyData));
+    
+            // Refresh UI and Dropdowns
+            renderBoard();
+            populateSmsRecipientDropdown();
+    
+            alert("Family board restored successfully!");
+          }
+        } catch (err) {
+          alert("Error reading backup file: " + err.message);
         }
-  
-        // Prompt confirmation before replacing current data
-        if (confirm(`Replace family board with ${importedData.length} members from backup?`)) {
-          familyData = importedData;
-  
-          // Save to localStorage & refresh all UI elements
-          saveData();
-          renderBoard();
-          populateSmsRecipientDropdown();
-  
-          alert("Family board restored successfully!");
-        }
-      } catch (err) {
-        alert("Could not read backup file: " + err.message + "\nMake sure it is a valid JSON file.");
-      }
-  
-      // Reset file input value so the same file can be selected again if needed
-      event.target.value = '';
-    };
-  
-    reader.onerror = function() {
-      alert("Error reading file from storage.");
-      event.target.value = '';
-    };
-  
-    reader.readAsText(file);
-  }
+    
+        // Reset file input so user can re-import the same file if needed
+        event.target.value = '';
+      };
+    
+      reader.readAsText(file);
+    }
    
   </script>  
 </body>
