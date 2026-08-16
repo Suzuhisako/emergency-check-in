@@ -1264,9 +1264,8 @@
     if (navigator.onLine) {
       console.log("🌐 Online on load. Checking for unsynced check-ins...");
       attemptBackgroundSync();
-    }
-   
-  
+    }   
+      
     window.addEventListener('online', attemptBackgroundSync);
     window.getGPSLocation = getGPSLocation;
     window.selectStatus = selectStatus;
@@ -1283,24 +1282,19 @@
     window.markCheckInSynced = markCheckInSynced;
     window.showToast = showToast;
 
-    // Expose toggleSiren globally for the Emergency Beacon button
-    if (typeof toggleSiren === 'function') {
-      window.toggleSiren = toggleSiren;
-    } else {
-      // Fallback stub if function is missing or named differently
-      window.toggleSiren = function() {
-        console.warn("toggleSiren function not found in script.");
-        if (typeof showToast === 'function') {
-          showToast("🚨 Emergency Beacon function missing", "error");
-        }
-      };
+    // Expose module functions globally for inline HTML onclick attributes
+    if (typeof selectStatus === 'function') {
+      window.selectStatus = selectStatus;
     }
     
-    // Keep broadcastStatus exposed if needed elsewhere in your app
+    if (typeof toggleSiren === 'function') {
+      window.toggleSiren = toggleSiren;
+    }
+    
     if (typeof broadcastStatus === 'function') {
       window.broadcastStatus = broadcastStatus;
-    }  
-    
+    }
+        
   </script>
 </body>
 </html>
