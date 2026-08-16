@@ -432,6 +432,13 @@
     function toggleSiren() {
       isSirenActive ? stopSiren() : startSiren();
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const sirenBtn = document.getElementById("sirenBtn");
+      if (sirenBtn) {
+        sirenBtn.addEventListener("click", toggleSiren);
+      }
+    });
   
     function startSiren() {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
