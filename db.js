@@ -40,14 +40,19 @@ export async function saveCheckInLocally(checkInData) {
 
 // 2. Retrieve all pending check-ins waiting to be sent online
 export async function getPendingCheckIns() {
-  const db = await openDB();
-  return new Promise((resolve) => {
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const store = tx.objectStore(STORE_NAME);
-    const index = store.index('synced');
-    const request = index.getAll(false); // Fetch items where synced === false
+  const db = await openDB(); // or initDB(), matching your db.js setup
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('checkins', 'readonly');
+    const store = tx.objectStore('checkins');
+    const request = store.getAll();
 
-    request.onsuccess = () => resolve(request.result || []);
+    request.onsuccess = () => {
+      // Simple JS filtering: keep items where synced is false or missing
+      const pending = request.result.filter(item => !item.synced);
+      resolve(pending);
+    };
+
+    request.onerror = () => reject(request.error);
   });
 }
 
