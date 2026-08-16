@@ -1154,7 +1154,7 @@
     }
   
     // Your sync logic
-   export async function attemptBackgroundSync() {
+    export async function attemptBackgroundSync() {
       const pendingItems = await getPendingCheckIns();
       if (pendingItems.length === 0) return;
     
@@ -1168,19 +1168,20 @@
             body: JSON.stringify(item)
           });
     
-          // Treat both 200 OK and 405 (static host test) as processed if needed
-          if (response.ok || response.status === 405) {
+          // Only mark as synced when the backend confirms success (HTTP 200-299)
+          if (response.ok) {
             await markCheckInSynced(item.id);
             syncedCount++;
+          } else {
+            console.warn(`Sync failed for item ${item.id} with status: ${response.status}`);
           }
         } catch (error) {
-          console.error("Sync failed for item:", item.id, error);
+          console.error("Network error during background sync for item:", item.id, error);
         }
       }
     
-      // Display notification if any items were synced
       if (syncedCount > 0) {
-        showToast(`✅ Successfully synced ${syncedCount} check-in(s)!`);
+        showToast(`Successfully synced ${syncedCount} check-in(s)!`, 'success');
       }
     }
 
