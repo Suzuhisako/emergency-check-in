@@ -1136,6 +1136,18 @@
         }
       }
     }
+
+    // Automatically sync whenever the browser detects network reconnection
+    window.addEventListener('online', () => {
+      console.log("🌐 Network reconnected! Triggering background sync...");
+      attemptBackgroundSync();
+    });
+    
+    // Run an initial sync check on page load if online
+    if (navigator.onLine) {
+      console.log("🌐 Online on load. Checking for unsynced check-ins...");
+      attemptBackgroundSync();
+    }
   
     window.addEventListener('online', attemptBackgroundSync);
     window.getGPSLocation = getGPSLocation;
