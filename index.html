@@ -1255,7 +1255,24 @@
     window.getPendingCheckIns = getPendingCheckIns;
     window.markCheckInSynced = markCheckInSynced;
     window.showToast = showToast;
-   
+
+    // Expose toggleSiren globally for the Emergency Beacon button
+    if (typeof toggleSiren === 'function') {
+      window.toggleSiren = toggleSiren;
+    } else {
+      // Fallback stub if function is missing or named differently
+      window.toggleSiren = function() {
+        console.warn("toggleSiren function not found in script.");
+        if (typeof showToast === 'function') {
+          showToast("🚨 Emergency Beacon function missing", "error");
+        }
+      };
+    }
+    
+    // Keep broadcastStatus exposed if needed elsewhere in your app
+    if (typeof broadcastStatus === 'function') {
+      window.broadcastStatus = broadcastStatus;
+    }  
     
   </script>
 </body>
