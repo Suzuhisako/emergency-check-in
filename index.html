@@ -475,12 +475,29 @@
     
     async function startSiren() {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
-      
+    
+      // 1. Force instantiation inside user gesture for mobile engines
       if (!audioCtx) {
         audioCtx = new AudioContext();
       }
-      
-      // Mobile browsers require awaiting resume() within user interaction
+    
+      // 2. Play a tiny silent HTML audio clip to force iOS out of "Ambient" mode 
+      // (allows sound to play even if physical mute switch is ON)
+      try {
+        const dummyAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+        dummyAudio.play().catch(() => {});
+      } catch (e) {}
+    
+      // 3. Play a 1-frame silent buffer to unlock Web Audio context on mobile Safari
+      try {
+        const buffer = audioCtx.createBuffer(1, 1, 22050);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
+      } catch (e) {}
+    
+      // 4. Ensure context is running
       if (audioCtx.state === 'suspended') {
         await audioCtx.resume();
       }
