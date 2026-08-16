@@ -47,11 +47,12 @@ export function getPendingCheckIns() {
       const db = e.target.result;
       const tx = db.transaction('checkins', 'readonly');
       const store = tx.objectStore('checkins');
-      
-      // Get all records from objectStore directly (avoids index key errors)
+
+      // Fetch directly from store without IDBIndex
       const getAllReq = store.getAll();
 
       getAllReq.onsuccess = () => {
+        // Filter unsynced items using pure JS
         const pending = getAllReq.result.filter(item => !item.synced);
         resolve(pending);
       };
