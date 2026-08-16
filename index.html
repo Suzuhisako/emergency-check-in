@@ -333,7 +333,10 @@
    <!-- Required for Bootstrap Modals to work -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   
-  <script>  
+  <script type="module">
+    // 1. Import at the very top of your main script block
+    import { saveCheckInLocally, getPendingCheckIns, markCheckInSynced } from './db.js'; 
+    
     // ------------------------------------------------------------------
     // Service Worker Management
     // ------------------------------------------------------------------
@@ -745,15 +748,26 @@
       renderBoard();
     }
   
-    function saveData() {
-      const myPayload = {
+    async function saveData() {
+      // 1. Get the current note text and build the payload
+      const noteText = document.getElementById("statusNote")?.value || "No note";
+
+      const payload = {
+        uid: "usr_self_01",
         status: currentStatus,
-        note: document.getElementById("statusNote")?.value || "",
-        phone: document.getElementById("smsRecipient")?.value || "",
-        timestamp: new Date().toISOString()
+        bat: `${liveBattery}%`,
+        gps: currentCoords ? `${currentCoords.lat},${currentCoords.lon}` : "N/A",
+        ts: new Date().toISOString().substring(11, 19) + "Z",
+        note: noteText
       };
-      localStorage.setItem("my_emergency_status", JSON.stringify(myPayload));
-      localStorage.setItem("family_board_status", JSON.stringify(familyData));
+
+      // 2. Save directly to IndexedDB (from db.js)
+      try {
+        await saveCheckInLocally(payload);
+        console.log("Status saved safely to IndexedDB!");
+      } catch (error) {
+        console.error("Failed to save to IndexedDB:", error);
+      }
     }
   
     function broadcastStatus() {
@@ -1085,12 +1099,7 @@
         });
       }
     });
-  </script>  
-
-  <!-- Inside index.html, before </body> -->
-  <script type="module">
-    import { saveCheckInLocally, getPendingCheckIns, markCheckInSynced } from './db.js';
-  
+    
     // Your form submission logic
     async function handleUserCheckIn(formData) {
       await saveCheckInLocally(formData);
