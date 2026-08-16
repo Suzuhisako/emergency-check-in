@@ -1239,6 +1239,7 @@
       console.log("🌐 Online on load. Checking for unsynced check-ins...");
       attemptBackgroundSync();
     }
+   
   
     window.addEventListener('online', attemptBackgroundSync);
     window.getGPSLocation = getGPSLocation;
