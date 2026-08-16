@@ -62,28 +62,45 @@
       margin-right: 6px;
       animation: pulse 1.8s infinite;
     }
-    .toast-notification {
+    
+    /* Container that manages vertical stacking */
+    #toast-container {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background-color: #2e7d32; /* Success green */
+      display: flex;
+      flex-direction: column; /* Stacks new toasts beneath old ones */
+      gap: 10px; /* Space between stacked toasts */
+      z-index: 9999;
+      pointer-events: none; /* Allows clicking behind empty container space */
+    }
+    
+    /* Individual Toast Item */
+    .toast-notification {
+      pointer-events: auto; /* Restores click interactions on toasts */
       color: #ffffff;
       padding: 12px 20px;
       border-radius: 8px;
       font-family: system-ui, -apple-system, sans-serif;
       font-size: 14px;
       font-weight: 500;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      z-index: 9999;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateX(100%); /* Smooth slide-in from the right margin */
       transition: opacity 0.3s ease, transform 0.3s ease;
     }
     
     .toast-notification.show {
       opacity: 1;
-      transform: translateY(0);
-}
+      transform: translateX(0);
+    }
+    
+    /* Status variants */
+    .toast-success { background-color: #2e7d32; }
+    .toast-warning { background-color: #ed6c02; }
+    .toast-error   { background-color: #d32f2f; }
+    .toast-info    { background-color: #0288d1; }
+    
     @keyframes pulse {
       0% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.3; transform: scale(1.2); }
@@ -1167,14 +1184,34 @@
       }
     }
 
-    function showToast(message) {
-      // Create toast element
-      const toast = document.createElement('div');
-      toast.className = 'toast-notification';
-      toast.textContent = message;
-      document.body.appendChild(toast);
+    function getOrCreateToastContainer() {
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+      }
+      return container;
+    }
     
-      // Trigger smooth enter animation
+    function showToast(message, type = 'success') {
+      const container = getOrCreateToastContainer();
+      const toast = document.createElement('div');
+    
+      const icons = {
+        success: '✅',
+        warning: '⚠️',
+        error: '❌',
+        info: 'ℹ️'
+      };
+    
+      const icon = icons[type] || '';
+      toast.className = `toast-notification toast-${type}`;
+      toast.textContent = `${icon} ${message}`.trim();
+    
+      // Append inside container instead of document.body
+      container.appendChild(toast);
+    
       requestAnimationFrame(() => {
         toast.classList.add('show');
       });
@@ -1182,10 +1219,15 @@
       // Remove toast after 3 seconds
       setTimeout(() => {
         toast.classList.remove('show');
-        toast.addEventListener('transitionend', () => toast.remove());
+        toast.addEventListener('transitionend', () => {
+          toast.remove();
+          // Remove container if no toasts remain
+          if (container.children.length === 0) {
+            container.remove();
+          }
+        });
       }, 3000);
     }
-
     // Automatically sync whenever the browser detects network reconnection
     window.addEventListener('online', () => {
       console.log("🌐 Network reconnected! Triggering background sync...");
