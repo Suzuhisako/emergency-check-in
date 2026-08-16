@@ -473,12 +473,16 @@
       isSirenActive ? stopSiren() : startSiren();
     }
     
-    function startSiren() {
+    async function startSiren() {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
+      
       if (!audioCtx) {
         audioCtx = new AudioContext();
-      } else if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
+      }
+      
+      // Mobile browsers require awaiting resume() within user interaction
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume();
       }
     
       oscillator = audioCtx.createOscillator();
