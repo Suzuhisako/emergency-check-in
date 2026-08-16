@@ -1121,7 +1121,7 @@
       const pending = await getPendingCheckIns();
       for (const item of pending) {
         try {
-          const response = await fetch('/api/checkin', {
+          const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(item)
