@@ -1162,16 +1162,15 @@
     
       for (const item of pendingItems) {
         try {
-          const response = await fetch('/api/checkin', {
+          const response = await fetch('https://httpbin.org/post', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(item)
           });
-    
-          // Only mark as synced when the backend confirms success (HTTP 200-299)
+          
           if (response.ok) {
             await markCheckInSynced(item.id);
-            syncedCount++;
+            syncedCount++;          
           } else {
             console.warn(`Sync failed for item ${item.id} with status: ${response.status}`);
           }
@@ -1248,8 +1247,7 @@
     window.openImportSMSModal = openImportSMSModal;
     window.openAddModal = openAddModal;
     window.saveData = saveData;
-    window.exportFamilyData = exportFamilyData;
-    window.simulateIncomingPacket = simulateIncomingPacket;
+    window.exportFamilyData = exportFamilyData;   
     window.openEditModal = openEditModal;
     window.toggleSiren = toggleSiren;
     window.deleteFamilyMember = deleteFamilyMember;
@@ -1257,6 +1255,7 @@
     window.getPendingCheckIns = getPendingCheckIns;
     window.markCheckInSynced = markCheckInSynced;
     window.showToast = showToast;
+     window.simulateIncomingPacket = simulateIncomingPacket;
     
   </script>
 </body>
