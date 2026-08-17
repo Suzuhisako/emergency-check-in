@@ -660,7 +660,7 @@
       if (payloadElem) payloadElem.innerText = JSON.stringify(payload, null, 2);
     }
   
-   function selectStatus(status) {
+    function selectStatus(status) {
       currentStatus = status;
     
       const btnSafe = document.getElementById('btn-safe');
@@ -691,7 +691,12 @@
       }
     
       updatePayload();
-
+    
+      // ➕ ADD THIS: Save the newly selected status directly to IndexedDB
+      if (typeof saveToIndexedDB === 'function') {
+        saveToIndexedDB({ status: currentStatus, timestamp: new Date().toISOString() });
+      }
+    
       // Trigger Toast (with self-contained fallback)
       if (typeof showToast === 'function') {
         showToast(`Status updated: ${status}`, "success");
@@ -1289,22 +1294,16 @@
     }
     
     // Automatically sync whenever the browser detects network reconnection
-    // 1. Silent network listener (no popup needed here)
     window.addEventListener('online', () => {
-      console.log("🌐 Network detected. Waiting 3 seconds for IP assignment...");
+      console.log("🌐 Network detected. Waiting 3 seconds for Wi-Fi connection...");
     
-      // Wait 3 seconds for full connection before syncing
-      setTimeout(() => {
+      // Delay 3 seconds to let mobile Wi-Fi establish
+      setTimeout(async () => {
         if (typeof attemptBackgroundSync === 'function') {
-          attemptBackgroundSync();
+          await attemptBackgroundSync();
         }
       }, 3000);
-    });
-        
-    // 2. Clear success toast inside attemptBackgroundSync() after fetch completes
-    if (typeof showToast === 'function') {
-      showToast("✅ Emergency status synced to server!", "success");
-    }   
+    });  
       
     window.addEventListener('online', attemptBackgroundSync);
     window.getGPSLocation = getGPSLocation;
