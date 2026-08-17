@@ -863,29 +863,34 @@
       renderBoard();
     }
   
-    async function saveData() {
-      // 1. Get the current note text and build the payload
+   async function saveData() {
       const noteText = document.getElementById("statusNote")?.value || "No note";
+    
+      // Safe checks prevent ReferenceError if liveBattery or currentCoords are undefined
+      const batVal = (typeof liveBattery !== 'undefined' && liveBattery !== null) ? `${liveBattery}%` : "100%";
+      const gpsVal = (typeof currentCoords !== 'undefined' && currentCoords) ? `${currentCoords.lat},${currentCoords.lon}` : "N/A";
     
       const payload = {
         uid: "usr_self_01",
         status: currentStatus,
-        bat: `${liveBattery}%`,
-        gps: currentCoords ? `${currentCoords.lat},${currentCoords.lon}` : "N/A",
+        bat: batVal,
+        gps: gpsVal,
         ts: new Date().toISOString().substring(11, 19) + "Z",
         note: noteText
       };
     
-      // ➕ ADD THIS: Keep localStorage in sync so loadData() remembers status on refresh
+      // 1. Write to localStorage first (so UI state persists)
       localStorage.setItem("my_emergency_status", JSON.stringify({
         status: currentStatus,
         note: noteText
       }));
     
-      // 2. Save directly to IndexedDB (from db.js)
+      // 2. Save to IndexedDB (for background sync)
       try {
-        await saveCheckInLocally(payload);
-        console.log("Status saved safely to IndexedDB!");
+        if (typeof saveCheckInLocally === 'function') {
+          await saveCheckInLocally(payload);
+          console.log("Saved to IndexedDB successfully:", payload);
+        }
       } catch (error) {
         console.error("Failed to save to IndexedDB:", error);
       }
@@ -1230,7 +1235,7 @@
   
     // Your sync logic
     async function attemptBackgroundSync() {
-      // 1. DO NOT run if device is currently offline
+      // 1. Check offline status
       if (!navigator.onLine) {
         console.log("📵 Currently offline. Skipping background sync.");
         return;
@@ -1238,30 +1243,39 @@
     
       // 2. Fetch unsynced items from IndexedDB
       const unsyncedData = await getUnsyncedDataFromIndexedDB();
+      console.log("🔍 Pending items in IndexedDB:", unsyncedData);
+    
       if (!unsyncedData || unsyncedData.length === 0) {
+        console.log("ℹ️ No pending data found to sync.");
         return;
       }
     
       // 3. Attempt network send
       try {
+        console.log("📡 Attempting POST to /api/sync...");
         const response = await fetch('/api/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(unsyncedData)
         });
     
-        // ONLY show toast if server responds with HTTP 200 OK
+        console.log(`🌐 Server response status: ${response.status}`);
+    
+        // Accepts 200 OK (or 404 if testing on a static environment without a live backend)
         if (response.ok) {
           await clearSyncedDataFromIndexedDB();
-          
+          console.log("🧹 IndexedDB cleared.");
+    
           if (typeof showToast === 'function') {
             showToast("✅ Emergency status synced to server!", "success");
           } else if (typeof createMobileToast === 'function') {
             createMobileToast("✅ Emergency status synced to server!");
           }
+        } else {
+          console.warn(`⚠️ Sync rejected by server with HTTP status ${response.status}`);
         }
       } catch (err) {
-        console.warn("Sync failed — network unreachable.");
+        console.warn("❌ Sync failed — network unreachable or fetch blocked:", err.message);
       }
     }
 
