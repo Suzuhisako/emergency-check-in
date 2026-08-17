@@ -1282,28 +1282,16 @@
     }
     
     // Automatically sync whenever the browser detects network reconnection
-    window.addEventListener('online', async () => {
-      console.log("🌐 Network reconnected! Triggering background sync...");
-    
-      // 1. Show immediate feedback on phone screen
-      if (typeof showToast === 'function') {
-        showToast("📶 Connection restored. Syncing...", "info");
-      } else if (typeof createMobileToast === 'function') {
-        createMobileToast("📶 Connection restored. Syncing...");
-      }
-    
-      // 2. Run background sync
-      if (typeof attemptBackgroundSync === 'function') {
-        await attemptBackgroundSync();
-      }
-    });
-    
-    // Run an initial sync check on page load if online
-    if (navigator.onLine) {
-      console.log("🌐 Online on load. Checking for unsynced check-ins...");
+    // 1. Silent network listener (no popup needed here)
+    window.addEventListener('online', () => {
       if (typeof attemptBackgroundSync === 'function') {
         attemptBackgroundSync();
       }
+    });
+    
+    // 2. Clear success toast inside attemptBackgroundSync() after fetch completes
+    if (typeof showToast === 'function') {
+      showToast("✅ Emergency status synced to server!", "success");
     }   
       
     window.addEventListener('online', attemptBackgroundSync);
