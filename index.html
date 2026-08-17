@@ -1235,7 +1235,8 @@
   
     // Your sync logic
     async function attemptBackgroundSync() {
-      // 1. Check offline status
+      return
+      /* ... // 1. Check offline status
       if (!navigator.onLine) {
         console.log("📵 Currently offline. Skipping background sync.");
         return;
@@ -1276,7 +1277,7 @@
         }
       } catch (err) {
         console.warn("❌ Sync failed — network unreachable or fetch blocked:", err.message);
-      }
+      } ... */
     }
 
     function getOrCreateToastContainer() {
