@@ -375,6 +375,8 @@
   <script type="module">
     // 1. Import at the very top of your main script block
     import { saveCheckInLocally, getPendingCheckIns, markCheckInSynced } from './db.js'; 
+
+    let currentStatus = "SAFE";
     
     // ------------------------------------------------------------------
     // Service Worker Management
@@ -838,17 +840,25 @@
     
       populateSmsRecipientDropdown();
     
+      // Read saved status from localStorage
       const savedStatus = localStorage.getItem("my_emergency_status");
       if (savedStatus) {
-        const parsed = JSON.parse(savedStatus);
-        currentStatus = parsed.status || "SAFE";
-        const noteElem = document.getElementById("statusNote");
-        if (noteElem) noteElem.value = parsed.note || "";
+        try {
+          const parsed = JSON.parse(savedStatus);
+          currentStatus = parsed.status || "SAFE";
+          const noteElem = document.getElementById("statusNote");
+          if (noteElem) noteElem.value = parsed.note || "";
+        } catch (e) {
+          currentStatus = "SAFE";
+        }
+      } else {
+        currentStatus = "SAFE"; // Default to SAFE if no status was saved yet
       }
     
       const smsRecipient = document.getElementById("smsRecipient");
       if (smsRecipient) smsRecipient.value = "";
     
+      // Now passes a valid string ("SAFE", "NEED HELP", or "IN TRANSIT")
       selectStatus(currentStatus);
       renderBoard();
     }
