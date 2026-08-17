@@ -855,7 +855,7 @@
     async function saveData() {
       // 1. Get the current note text and build the payload
       const noteText = document.getElementById("statusNote")?.value || "No note";
-
+    
       const payload = {
         uid: "usr_self_01",
         status: currentStatus,
@@ -864,7 +864,13 @@
         ts: new Date().toISOString().substring(11, 19) + "Z",
         note: noteText
       };
-
+    
+      // ➕ ADD THIS: Keep localStorage in sync so loadData() remembers status on refresh
+      localStorage.setItem("my_emergency_status", JSON.stringify({
+        status: currentStatus,
+        note: noteText
+      }));
+    
       // 2. Save directly to IndexedDB (from db.js)
       try {
         await saveCheckInLocally(payload);
