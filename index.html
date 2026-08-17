@@ -691,11 +691,32 @@
       }
     
       updatePayload();
-    
-      // Trigger the Toast Notification
+
+      // Trigger Toast (with self-contained fallback)
       if (typeof showToast === 'function') {
         showToast(`Status updated: ${status}`, "success");
+      } else {
+        // Standalone Toast Generator (creates popup if showToast is missing)
+        createMobileToast(`Status updated: ${status}`);
       }
+    }
+    
+    // Standalone Toast helper
+    function createMobileToast(msg) {
+      let container = document.getElementById('custom-toast-box');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'custom-toast-box';
+        container.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;';
+        document.body.appendChild(container);
+      }
+      
+      const toast = document.createElement('div');
+      toast.style.cssText = 'background:#198754;color:#fff;padding:12px 24px;border-radius:25px;font-weight:bold;box-shadow:0 4px 12px rgba(0,0,0,0.3);font-size:14px;text-align:center;';
+      toast.innerText = msg;
+      
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
     }
   
     function copyAndOpenSMS() {
