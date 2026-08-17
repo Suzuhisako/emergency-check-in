@@ -665,14 +665,21 @@
     function selectStatus(status) {
       currentStatus = status;
     
+      // 1. Wipe active/color classes from ALL buttons with class "status-btn"
+      document.querySelectorAll('.status-btn').forEach(btn => {
+        btn.classList.remove('btn-success', 'btn-danger', 'btn-warning', 'text-dark', 'active');
+      });
+    
+      // 2. Restore default outline styles
       const btnSafe = document.getElementById('btn-safe');
       const btnHelp = document.getElementById('btn-help');
       const btnTransit = document.getElementById('btn-transit');
     
-      if (btnSafe) btnSafe.className = 'btn btn-outline-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-      if (btnHelp) btnHelp.className = 'btn btn-outline-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-      if (btnTransit) btnTransit.className = 'btn btn-outline-warning status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+      if (btnSafe) btnSafe.classList.add('btn-outline-success');
+      if (btnHelp) btnHelp.classList.add('btn-outline-danger');
+      if (btnTransit) btnTransit.classList.add('btn-outline-warning');
     
+      // 3. Reset all labels
       const lblSafe = document.getElementById('label-safe');
       const lblHelp = document.getElementById('label-help');
       const lblTransit = document.getElementById('label-transit');
@@ -681,32 +688,25 @@
       if (lblHelp) lblHelp.innerText = 'Tap to set';
       if (lblTransit) lblTransit.innerText = 'Tap to set';
     
-      if (status === 'SAFE' && btnSafe) {
-        btnSafe.className = 'btn btn-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+      // 4. Highlight ONLY the selected status
+      const normalized = String(status).toUpperCase().trim();
+    
+      if (normalized === 'SAFE' && btnSafe) {
+        btnSafe.classList.remove('btn-outline-success');
+        btnSafe.classList.add('btn-success');
         if (lblSafe) lblSafe.innerText = 'SELECTED';
-      } else if (status === 'NEED HELP' && btnHelp) {
-        btnHelp.className = 'btn btn-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+      } else if ((normalized === 'NEED HELP' || normalized === 'NEED_HELP') && btnHelp) {
+        btnHelp.classList.remove('btn-outline-danger');
+        btnHelp.classList.add('btn-danger');
         if (lblHelp) lblHelp.innerText = 'SELECTED';
-      } else if (status === 'IN TRANSIT' && btnTransit) {
-        btnTransit.className = 'btn btn-warning text-dark status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+      } else if (normalized === 'IN TRANSIT' && btnTransit) {
+        btnTransit.classList.remove('btn-outline-warning');
+        btnTransit.classList.add('btn-warning', 'text-dark');
         if (lblTransit) lblTransit.innerText = 'SELECTED';
       }
     
-      updatePayload();
-      saveData();
-    
-      // ➕ ADD THIS: Save the newly selected status directly to IndexedDB
-      if (typeof saveToIndexedDB === 'function') {
-        saveToIndexedDB({ status: currentStatus, timestamp: new Date().toISOString() });
-      }
-    
-      // Trigger Toast (with self-contained fallback)
-      if (typeof showToast === 'function') {
-        showToast(`Status updated: ${status}`, "success");
-      } else {
-        // Standalone Toast Generator (creates popup if showToast is missing)
-        createMobileToast(`Status updated: ${status}`);
-      }
+      if (typeof updatePayload === 'function') updatePayload();
+      if (typeof saveData === 'function') saveData();
     }
     
     // Standalone Toast helper
@@ -1235,49 +1235,42 @@
   
     // Your sync logic
     async function attemptBackgroundSync() {
-      return
-      /* ... // 1. Check offline status
+      // 1. Skip if device is offline
       if (!navigator.onLine) {
         console.log("📵 Currently offline. Skipping background sync.");
         return;
       }
     
       // 2. Fetch unsynced items from IndexedDB
+      if (typeof getUnsyncedDataFromIndexedDB !== 'function') return;
       const unsyncedData = await getUnsyncedDataFromIndexedDB();
-      console.log("🔍 Pending items in IndexedDB:", unsyncedData);
-    
       if (!unsyncedData || unsyncedData.length === 0) {
-        console.log("ℹ️ No pending data found to sync.");
         return;
       }
     
       // 3. Attempt network send
       try {
-        console.log("📡 Attempting POST to /api/sync...");
         const response = await fetch('/api/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(unsyncedData)
         });
     
-        console.log(`🌐 Server response status: ${response.status}`);
-    
-        // Accepts 200 OK (or 404 if testing on a static environment without a live backend)
+        // Clear local storage and trigger toast only on server success (200 OK)
         if (response.ok) {
-          await clearSyncedDataFromIndexedDB();
-          console.log("🧹 IndexedDB cleared.");
+          if (typeof clearSyncedDataFromIndexedDB === 'function') {
+            await clearSyncedDataFromIndexedDB();
+          }
     
           if (typeof showToast === 'function') {
             showToast("✅ Emergency status synced to server!", "success");
           } else if (typeof createMobileToast === 'function') {
             createMobileToast("✅ Emergency status synced to server!");
           }
-        } else {
-          console.warn(`⚠️ Sync rejected by server with HTTP status ${response.status}`);
         }
       } catch (err) {
-        console.warn("❌ Sync failed — network unreachable or fetch blocked:", err.message);
-      } ... */
+        console.warn("Sync failed — network unreachable.");
+      }
     }
 
     function getOrCreateToastContainer() {
