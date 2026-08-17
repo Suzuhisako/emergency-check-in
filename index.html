@@ -1207,36 +1207,40 @@
     }
   
     // Your sync logic
-    async function attemptBackgroundSync() {
-      // 1. Get queued offline updates from IndexedDB
+    async function attemptBackgroundSync(retries = 3) {
       const unsyncedData = await getUnsyncedDataFromIndexedDB();
     
-      // If there's nothing to send, exit silently
       if (!unsyncedData || unsyncedData.length === 0) {
-        console.log("No unsynced data found.");
         return;
       }
     
-      // 2. Send payload to server
-      try {
-        const response = await fetch('/api/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(unsyncedData)
-        });
-    
-        if (response.ok) {
-          await clearSyncedDataFromIndexedDB(); // Clear local queue
-    
-          // 3. Show success toast ONLY when data was successfully uploaded
-          if (typeof showToast === 'function') {
-            showToast("✅ Emergency status synced to server!", "success");
-          } else if (typeof createMobileToast === 'function') {
-            createMobileToast("✅ Emergency status synced to server!");
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          // If retrying, wait 2 seconds between attempts
+          if (attempt > 1) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
           }
+    
+          const response = await fetch('/api/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(unsyncedData)
+          });
+    
+          if (response.ok) {
+            await clearSyncedDataFromIndexedDB();
+    
+            // Show toast ONLY after successful server sync
+            if (typeof showToast === 'function') {
+              showToast("✅ Emergency status synced to server!", "success");
+            } else if (typeof createMobileToast === 'function') {
+              createMobileToast("✅ Emergency status synced to server!");
+            }
+            return; // Sync successful, exit function
+          }
+        } catch (err) {
+          console.warn(`Sync attempt ${attempt} failed (network still establishing)...`);
         }
-      } catch (err) {
-        console.error("Sync failed:", err);
       }
     }
 
@@ -1288,11 +1292,16 @@
     // Automatically sync whenever the browser detects network reconnection
     // 1. Silent network listener (no popup needed here)
     window.addEventListener('online', () => {
-      if (typeof attemptBackgroundSync === 'function') {
-        attemptBackgroundSync();
-      }
-    });
+      console.log("🌐 Network detected. Waiting 3 seconds for IP assignment...");
     
+      // Wait 3 seconds for full connection before syncing
+      setTimeout(() => {
+        if (typeof attemptBackgroundSync === 'function') {
+          attemptBackgroundSync();
+        }
+      }, 3000);
+    });
+        
     // 2. Clear success toast inside attemptBackgroundSync() after fetch completes
     if (typeof showToast === 'function') {
       showToast("✅ Emergency status synced to server!", "success");
