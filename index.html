@@ -660,35 +660,41 @@
       if (payloadElem) payloadElem.innerText = JSON.stringify(payload, null, 2);
     }
   
-   async function selectStatus(status) {
-      // 1. Update active button UI states
-      const labels = {
-        'SAFE': document.getElementById('label-safe'),
-        'NEED HELP': document.getElementById('label-help'),
-        'IN TRANSIT': document.getElementById('label-transit')
-      };
+   function selectStatus(status) {
+      currentStatus = status;
     
-      const buttons = {
-        'SAFE': document.getElementById('btn-safe'),
-        'NEED HELP': document.getElementById('btn-help'),
-        'IN TRANSIT': document.getElementById('btn-transit')
-      };
+      const btnSafe = document.getElementById('btn-safe');
+      const btnHelp = document.getElementById('btn-help');
+      const btnTransit = document.getElementById('btn-transit');
     
-      // Reset all label texts and button classes
-      if (labels['SAFE']) labels['SAFE'].textContent = status === 'SAFE' ? 'SELECTED' : 'Tap to set';
-      if (labels['NEED HELP']) labels['NEED HELP'].textContent = status === 'NEED HELP' ? 'SELECTED' : 'Tap to set';
-      if (labels['IN TRANSIT']) labels['IN TRANSIT'].textContent = status === 'IN TRANSIT' ? 'SELECTED' : 'Tap to set';
+      if (btnSafe) btnSafe.className = 'btn btn-outline-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+      if (btnHelp) btnHelp.className = 'btn btn-outline-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+      if (btnTransit) btnTransit.className = 'btn btn-outline-warning status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
     
-      // 2. Trigger the Toast Notification
-      if (typeof showToast === 'function') {
-        showToast(`Status updated: ${status}`, "success");
-      } else {
-        alert(`Status updated: ${status}`); // Emergency fallback
+      const lblSafe = document.getElementById('label-safe');
+      const lblHelp = document.getElementById('label-help');
+      const lblTransit = document.getElementById('label-transit');
+    
+      if (lblSafe) lblSafe.innerText = 'Tap to set';
+      if (lblHelp) lblHelp.innerText = 'Tap to set';
+      if (lblTransit) lblTransit.innerText = 'Tap to set';
+    
+      if (status === 'SAFE' && btnSafe) {
+        btnSafe.className = 'btn btn-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+        if (lblSafe) lblSafe.innerText = 'SELECTED';
+      } else if (status === 'NEED HELP' && btnHelp) {
+        btnHelp.className = 'btn btn-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+        if (lblHelp) lblHelp.innerText = 'SELECTED';
+      } else if (status === 'IN TRANSIT' && btnTransit) {
+        btnTransit.className = 'btn btn-warning text-dark status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+        if (lblTransit) lblTransit.innerText = 'SELECTED';
       }
     
-      // 3. Save to IndexedDB if your db handler is present
-      if (typeof saveStatusToIndexedDB === 'function') {
-        await saveStatusToIndexedDB(status);
+      updatePayload();
+    
+      // Trigger the Toast Notification
+      if (typeof showToast === 'function') {
+        showToast(`Status updated: ${status}`, "success");
       }
     }
   
