@@ -1207,40 +1207,39 @@
     }
   
     // Your sync logic
-    async function attemptBackgroundSync(retries = 3) {
-      const unsyncedData = await getUnsyncedDataFromIndexedDB();
+    async function attemptBackgroundSync() {
+      // 1. DO NOT run if device is currently offline
+      if (!navigator.onLine) {
+        console.log("📵 Currently offline. Skipping background sync.");
+        return;
+      }
     
+      // 2. Fetch unsynced items from IndexedDB
+      const unsyncedData = await getUnsyncedDataFromIndexedDB();
       if (!unsyncedData || unsyncedData.length === 0) {
         return;
       }
     
-      for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-          // If retrying, wait 2 seconds between attempts
-          if (attempt > 1) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
+      // 3. Attempt network send
+      try {
+        const response = await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(unsyncedData)
+        });
+    
+        // ONLY show toast if server responds with HTTP 200 OK
+        if (response.ok) {
+          await clearSyncedDataFromIndexedDB();
+          
+          if (typeof showToast === 'function') {
+            showToast("✅ Emergency status synced to server!", "success");
+          } else if (typeof createMobileToast === 'function') {
+            createMobileToast("✅ Emergency status synced to server!");
           }
-    
-          const response = await fetch('/api/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(unsyncedData)
-          });
-    
-          if (response.ok) {
-            await clearSyncedDataFromIndexedDB();
-    
-            // Show toast ONLY after successful server sync
-            if (typeof showToast === 'function') {
-              showToast("✅ Emergency status synced to server!", "success");
-            } else if (typeof createMobileToast === 'function') {
-              createMobileToast("✅ Emergency status synced to server!");
-            }
-            return; // Sync successful, exit function
-          }
-        } catch (err) {
-          console.warn(`Sync attempt ${attempt} failed (network still establishing)...`);
         }
+      } catch (err) {
+        console.warn("Sync failed — network unreachable.");
       }
     }
 
