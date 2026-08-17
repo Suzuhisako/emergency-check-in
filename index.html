@@ -691,6 +691,7 @@
       }
     
       updatePayload();
+      saveData();
     
       // ➕ ADD THIS: Save the newly selected status directly to IndexedDB
       if (typeof saveToIndexedDB === 'function') {
