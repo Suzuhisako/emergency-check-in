@@ -568,10 +568,14 @@
       if (payloadElem) payloadElem.innerText = JSON.stringify(payload, null, 2);
     }
   
+    // Global status variable (defaults to SAFE)
+    let currentStatus = "SAFE";
+    
     function selectStatus(status) {
+      // 1. Explicitly assign the new status string FIRST
       currentStatus = status;
     
-      // Clear ALL active button styles first
+      // 2. Update UI highlights
       const btnSafe = document.getElementById('btn-safe');
       const btnHelp = document.getElementById('btn-help');
       const btnTransit = document.getElementById('btn-transit');
@@ -580,7 +584,6 @@
       if (btnHelp) btnHelp.className = "btn btn-outline-danger w-100 status-btn";
       if (btnTransit) btnTransit.className = "btn btn-outline-warning w-100 status-btn";
     
-      // Highlight ONLY selected button
       const norm = String(status).toUpperCase().trim();
       if (norm === 'SAFE' && btnSafe) {
         btnSafe.className = "btn btn-success w-100 status-btn";
@@ -590,6 +593,7 @@
         btnTransit.className = "btn btn-warning text-dark w-100 status-btn";
       }
     
+      // 3. Save payload with updated currentStatus
       saveData();
     }
   
@@ -712,31 +716,27 @@
   
     function saveData() {
       const noteText = document.getElementById("statusNote")?.value || "";
-      
-      // 1. Save locally first (instant UI update)
+    
+      // Update local state
       localStorage.setItem("my_emergency_status", JSON.stringify({
         status: currentStatus,
         note: noteText
       }));
     
-      // 2. Prepare payload
+      // Build full technical packet payload
       const payload = {
         uid: "usr_self_01",
-        status: currentStatus,
+        status: currentStatus, // Now accurately synced!
         bat: (typeof liveBattery !== "undefined" && liveBattery !== null) ? `${liveBattery}%` : "100%",
         gps: currentCoords ? `${currentCoords.lat},${currentCoords.lon}` : "N/A",
         ts: new Date().toISOString(),
         note: noteText
       };
     
-      // 3. Queue logic: If online, send immediately; if offline, add to queue
       if (navigator.onLine) {
         sendPayloadToServer(payload);
       } else {
         addToOfflineQueue(payload);
-        if (typeof showToast === 'function') {
-          showToast("📵 Saved offline. Will sync when reconnected.", "warning");
-        }
       }
     }
     
