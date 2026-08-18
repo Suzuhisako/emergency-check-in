@@ -745,8 +745,22 @@
       queue.push(payload);
       localStorage.setItem("pending_sync_queue", JSON.stringify(queue));
     }
-    
+
     async function sendPayloadToServer(payload) {
+      // Static host (GitHub Pages) cannot receive POST requests.
+      // Save locally in localStorage for UI state.
+      console.log("💾 Status saved locally (GitHub Pages static mode):", payload);
+      if (typeof showToast === 'function') {
+        showToast("✅ Emergency status saved locally!", "success");
+      }
+    }
+    
+    async function flushOfflineQueue() {
+      // No server endpoint on GitHub Pages to flush queue to.
+      console.log("ℹ️ Running on static host. Skipping server sync.");
+    }
+    
+    /*--- async function sendPayloadToServer(payload) {
       try {
         const response = await fetch('/api/sync', {
           method: 'POST',
@@ -788,7 +802,7 @@
       } catch (err) {
         console.warn("Sync failed — network unreachable.");
       }
-    }          
+    } ---*/         
        
      
     function openAddModal() {
