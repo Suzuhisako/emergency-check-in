@@ -771,8 +771,10 @@
       }
     }
 
-    // Trigger load on startup
-    document.addEventListener('DOMContentLoaded', loadSavedData);
+    document.addEventListener("DOMContentLoaded", () => {
+      loadSavedData();
+      saveData(); // Generates and prints the JSON packet when the page first opens
+    });
     
     function addToOfflineQueue(payload) {
       const queue = JSON.parse(localStorage.getItem("pending_sync_queue") || "[]");
