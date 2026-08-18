@@ -715,22 +715,88 @@
     }
   
     function saveData() {
-      const myPayload = {
+      const noteText = document.getElementById("statusNote")?.value || "";
+      
+      // 1. Always update the local state so the UI stays instant & persistent
+      const localStatusData = {
         status: currentStatus,
-        note: document.getElementById("statusNote").value,
-        phone: document.getElementById("smsRecipient").value,
-        timestamp: new Date().toISOString()
+        note: noteText
       };
-      localStorage.setItem("my_emergency_status", JSON.stringify(myPayload));
-      localStorage.setItem("family_board_status", JSON.stringify(familyData));
+      localStorage.setItem("my_emergency_status", JSON.stringify(localStatusData));
+    
+      // 2. Build the full payload for the server
+      const payload = {
+        uid: "usr_self_01",
+        status: currentStatus,
+        bat: typeof liveBattery !== "undefined" ? `${liveBattery}%` : "100%",
+        gps: currentCoords ? `${currentCoords.lat},${currentCoords.lon}` : "N/A",
+        ts: new Date().toISOString(),
+        note: noteText
+      };
+
+      async function flushOfflineQueue() {
+        if (!navigator.onLine) return;
+      
+        const queue = JSON.parse(localStorage.getItem("pending_sync_queue") || "[]");
+        if (queue.length === 0) return;
+      
+        console.log(`📡 Internet restored! Flushing ${queue.length} pending check-in(s)...`);
+      
+        try {
+          const response = await fetch('/api/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(queue)
+          });
+      
+          if (response.ok) {
+            // Clear queue only after server confirms receipt (HTTP 200)
+            localStorage.removeItem("pending_sync_queue");
+            console.log("✅ Offline queue successfully synced!");
+      
+            if (typeof showToast === 'function') {
+              showToast("✅ Emergency status synced to server!", "success");
+            }
+          }
+        } catch (err) {
+          console.warn("Sync failed — network unreachable. Keeping items in queue.", err);
+        }
+      }
+      
+      // Helper for live updates when online
+      async function sendPayloadToServer(payload) {
+        try {
+          const response = await fetch('/api/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify([payload])
+          });
+          if (response.ok && typeof showToast === 'function') {
+            showToast("✅ Status updated!", "success");
+          }
+        } catch (err) {
+          // If the send fails mid-request, fallback to queue
+          addToOfflineQueue(payload);
+        }
+      }
+    
+      // 3. Queue logic: If online, send immediately; if offline, add to queue
+      if (navigator.onLine) {
+        sendPayloadToServer(payload);
+      } else {
+        addToOfflineQueue(payload);
+        if (typeof showToast === 'function') {
+          showToast("📵 Saved offline. Will sync when reconnected.", "warning");
+        }
+      }
     }
-  
-    function broadcastStatus() {
-      updatePayload();
-      saveData();
-      const alertElem = document.getElementById("broadcastAlert");
-      alertElem.classList.remove("d-none");
-      setTimeout(() => alertElem.classList.add("d-none"), 2500);
+    
+    // Helper: Push item into localStorage queue array
+    function addToOfflineQueue(payload) {
+      const queue = JSON.parse(localStorage.getItem("pending_sync_queue") || "[]");
+      queue.push(payload);
+      localStorage.setItem("pending_sync_queue", JSON.stringify(queue));
+      console.log("📥 Added to offline queue. Current pending:", queue.length);
     }
   
     function openAddModal() {
@@ -1093,6 +1159,19 @@
     
       reader.readAsText(file);
     }
+
+    // Automatically sync the moment the browser detects internet connection
+    window.addEventListener('online', () => {
+      console.log("🌐 Network status: ONLINE");
+      flushOfflineQueue();
+    });
+    
+    // Also attempt a flush on app startup if any unsynced items were left behind
+    document.addEventListener('DOMContentLoaded', () => {
+      if (navigator.onLine) {
+        flushOfflineQueue();
+      }
+    });
    
   </script>  
 </body>
