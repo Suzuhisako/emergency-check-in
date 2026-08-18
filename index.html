@@ -783,24 +783,7 @@
       } catch (err) {
         console.warn("Sync failed — network unreachable.");
       }
-    }   
-    
-      
-    async function sendPayloadToServer(payload) {
-      try {
-        const response = await fetch('/api/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify([payload])
-        });
-        if (response.ok && typeof showToast === 'function') {
-          showToast("✅ Status updated!", "success");
-        }
-      } catch (err) {
-        addToOfflineQueue(payload);
-      }
-    }
-    
+    }          
        
      
     function openAddModal() {
