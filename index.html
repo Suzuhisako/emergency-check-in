@@ -2,8 +2,7 @@
 <html lang="en" data-bs-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Emergency Check-In PWA</title>
 
   <!-- PWA & Mobile Display Settings -->
@@ -16,29 +15,18 @@
   <!-- Manifest & Local Icons -->
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <meta name="theme-color" content="#0d6efd">
   <link rel="apple-touch-icon" href="./icon-192.png">
   
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   
   <style>
-    html {
-      width: 100%;
-      min-height: 100dvh; /* Dynamic Viewport Height: adjusts dynamically to phone bars */
-    }
-    
     body {
-      width: 100%;
-      min-height: 100dvh;
-      margin: 0;
-      padding: 16px 12px 32px 12px; /* Generous top/bottom padding to give text space */
-      box-sizing: border-box; /* Ensures padding doesn't cause overflow */
       background-color: #000000; /* Pure black for OLED battery preservation */
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       user-select: none;
-      line-height: 1.5; /* Adds comfortable spacing between text lines */
     }
-
     .status-btn {
       min-height: 60px;
       font-size: 1.2rem;
@@ -62,45 +50,6 @@
       margin-right: 6px;
       animation: pulse 1.8s infinite;
     }
-    
-    /* Container that manages vertical stacking */
-    #toast-container {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      display: flex;
-      flex-direction: column; /* Stacks new toasts beneath old ones */
-      gap: 10px; /* Space between stacked toasts */
-      z-index: 9999;
-      pointer-events: none; /* Allows clicking behind empty container space */
-    }
-    
-    /* Individual Toast Item */
-    .toast-notification {
-      pointer-events: auto; /* Restores click interactions on toasts */
-      color: #ffffff;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-family: system-ui, -apple-system, sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      opacity: 0;
-      transform: translateX(100%); /* Smooth slide-in from the right margin */
-      transition: opacity 0.3s ease, transform 0.3s ease;
-    }
-    
-    .toast-notification.show {
-      opacity: 1;
-      transform: translateX(0);
-    }
-    
-    /* Status variants */
-    .toast-success { background-color: #2e7d32; }
-    .toast-warning { background-color: #ed6c02; }
-    .toast-error   { background-color: #d32f2f; }
-    .toast-info    { background-color: #0288d1; }
-    
     @keyframes pulse {
       0% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.3; transform: scale(1.2); }
@@ -136,7 +85,7 @@
 </head>
 <body class="text-light">
 
-  <div class="container-fluid px-3 py-2" style="max-width: 500px; margin: 0 auto;"> 
+  <div class="container my-3" style="max-width: 500px;">
     
     <!-- System & Connection Header -->
     <header class="d-flex justify-content-between align-items-center p-3 mb-3 card-dark rounded-3">
@@ -210,7 +159,12 @@
         <div id="gpsStatus" class="form-text text-success small d-none">GPS coordinates captured!</div>
       </div>
 
-      <button type="button" class="btn btn-primary w-100 py-2 fw-bold mb-3" onclick="broadcastStatus()">
+      <button type="button" class="btn btn-primary w-100 py-2 fw-bold" onclick="broadcastStatus()">
+        📡 Save & Broadcast Status Packet
+      </button>
+
+      <!-- Save & Localstorage Button -->
+      <button type="button" class="btn btn-primary w-100 py-2 fw-bold mb-2" onclick="broadcastStatus()">
         📡 Save Status Packet (Offline)
       </button>
 
@@ -270,7 +224,7 @@
         </div>
       
         <!-- Hidden File Input for JSON Restore -->
-        <input type="file" id="importFileInput" accept="*/*" style="display: none;" onchange="importFamilyData(event)">
+        <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importFamilyData(event)">
       </div>
     </section>
 
@@ -372,19 +326,11 @@
    <!-- Required for Bootstrap Modals to work -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   
-  <script type="module">
-    // 1. Import at the very top of your main script block
-    import { saveCheckInLocally, getPendingCheckIns, markCheckInSynced } from './db.js'; 
-
-    let currentStatus = "SAFE";
-    
-    // ------------------------------------------------------------------
-    // Service Worker Management
-    // ------------------------------------------------------------------
+  <script>  
     if ('serviceWorker' in navigator) {
-      let refreshing = false;
+    let refreshing = false;
       
-      // Global listener: Reload once new SW takes control
+      // Only reload the page once the new Service Worker has actually claimed control
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (refreshing) return;
         refreshing = true;
@@ -392,25 +338,39 @@
       });
       
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').then((registration) => {
-          // 1. Worker waiting in background
-          if (registration.waiting) {
-            showUpdatePrompt(registration.waiting);
-          }
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('./sw.js').then((registration) => {
         
-          // 2. Newly installed worker
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing;
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                showUpdatePrompt(newWorker);
-              }
+            // 1. Check if a worker is already waiting in the background
+            if (registration.waiting) {
+              showUpdatePrompt(registration.waiting);
+            }
+        
+            // 2. Listen for newly discovered updates
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+                
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  showUpdatePrompt(newWorker);
+                }
+              });
             });
           });
-        });
+        
+          // 3. Automatically refresh the page once the new SW activates
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+              refreshing = true;
+              window.location.reload();
+            }
+          });
+        }
       });   
     }
       
+    
     function showUpdatePrompt(worker) {
       if (document.getElementById('pwa-update-toast')) return;
     
@@ -442,13 +402,12 @@
       document.body.appendChild(toast);
     
       document.getElementById('pwa-reload-btn').addEventListener('click', () => {
+        // Send message to SW to trigger skipWaiting()
         worker.postMessage({ type: 'SKIP_WAITING' });
       });
     } 
   
-    // ------------------------------------------------------------------
-    // State Management & Constants
-    // ------------------------------------------------------------------
+    // State Management
     const DEFAULT_FAMILY = [
       { id: "dad", name: "Taro (Dad)", status: "SAFE", badgeClass: "bg-success", time: "10:18 AM", location: "📍 Chigasaki Elem. Shelter", battery: "88%", via: "Received via: Direct BLE", viaClass: "text-success" },
       { id: "mom", name: "Hanako (Mom)", status: "IN TRANSIT", badgeClass: "bg-warning text-dark", time: "10:05 AM", location: "📍 Moving toward Station", battery: "41%", via: "Received via: Mesh Hop #3", viaClass: "text-warning" },
@@ -465,105 +424,66 @@
     let liveBattery = 85;
     let currentCoords = null;
     let familyModalInstance = null;
-    let smsModalInstance = null; 
-   
-    
+  
     // ------------------------------------------------------------------
     // 1. Emergency Siren & Strobe Controls
     // ------------------------------------------------------------------
     function toggleSiren() {
       isSirenActive ? stopSiren() : startSiren();
     }
-    
-    async function startSiren() {
+  
+    function startSiren() {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
-    
-      // 1. Force instantiation inside user gesture for mobile engines
       if (!audioCtx) {
         audioCtx = new AudioContext();
+      } else if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
       }
-    
-      // 2. Play a tiny silent HTML audio clip to force iOS out of "Ambient" mode 
-      // (allows sound to play even if physical mute switch is ON)
-      try {
-        const dummyAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
-        dummyAudio.play().catch(() => {});
-      } catch (e) {}
-    
-      // 3. Play a 1-frame silent buffer to unlock Web Audio context on mobile Safari
-      try {
-        const buffer = audioCtx.createBuffer(1, 1, 22050);
-        const source = audioCtx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioCtx.destination);
-        source.start(0);
-      } catch (e) {}
-    
-      // 4. Ensure context is running
-      if (audioCtx.state === 'suspended') {
-        await audioCtx.resume();
-      }
-    
+  
       oscillator = audioCtx.createOscillator();
       gainNode = audioCtx.createGain();
-    
+  
       oscillator.type = 'sawtooth';
       gainNode.gain.setValueAtTime(0.8, audioCtx.currentTime);
-    
+  
       oscillator.connect(gainNode);
       gainNode.connect(audioCtx.destination);
-    
+  
       oscillator.start();
       isSirenActive = true;
-    
+  
       let highTone = false;
       sirenInterval = setInterval(() => {
         if (!oscillator || !audioCtx) return;
         oscillator.frequency.setValueAtTime(highTone ? 800 : 1200, audioCtx.currentTime);
         highTone = !highTone;
       }, 350);
-    
+  
       if (document.getElementById("strobeToggle")?.checked) {
         document.body.classList.add("strobe-active");
       }
-    
+  
       const btn = document.getElementById("sirenBtn");
       const status = document.getElementById("sirenStatus");
-      if (btn) {
-        btn.classList.remove("btn-danger");
-        btn.classList.add("btn-warning", "text-dark", "pulse-animation");
-        btn.innerHTML = "🛑 STOP ALARM";
-      }
+      btn.classList.remove("btn-danger");
+      btn.classList.add("btn-warning", "text-dark", "pulse-animation");
+      btn.innerText = "🛑 STOP ALARM";
       if (status) status.classList.remove("d-none");
     }
-    
+  
     function stopSiren() {
-      if (sirenInterval) { 
-        clearInterval(sirenInterval); 
-        sirenInterval = null; 
-      }
-      if (oscillator) { 
-        try { 
-          oscillator.stop(); 
-          oscillator.disconnect(); 
-        } catch (e) {}
-        oscillator = null; 
-      }
+      if (sirenInterval) { clearInterval(sirenInterval); sirenInterval = null; }
+      if (oscillator) { oscillator.stop(); oscillator.disconnect(); oscillator = null; }
       isSirenActive = false;
-    
+  
       document.body.classList.remove("strobe-active");
       const btn = document.getElementById("sirenBtn");
       const status = document.getElementById("sirenStatus");
-      if (btn) {
-        btn.classList.remove("btn-warning", "text-dark", "pulse-animation");
-        btn.classList.add("btn-danger");
-        btn.innerHTML = "🔊 START EMERGENCY ALARM";
-      }
+      btn.classList.remove("btn-warning", "text-dark", "pulse-animation");
+      btn.classList.add("btn-danger");
+      btn.innerText = "🔊 START EMERGENCY ALARM";
       if (status) status.classList.add("d-none");
     }
-    
-    // Expose toggleSiren globally for HTML inline onclick
-    window.toggleSiren = toggleSiren;
   
     // ------------------------------------------------------------------
     // 2. Hardware APIs (Battery & GPS)
@@ -575,12 +495,10 @@
           battery.addEventListener('levelchange', () => updateBatteryUI(battery));
           battery.addEventListener('chargingchange', () => updateBatteryUI(battery));
         }).catch(() => {
-          const display = document.getElementById("displayBattery");
-          if (display) display.innerText = `${liveBattery}% (Default)`;
+          document.getElementById("displayBattery").innerText = `${liveBattery}% (Default)`;
         });
       } else {
-        const display = document.getElementById("displayBattery");
-        if (display) display.innerText = `${liveBattery}% (N/A)`;
+        document.getElementById("displayBattery").innerText = `${liveBattery}% (N/A)`;
       }
     }
   
@@ -602,10 +520,8 @@
         return;
       }
   
-      if (gpsBtn) {
-        gpsBtn.disabled = true;
-        gpsBtn.innerText = "⏳ Locating...";
-      }
+      gpsBtn.disabled = true;
+      gpsBtn.innerText = "⏳ Locating...";
   
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -614,15 +530,11 @@
           currentCoords = { lat, lon };
   
           const gpsString = `GPS: ${lat},${lon}`;
-          if (noteInput) {
-            const cleanExistingNote = noteInput.value.replace(/\(?GPS: [-?\d.]+,[-?\d.]+\)?/g, '').trim();
-            noteInput.value = cleanExistingNote ? `${cleanExistingNote} (${gpsString})` : gpsString;
-          }
+          const cleanExistingNote = noteInput.value.replace(/\(?GPS: [-?\d.]+,[-?\d.]+\)?/g, '').trim();
+          noteInput.value = cleanExistingNote ? `${cleanExistingNote} (${gpsString})` : gpsString;
   
-          if (gpsBtn) {
-            gpsBtn.disabled = false;
-            gpsBtn.innerText = "📍 Auto-GPS";
-          }
+          gpsBtn.disabled = false;
+          gpsBtn.innerText = "📍 Auto-GPS";
   
           updatePayload();
           saveData();
@@ -633,10 +545,8 @@
           }
         },
         (error) => {
-          if (gpsBtn) {
-            gpsBtn.disabled = false;
-            gpsBtn.innerText = "📍 Auto-GPS";
-          }
+          gpsBtn.disabled = false;
+          gpsBtn.innerText = "📍 Auto-GPS";
           alert(`Location Error: ${error.message}`);
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -664,67 +574,31 @@
   
     function selectStatus(status) {
       currentStatus = status;
-    
-      // 1. Wipe active/color classes from ALL buttons with class "status-btn"
-      document.querySelectorAll('.status-btn').forEach(btn => {
-        btn.classList.remove('btn-success', 'btn-danger', 'btn-warning', 'text-dark', 'active');
-      });
-    
-      // 2. Restore default outline styles
+  
       const btnSafe = document.getElementById('btn-safe');
       const btnHelp = document.getElementById('btn-help');
       const btnTransit = document.getElementById('btn-transit');
-    
-      if (btnSafe) btnSafe.classList.add('btn-outline-success');
-      if (btnHelp) btnHelp.classList.add('btn-outline-danger');
-      if (btnTransit) btnTransit.classList.add('btn-outline-warning');
-    
-      // 3. Reset all labels
-      const lblSafe = document.getElementById('label-safe');
-      const lblHelp = document.getElementById('label-help');
-      const lblTransit = document.getElementById('label-transit');
-    
-      if (lblSafe) lblSafe.innerText = 'Tap to set';
-      if (lblHelp) lblHelp.innerText = 'Tap to set';
-      if (lblTransit) lblTransit.innerText = 'Tap to set';
-    
-      // 4. Highlight ONLY the selected status
-      const normalized = String(status).toUpperCase().trim();
-    
-      if (normalized === 'SAFE' && btnSafe) {
-        btnSafe.classList.remove('btn-outline-success');
-        btnSafe.classList.add('btn-success');
-        if (lblSafe) lblSafe.innerText = 'SELECTED';
-      } else if ((normalized === 'NEED HELP' || normalized === 'NEED_HELP') && btnHelp) {
-        btnHelp.classList.remove('btn-outline-danger');
-        btnHelp.classList.add('btn-danger');
-        if (lblHelp) lblHelp.innerText = 'SELECTED';
-      } else if (normalized === 'IN TRANSIT' && btnTransit) {
-        btnTransit.classList.remove('btn-outline-warning');
-        btnTransit.classList.add('btn-warning', 'text-dark');
-        if (lblTransit) lblTransit.innerText = 'SELECTED';
+  
+      btnSafe.className = 'btn btn-outline-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+      btnHelp.className = 'btn btn-outline-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+      btnTransit.className = 'btn btn-outline-warning status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+  
+      document.getElementById('label-safe').innerText = 'Tap to set';
+      document.getElementById('label-help').innerText = 'Tap to set';
+      document.getElementById('label-transit').innerText = 'Tap to set';
+  
+      if (status === 'SAFE') {
+        btnSafe.className = 'btn btn-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+        document.getElementById('label-safe').innerText = 'SELECTED';
+      } else if (status === 'NEED HELP') {
+        btnHelp.className = 'btn btn-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+        document.getElementById('label-help').innerText = 'SELECTED';
+      } else if (status === 'IN TRANSIT') {
+        btnTransit.className = 'btn btn-warning text-dark status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
+        document.getElementById('label-transit').innerText = 'SELECTED';
       }
-    
-      if (typeof updatePayload === 'function') updatePayload();
-      if (typeof saveData === 'function') saveData();
-    }
-    
-    // Standalone Toast helper
-    function createMobileToast(msg) {
-      let container = document.getElementById('custom-toast-box');
-      if (!container) {
-        container = document.createElement('div');
-        container.id = 'custom-toast-box';
-        container.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;';
-        document.body.appendChild(container);
-      }
-      
-      const toast = document.createElement('div');
-      toast.style.cssText = 'background:#198754;color:#fff;padding:12px 24px;border-radius:25px;font-weight:bold;box-shadow:0 4px 12px rgba(0,0,0,0.3);font-size:14px;text-align:center;';
-      toast.innerText = msg;
-      
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
+  
+      updatePayload();
     }
   
     function copyAndOpenSMS() {
@@ -736,17 +610,16 @@
         return;
       }
       
-      const noteText = document.getElementById("statusNote")?.value || "No note";
-      const cleanPhone = recipientPhone.replace(/[^0-9+]/g, '');
+      const noteText = document.getElementById("statusNote").value || "No note";
+      const phoneInput = document.getElementById("smsRecipient").value.trim();
+      const cleanPhone = phoneInput.replace(/[^0-9+]/g, '');
   
       const textToCopy = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: ${liveBattery}% | Note: ${noteText}`;
   
       navigator.clipboard.writeText(textToCopy).then(() => {
         const alertElem = document.getElementById("copyAlert");
-        if (alertElem) {
-          alertElem.classList.remove("d-none");
-          setTimeout(() => alertElem.classList.add("d-none"), 3000);
-        }
+        alertElem.classList.remove("d-none");
+        setTimeout(() => alertElem.classList.add("d-none"), 3000);
   
         setTimeout(() => {
           window.location.href = cleanPhone ? `sms:${cleanPhone}` : `sms:`;
@@ -768,8 +641,6 @@
   
     function renderBoard() {
       const list = document.getElementById("familyList");
-      if (!list) return;
-  
       if (!familyData || familyData.length === 0) {
         list.innerHTML = `<div class="text-secondary small py-2 text-center">No family members added yet. Tap <strong>+ Add</strong> above.</div>`;
         return;
@@ -796,14 +667,19 @@
         </div>
       `).join('');
     }
-  
+
+    // Function to populate the Outbound Family Mobile Number dropdown
     function populateSmsRecipientDropdown() {
       const select = document.getElementById('smsRecipient');
       if (!select) return;
     
+      // 1. Store currently selected phone number before clearing HTML
       const currentSelection = select.value;
+    
+      // 2. Reset options
       select.innerHTML = '<option value="">-- Select Family Member --</option>';
     
+      // 3. Add options from familyData
       familyData.forEach(member => {
         if (member.phone) {
           const option = document.createElement('option');
@@ -813,114 +689,66 @@
         }
       });
     
+      // 4. Restore selected value if it still exists
       if (currentSelection) {
         select.value = currentSelection;
       }
     }
   
-    function populateSenderDropdown() {
-      const select = document.getElementById('smsSenderSelect');
-      if (!select) return;
-    
-      select.innerHTML = '<option value="">-- Auto-detect from SMS text --</option>';
-    
-      familyData.forEach(member => {
-        if (member.phone) {
-          const option = document.createElement('option');
-          option.value = member.phone;
-          option.textContent = `👤 ${member.name} (${member.phone})`;
-          select.appendChild(option);
-        }
-      });
-    }
-  
     function loadData() {
+      // 1. Load family data
       const savedFamily = localStorage.getItem("family_board_status");
       familyData = savedFamily ? JSON.parse(savedFamily) : [...DEFAULT_FAMILY];
     
+      // 2. Build dropdown options (defaults to value="" naturally)
       populateSmsRecipientDropdown();
     
-      // Read saved status from localStorage
+      // 3. Load user's emergency status & notes
       const savedStatus = localStorage.getItem("my_emergency_status");
       if (savedStatus) {
-        try {
-          const parsed = JSON.parse(savedStatus);
-          currentStatus = parsed.status || "SAFE";
-          const noteElem = document.getElementById("statusNote");
-          if (noteElem) noteElem.value = parsed.note || "";
-        } catch (e) {
-          currentStatus = "SAFE";
-        }
-      } else {
-        currentStatus = "SAFE"; // Default to SAFE if no status was saved yet
+        const parsed = JSON.parse(savedStatus);
+        currentStatus = parsed.status || "SAFE";
+        document.getElementById("statusNote").value = parsed.note || "";
       }
     
-      const smsRecipient = document.getElementById("smsRecipient");
-      if (smsRecipient) smsRecipient.value = "";
+      // 4. Force dropdown to blank on app open
+      document.getElementById("smsRecipient").value = "";
     
-      // Now passes a valid string ("SAFE", "NEED HELP", or "IN TRANSIT")
       selectStatus(currentStatus);
       renderBoard();
     }
   
-   async function saveData() {
-      const noteText = document.getElementById("statusNote")?.value || "No note";
-    
-      // Safe checks prevent ReferenceError if liveBattery or currentCoords are undefined
-      const batVal = (typeof liveBattery !== 'undefined' && liveBattery !== null) ? `${liveBattery}%` : "100%";
-      const gpsVal = (typeof currentCoords !== 'undefined' && currentCoords) ? `${currentCoords.lat},${currentCoords.lon}` : "N/A";
-    
-      const payload = {
-        uid: "usr_self_01",
+    function saveData() {
+      const myPayload = {
         status: currentStatus,
-        bat: batVal,
-        gps: gpsVal,
-        ts: new Date().toISOString().substring(11, 19) + "Z",
-        note: noteText
+        note: document.getElementById("statusNote").value,
+        phone: document.getElementById("smsRecipient").value,
+        timestamp: new Date().toISOString()
       };
-    
-      // 1. Write to localStorage first (so UI state persists)
-      localStorage.setItem("my_emergency_status", JSON.stringify({
-        status: currentStatus,
-        note: noteText
-      }));
-    
-      // 2. Save to IndexedDB (for background sync)
-      try {
-        if (typeof saveCheckInLocally === 'function') {
-          await saveCheckInLocally(payload);
-          console.log("Saved to IndexedDB successfully:", payload);
-        }
-      } catch (error) {
-        console.error("Failed to save to IndexedDB:", error);
-      }
+      localStorage.setItem("my_emergency_status", JSON.stringify(myPayload));
+      localStorage.setItem("family_board_status", JSON.stringify(familyData));
     }
   
     function broadcastStatus() {
       updatePayload();
       saveData();
       const alertElem = document.getElementById("broadcastAlert");
-      if (alertElem) {
-        alertElem.classList.remove("d-none");
-        setTimeout(() => alertElem.classList.add("d-none"), 2500);
-      }
+      alertElem.classList.remove("d-none");
+      setTimeout(() => alertElem.classList.add("d-none"), 2500);
     }
   
     function openAddModal() {
       document.getElementById("modalTitle").innerText = "Add Family Member";
       document.getElementById("modalMemberId").value = "";
       document.getElementById("modalMemberName").value = "";
-      document.getElementById("modalMemberPhone").value = "";
+      document.getElementById("modalMemberPhone").value = ""; // Clear phone input
       document.getElementById("modalMemberStatus").value = "SAFE";
       document.getElementById("modalMemberLocation").value = "";
     
-      const modalEl = document.getElementById('familyModal');
-      if (modalEl && window.bootstrap) {
-        if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(modalEl);
-        familyModalInstance.show();
-      }
+      if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(document.getElementById('familyModal'));
+      familyModalInstance.show();
     }
-      
+    
     function openEditModal(id) {
       const member = familyData.find(m => String(m.id) === String(id));
       if (!member) return;
@@ -928,15 +756,12 @@
       document.getElementById("modalTitle").innerText = "Edit Family Member";
       document.getElementById("modalMemberId").value = member.id;
       document.getElementById("modalMemberName").value = member.name;
-      document.getElementById("modalMemberPhone").value = member.phone || "";
+      document.getElementById("modalMemberPhone").value = member.phone || ""; // Load phone number
       document.getElementById("modalMemberStatus").value = member.status;
       document.getElementById("modalMemberLocation").value = member.location || "";
     
-      const modalEl = document.getElementById('familyModal');
-      if (modalEl && window.bootstrap) {
-        if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(modalEl);
-        familyModalInstance.show();
-      }
+      if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(document.getElementById('familyModal'));
+      familyModalInstance.show();
     }
         
     function saveFamilyMember() {
@@ -982,60 +807,70 @@
     
       saveData();
       renderBoard();
-      populateSmsRecipientDropdown();
+      populateSmsRecipientDropdown()
       if (document.activeElement) document.activeElement.blur();
       if (familyModalInstance) familyModalInstance.hide();
     }
-  
+
     function normalizePhone(phoneStr) {
       if (!phoneStr) return "";
+      // Remove all non-digit characters
       let digits = phoneStr.replace(/\D/g, "");
+      // Convert Japanese country code (+81 90... -> 090...)
       if (digits.startsWith("81") && digits.length === 12) {
         digits = "0" + digits.slice(2);
       }
       return digits;
     }
-      
+     
+    // Formats normalized digits into standard Japanese hyphenated layout
     function formatPhoneDisplay(phoneStr) {
       const clean = normalizePhone(phoneStr);
-      if (clean.length === 11) {
+      if (clean.length === 11) { // 090-1234-5678
         return clean.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
       }
-      if (clean.length === 10) {
+      if (clean.length === 10) { // 03-1234-5678
         return clean.replace(/(\d{2,3})(\d{3,4})(\d{4})/, '$1-$2-$3');
       }
       return clean || phoneStr;
     }
-  
+
+    
+    let smsModalInstance = null;
+
     function openImportSMSModal() {
       const modalEl = document.getElementById("smsModal");
       if (!modalEl) {
-        return alert("Update pending! Please close and reopen the app to load the SMS modal.");
+        return alert("Update pending! Please close and reopen the app to load the new SMS modal.");
       }
       
       document.getElementById("smsTextarea").value = "";
-      if (window.bootstrap) {
-        if (!smsModalInstance) smsModalInstance = new bootstrap.Modal(modalEl);
-        smsModalInstance.show();
+      if (!smsModalInstance) {
+        smsModalInstance = new bootstrap.Modal(modalEl);
       }
+      smsModalInstance.show();
     }
-  
+
     function submitImportSMS() {
-      const rawText = document.getElementById('smsTextarea')?.value || "";
-      const selectedPhone = document.getElementById('smsSenderSelect')?.value || "";
-    
-      processIncomingSMS(rawText, selectedPhone);
-    
+      const rawText = document.getElementById("smsTextarea").value.trim();
+      if (!rawText) {
+        return alert("Please paste or type SMS text before importing.");
+      }
+
+      // Call existing SMS parser function
+      processIncomingSMS(rawText);
+
+      // Blur active element and hide modal on success
       if (document.activeElement) document.activeElement.blur();
       if (smsModalInstance) smsModalInstance.hide();
     }
-  
+
     function processIncomingSMS(rawSmsText, senderPhoneInput = "") {
       if (!rawSmsText && !senderPhoneInput) {
-        return alert("Please paste SMS text or select a sender.");
+        return alert("Please paste SMS text or enter a sender phone number.");
       }
     
-      // 1. Normalize Full-Width Japanese / IME Characters
+      // 1. Normalize Japanese IME / Mobile Full-Width Characters
       let text = rawSmsText
         .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
         .replace(/：/g, ":")
@@ -1083,13 +918,14 @@
     
       // 6. Multi-Pass Cleaning for Location/Note
       let cleanNote = text
-        .replace(phoneHeaderPattern, "")
-        .replace(/SAFE|EVACUATED|EVAC|NEED HELP|HELP|SOS|UNKNOWN/gi, "")
-        .replace(/\b\d{1,3}\s*%/gi, "") // Targets percentages specifically, leaving ordinary numbers intact
-        .replace(/[:,\-]/g, " ")
-        .replace(/\s+/g, " ")
+        .replace(phoneHeaderPattern, "")                                   // Remove phone & "From:"
+        .replace(/SAFE|EVACUATED|EVAC|NEED HELP|HELP|SOS|UNKNOWN/gi, "")   // Remove status keywords
+        .replace(/\b\d{1,3}\s*%?/gi, "")                                   // Remove digits with or without % sign
+        .replace(/[:,\-]/g, " ")                                           // Remove standalone punctuation
+        .replace(/\s+/g, " ")                                              // Collapse duplicate spaces
         .trim();
     
+      // Handle fallback when no location is provided
       if (!cleanNote) {
         cleanNote = "📍 No location provided";
       } else {
@@ -1114,251 +950,154 @@
     
       alert(`Updated ${familyData[memberIndex].name}! Status: ${status}`);
     }
+
+    // Populate dropdown from familyData
+    function populateSenderDropdown() {
+      const select = document.getElementById('smsSenderSelect');
+      if (!select) return;
+    
+      select.innerHTML = '<option value="">-- Auto-detect from SMS text --</option>';
+    
+      familyData.forEach(member => {
+        if (member.phone) {
+          const option = document.createElement('option');
+          option.value = member.phone;
+          option.textContent = `👤 ${member.name} (${member.phone})`;
+          select.appendChild(option);
+        }
+      });
+    }
+    
+    // Automatically refresh dropdown when modal opens
+    const smsModalEl = document.getElementById('smsModal');
+    if (smsModalEl) {
+      smsModalEl.addEventListener('show.bs.modal', () => {
+        populateSenderDropdown();
+        document.getElementById('smsTextarea').value = ''; // Reset text
+      });
+    }
+    
+    // Submit function triggered by Parse & Update button
+    function submitImportSMS() {
+      const rawText = document.getElementById('smsTextarea').value;
+      const selectedPhone = document.getElementById('smsSenderSelect').value;
+    
+      // Pass selectedPhone into your parser
+      processIncomingSMS(rawText, selectedPhone);
+    
+      // Close modal
+      const modalInstance = bootstrap.Modal.getInstance(smsModalEl);
+      if (modalInstance) modalInstance.hide();
+    }
   
     function deleteFamilyMember(id) {
       if (!confirm("Are you sure you want to remove this member?")) return;
       familyData = familyData.filter(m => String(m.id) !== String(id));
       saveData();
       renderBoard();
-      populateSmsRecipientDropdown();
+      populateSmsRecipientDropdown(); // Refresh dropdown
     }
   
+    // ------------------------------------------------------------------
+    // 5. Single DOM Initialization
+    // ------------------------------------------------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+      loadData();
+      initBatteryAPI();
+  
+      document.getElementById("statusNote").addEventListener("input", () => {
+        updatePayload();
+        saveData();
+      });
+  
+      const smsRecipient = document.getElementById("smsRecipient");
+      if (smsRecipient) {
+        smsRecipient.addEventListener("input", () => {
+          saveData();
+          updatePayload();
+        });
+      }
+    });
+
     function forceAppUpdate() {
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then((registrations) => {
           for (let registration of registrations) {
-            registration.unregister();
+            registration.unregister(); // Delete active SW
           }
           caches.keys().then((names) => {
-            for (let name of names) caches.delete(name);
+            for (let name of names) caches.delete(name); // Delete all caches
           }).then(() => {
             alert("App cache cleared! Reloading...");
-            window.location.reload(true);
+            window.location.reload(true); // Hard reload from network
           });
         });
       } else {
         window.location.reload(true);
       }
     }
-  
+
     function exportFamilyData() {
       if (!familyData || familyData.length === 0) {
         alert("No family data available to export.");
         return;
       }
     
+      // Convert array to clean JSON string
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(familyData, null, 2));
+      
+      // Create temporary download link
       const downloadAnchor = document.createElement('a');
-      const dateStr = new Date().toISOString().slice(0, 10);
+      const dateStr = new Date().toISOString().slice(0, 10); // e.g. "2026-08-14"
       
       downloadAnchor.setAttribute("href", dataStr);
       downloadAnchor.setAttribute("download", `family_board_backup_${dateStr}.json`);
       document.body.appendChild(downloadAnchor);
       
+      // Trigger download & clean up
       downloadAnchor.click();
       downloadAnchor.remove();
     }
-  
+
     function importFamilyData(event) {
-      const file = event.target.files && event.target.files[0];
+      const file = event.target.files[0];
       if (!file) return;
     
       const reader = new FileReader();
     
       reader.onload = function(e) {
         try {
-          const content = e.target.result;
-          const importedData = JSON.parse(content);
+          const importedData = JSON.parse(e.target.result);
     
+          // Basic validation: ensure it's an array
           if (!Array.isArray(importedData)) {
-            alert("Invalid backup file format. Expected a list of family members.");
+            alert("Invalid backup file format. Expected a JSON list.");
             return;
           }
     
           if (confirm(`Replace family board with ${importedData.length} members from backup?`)) {
             familyData = importedData;
     
-            saveData();
+            // Save to localStorage
+            localStorage.setItem("family_board_status", JSON.stringify(familyData));
+    
+            // Refresh UI and Dropdowns
             renderBoard();
             populateSmsRecipientDropdown();
     
             alert("Family board restored successfully!");
           }
         } catch (err) {
-          alert("Could not read backup file: " + err.message + "\nMake sure it is a valid JSON file.");
+          alert("Error reading backup file: " + err.message);
         }
     
-        event.target.value = '';
-      };
-    
-      reader.onerror = function() {
-        alert("Error reading file from storage.");
+        // Reset file input so user can re-import the same file if needed
         event.target.value = '';
       };
     
       reader.readAsText(file);
     }
-  
-    // ------------------------------------------------------------------
-    // 5. DOM Initialization & Event Listeners
-    // ------------------------------------------------------------------
-    document.addEventListener("DOMContentLoaded", () => {
-      loadData();
-      initBatteryAPI();
-  
-      document.getElementById("statusNote")?.addEventListener("input", () => {
-        updatePayload();
-        saveData();
-      });
-  
-      document.getElementById("smsRecipient")?.addEventListener("input", () => {
-        saveData();
-        updatePayload();
-      });
-  
-      const smsModalEl = document.getElementById('smsModal');
-      if (smsModalEl) {
-        smsModalEl.addEventListener('show.bs.modal', () => {
-          populateSenderDropdown();
-          const textarea = document.getElementById('smsTextarea');
-          if (textarea) textarea.value = '';
-        });
-      }
-    });
-    
-    // Your form submission logic
-    async function handleUserCheckIn(formData) {
-      await saveCheckInLocally(formData);
-      alert('Status saved safely on device!');
-      attemptBackgroundSync();
-    }
-  
-    // Your sync logic
-    async function attemptBackgroundSync() {
-      // 1. Skip if device is offline
-      if (!navigator.onLine) {
-        console.log("📵 Currently offline. Skipping background sync.");
-        return;
-      }
-    
-      // 2. Fetch unsynced items from IndexedDB
-      if (typeof getUnsyncedDataFromIndexedDB !== 'function') return;
-      const unsyncedData = await getUnsyncedDataFromIndexedDB();
-      if (!unsyncedData || unsyncedData.length === 0) {
-        return;
-      }
-    
-      // 3. Attempt network send
-      try {
-        const response = await fetch('/api/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(unsyncedData)
-        });
-    
-        // Clear local storage and trigger toast only on server success (200 OK)
-        if (response.ok) {
-          if (typeof clearSyncedDataFromIndexedDB === 'function') {
-            await clearSyncedDataFromIndexedDB();
-          }
-    
-          if (typeof showToast === 'function') {
-            showToast("✅ Emergency status synced to server!", "success");
-          } else if (typeof createMobileToast === 'function') {
-            createMobileToast("✅ Emergency status synced to server!");
-          }
-        }
-      } catch (err) {
-        console.warn("Sync failed — network unreachable.");
-      }
-    }
-
-    function getOrCreateToastContainer() {
-      let container = document.getElementById('toast-container');
-      if (!container) {
-        container = document.createElement('div');
-        container.id = 'toast-container';
-        document.body.appendChild(container);
-      }
-      return container;
-    }
-    
-    function showToast(message, type = 'success') {
-      const container = getOrCreateToastContainer();
-      const toast = document.createElement('div');
-    
-      const icons = {
-        success: '✅',
-        warning: '⚠️',
-        error: '❌',
-        info: 'ℹ️'
-      };
-    
-      const icon = icons[type] || '';
-      toast.className = `toast-notification toast-${type}`;
-      toast.textContent = `${icon} ${message}`.trim();
-    
-      // Append inside container instead of document.body
-      container.appendChild(toast);
-    
-      requestAnimationFrame(() => {
-        toast.classList.add('show');
-      });
-    
-      // Remove toast after 3 seconds
-      setTimeout(() => {
-        toast.classList.remove('show');
-        toast.addEventListener('transitionend', () => {
-          toast.remove();
-          // Remove container if no toasts remain
-          if (container.children.length === 0) {
-            container.remove();
-          }
-        });
-      }, 3000);
-    }
-    
-    // Automatically sync whenever the browser detects network reconnection
-    window.addEventListener('online', () => {
-      console.log("🌐 Network detected. Waiting 3 seconds for Wi-Fi connection...");
-    
-      // Delay 3 seconds to let mobile Wi-Fi establish
-      setTimeout(async () => {
-        if (typeof attemptBackgroundSync === 'function') {
-          await attemptBackgroundSync();
-        }
-      }, 3000);
-    });  
-      
-    window.addEventListener('online', attemptBackgroundSync);
-    window.getGPSLocation = getGPSLocation;
-    window.selectStatus = selectStatus;
-    window.copyAndOpenSMS = copyAndOpenSMS;
-    window.openImportSMSModal = openImportSMSModal;
-    window.openAddModal = openAddModal;
-    window.saveData = saveData;
-    window.exportFamilyData = exportFamilyData;   
-    window.openEditModal = openEditModal;
-    window.toggleSiren = toggleSiren;
-    window.deleteFamilyMember = deleteFamilyMember;
-    window.attemptBackgroundSync = attemptBackgroundSync;
-    window.getPendingCheckIns = getPendingCheckIns;
-    window.markCheckInSynced = markCheckInSynced;
-    window.showToast = showToast;
-
-    // Expose module functions globally for inline HTML onclick attributes
-    if (typeof selectStatus === 'function') {
-      window.selectStatus = selectStatus;
-    }
-    
-    if (typeof toggleSiren === 'function') {
-      window.toggleSiren = toggleSiren;
-    }
-    
-    if (typeof broadcastStatus === 'function') {
-      window.broadcastStatus = broadcastStatus;
-    }
-        
-  </script>
+   
+  </script>  
 </body>
 </html>
