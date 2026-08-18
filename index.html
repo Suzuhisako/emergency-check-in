@@ -739,6 +739,28 @@
         addToOfflineQueue(payload);
       }
     }
+
+    function loadSavedData() {
+      const savedRaw = localStorage.getItem("my_emergency_status");
+      if (!savedRaw) return;
+    
+      try {
+        const saved = JSON.parse(savedRaw);
+        if (saved.status) {
+          // Re-apply button highlight and set currentStatus
+          selectStatus(saved.status);
+        }
+        if (saved.note) {
+          const noteInput = document.getElementById("statusNote");
+          if (noteInput) noteInput.value = saved.note;
+        }
+      } catch (err) {
+        console.warn("Could not load saved emergency status", err);
+      }
+    }
+
+    // Trigger load on startup
+    document.addEventListener('DOMContentLoaded', loadSavedData);
     
     function addToOfflineQueue(payload) {
       const queue = JSON.parse(localStorage.getItem("pending_sync_queue") || "[]");
