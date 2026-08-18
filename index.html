@@ -570,31 +570,27 @@
   
     function selectStatus(status) {
       currentStatus = status;
-  
+    
+      // Clear ALL active button styles first
       const btnSafe = document.getElementById('btn-safe');
       const btnHelp = document.getElementById('btn-help');
       const btnTransit = document.getElementById('btn-transit');
-  
-      btnSafe.className = 'btn btn-outline-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-      btnHelp.className = 'btn btn-outline-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-      btnTransit.className = 'btn btn-outline-warning status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-  
-      document.getElementById('label-safe').innerText = 'Tap to set';
-      document.getElementById('label-help').innerText = 'Tap to set';
-      document.getElementById('label-transit').innerText = 'Tap to set';
-  
-      if (status === 'SAFE') {
-        btnSafe.className = 'btn btn-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-        document.getElementById('label-safe').innerText = 'SELECTED';
-      } else if (status === 'NEED HELP') {
-        btnHelp.className = 'btn btn-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-        document.getElementById('label-help').innerText = 'SELECTED';
-      } else if (status === 'IN TRANSIT') {
-        btnTransit.className = 'btn btn-warning text-dark status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center';
-        document.getElementById('label-transit').innerText = 'SELECTED';
+    
+      if (btnSafe) btnSafe.className = "btn btn-outline-success w-100 status-btn";
+      if (btnHelp) btnHelp.className = "btn btn-outline-danger w-100 status-btn";
+      if (btnTransit) btnTransit.className = "btn btn-outline-warning w-100 status-btn";
+    
+      // Highlight ONLY selected button
+      const norm = String(status).toUpperCase().trim();
+      if (norm === 'SAFE' && btnSafe) {
+        btnSafe.className = "btn btn-success w-100 status-btn";
+      } else if ((norm === 'NEED HELP' || norm === 'NEED_HELP') && btnHelp) {
+        btnHelp.className = "btn btn-danger w-100 status-btn";
+      } else if (norm === 'IN TRANSIT' && btnTransit) {
+        btnTransit.className = "btn btn-warning text-dark w-100 status-btn";
       }
-  
-      updatePayload();
+    
+      saveData();
     }
   
     function copyAndOpenSMS() {
@@ -717,18 +713,17 @@
     function saveData() {
       const noteText = document.getElementById("statusNote")?.value || "";
       
-      // 1. Always update the local state so the UI stays instant & persistent
-      const localStatusData = {
+      // 1. Save locally first (instant UI update)
+      localStorage.setItem("my_emergency_status", JSON.stringify({
         status: currentStatus,
         note: noteText
-      };
-      localStorage.setItem("my_emergency_status", JSON.stringify(localStatusData));
+      }));
     
-      // 2. Build the full payload for the server
+      // 2. Prepare payload
       const payload = {
         uid: "usr_self_01",
         status: currentStatus,
-        bat: typeof liveBattery !== "undefined" ? `${liveBattery}%` : "100%",
+        bat: (typeof liveBattery !== "undefined" && liveBattery !== null) ? `${liveBattery}%` : "100%",
         gps: currentCoords ? `${currentCoords.lat},${currentCoords.lon}` : "N/A",
         ts: new Date().toISOString(),
         note: noteText
@@ -745,79 +740,69 @@
       }
     }
     
-    // Helper: Push item into localStorage queue array
     function addToOfflineQueue(payload) {
       const queue = JSON.parse(localStorage.getItem("pending_sync_queue") || "[]");
       queue.push(payload);
       localStorage.setItem("pending_sync_queue", JSON.stringify(queue));
-      console.log("📥 Added to offline queue. Current pending:", queue.length);
     }
-
-      async function flushOfflineQueue() {
-        if (!navigator.onLine) return;
-      
-        const queue = JSON.parse(localStorage.getItem("pending_sync_queue") || "[]");
-        if (queue.length === 0) return;
-      
-        console.log(`📡 Internet restored! Flushing ${queue.length} pending check-in(s)...`);
-      
-        try {
-          const response = await fetch('/api/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(queue)
-          });
-      
-          if (response.ok) {
-            // Clear queue only after server confirms receipt (HTTP 200)
-            localStorage.removeItem("pending_sync_queue");
-            console.log("✅ Offline queue successfully synced!");
-      
-            if (typeof showToast === 'function') {
-              showToast("✅ Emergency status synced to server!", "success");
-            }
-          }
-        } catch (err) {
-          console.warn("Sync failed — network unreachable. Keeping items in queue.", err);
-        }
-      }
-      
-      // Helper for live updates when online
-      async function sendPayloadToServer(payload) {
-        try {
-          const response = await fetch('/api/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify([payload])
-          });
-          if (response.ok && typeof showToast === 'function') {
-            showToast("✅ Status updated!", "success");
-          }
-        } catch (err) {
-          // If the send fails mid-request, fallback to queue
-          addToOfflineQueue(payload);
-        }
-      }
     
-      // 3. Queue logic: If online, send immediately; if offline, add to queue
-      if (navigator.onLine) {
-        sendPayloadToServer(payload);
-      } else {
+    async function sendPayloadToServer(payload) {
+      try {
+        const response = await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify([payload])
+        });
+        if (response.ok && typeof showToast === 'function') {
+          showToast("✅ Status updated!", "success");
+        }
+      } catch (err) {
         addToOfflineQueue(payload);
-        if (typeof showToast === 'function') {
-          showToast("📵 Saved offline. Will sync when reconnected.", "warning");
-        }
       }
     }
     
-    // Helper: Push item into localStorage queue array
-    function addToOfflineQueue(payload) {
+    async function flushOfflineQueue() {
+      if (!navigator.onLine) return;
+    
       const queue = JSON.parse(localStorage.getItem("pending_sync_queue") || "[]");
-      queue.push(payload);
-      localStorage.setItem("pending_sync_queue", JSON.stringify(queue));
-      console.log("📥 Added to offline queue. Current pending:", queue.length);
+      if (queue.length === 0) return;
+    
+      try {
+        const response = await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(queue)
+        });
+    
+        if (response.ok) {
+          localStorage.removeItem("pending_sync_queue");
+          if (typeof showToast === 'function') {
+            showToast("✅ Emergency status synced to server!", "success");
+          }
+        }
+      } catch (err) {
+        console.warn("Sync failed — network unreachable.");
+      }
+    }   
+    
+      
+    async function sendPayloadToServer(payload) {
+      try {
+        const response = await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify([payload])
+        });
+        if (response.ok && typeof showToast === 'function') {
+          showToast("✅ Status updated!", "success");
+        }
+      } catch (err) {
+        addToOfflineQueue(payload);
+      }
     }
-  
+    
+       
+     
     function openAddModal() {
       document.getElementById("modalTitle").innerText = "Add Family Member";
       document.getElementById("modalMemberId").value = "";
