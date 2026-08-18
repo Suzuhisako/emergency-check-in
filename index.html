@@ -733,6 +733,25 @@
         ts: new Date().toISOString(),
         note: noteText
       };
+    
+      // 3. Queue logic: If online, send immediately; if offline, add to queue
+      if (navigator.onLine) {
+        sendPayloadToServer(payload);
+      } else {
+        addToOfflineQueue(payload);
+        if (typeof showToast === 'function') {
+          showToast("📵 Saved offline. Will sync when reconnected.", "warning");
+        }
+      }
+    }
+    
+    // Helper: Push item into localStorage queue array
+    function addToOfflineQueue(payload) {
+      const queue = JSON.parse(localStorage.getItem("pending_sync_queue") || "[]");
+      queue.push(payload);
+      localStorage.setItem("pending_sync_queue", JSON.stringify(queue));
+      console.log("📥 Added to offline queue. Current pending:", queue.length);
+    }
 
       async function flushOfflineQueue() {
         if (!navigator.onLine) return;
