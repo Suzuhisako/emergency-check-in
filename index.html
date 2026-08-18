@@ -753,10 +753,15 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify([payload])
         });
-        if (response.ok && typeof showToast === 'function') {
-          showToast("✅ Status updated!", "success");
+    
+        if (response.ok) {
+          if (typeof showToast === 'function') showToast("✅ Status updated on server!", "success");
+        } else if (response.status === 405) {
+          console.warn("⚠️ Server returned 405 (No POST endpoint configured at /api/sync). Queuing locally.");
+          addToOfflineQueue(payload);
         }
       } catch (err) {
+        // Network error (offline or unreachable)
         addToOfflineQueue(payload);
       }
     }
