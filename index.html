@@ -227,7 +227,7 @@
     <!-- Technical Packet Preview -->
     <section class="card-dark rounded-3 p-3">
       <h2 class="h6 text-uppercase text-secondary fw-bold mb-2">Technical Packet Payload (JSON)</h2>
-      <pre class="bg-black text-success p-2 rounded border border-secondary small mb-0" style="font-size: 0.75rem;" id="rawPayload">
+      <pre class="bg-black text-success p-2 rounded border border-secondary small mb-0" style="font-size: 0.75rem;" min-height: 120px; white-space: pre-wrap;" id="rawPayload">
       </pre>
     </section>
   </div>
@@ -553,19 +553,24 @@
     // 3. App State & Payload Updates
     // ------------------------------------------------------------------
     function updatePayload() {
-      const noteText = document.getElementById("statusNote")?.value || "No note";
-  
+      const noteText = document.getElementById("statusNote")?.value || "";
+    
       const payload = {
         uid: "usr_self_01",
         status: currentStatus,
-        bat: `${liveBattery}%`,
-        gps: currentCoords ? `${currentCoords.lat},${currentCoords.lon}` : "N/A",
-        ts: new Date().toISOString().substring(11, 19) + "Z",
+        bat: (typeof liveBattery !== "undefined" && liveBattery !== null) ? `${liveBattery}%` : "100%",
+        gps: typeof currentCoords !== "undefined" && currentCoords ? `${currentCoords.lat},${currentCoords.lon}` : "N/A",
+        ts: new Date().toISOString(),
         note: noteText
       };
-      
-      const payloadElem = document.getElementById("rawPayload");
-      if (payloadElem) payloadElem.innerText = JSON.stringify(payload, null, 2);
+    
+      // Inject nicely formatted JSON into <pre id="rawPayload">
+      const rawElem = document.getElementById("rawPayload");
+      if (rawElem) {
+        rawElem.textContent = JSON.stringify(payload, null, 2);
+      }
+    
+      return payload;
     }
   
     // Global status variable (defaults to SAFE)
@@ -717,22 +722,29 @@
     function saveData() {
       const noteText = document.getElementById("statusNote")?.value || "";
     
-      // Update local state
+      // 1. Update local storage
       localStorage.setItem("my_emergency_status", JSON.stringify({
         status: currentStatus,
         note: noteText
       }));
     
-      // Build full technical packet payload
+      // 2. Build full technical packet payload
       const payload = {
         uid: "usr_self_01",
-        status: currentStatus, // Now accurately synced!
+        status: currentStatus,
         bat: (typeof liveBattery !== "undefined" && liveBattery !== null) ? `${liveBattery}%` : "100%",
-        gps: currentCoords ? `${currentCoords.lat},${currentCoords.lon}` : "N/A",
+        gps: (typeof currentCoords !== "undefined" && currentCoords) ? `${currentCoords.lat},${currentCoords.lon}` : "N/A",
         ts: new Date().toISOString(),
         note: noteText
       };
     
+      // 3. Render JSON into the <pre id="rawPayload"> display box
+      const rawElem = document.getElementById("rawPayload");
+      if (rawElem) {
+        rawElem.textContent = JSON.stringify(payload, null, 2);
+      }
+    
+      // 4. Dispatch to server or offline queue
       if (navigator.onLine) {
         sendPayloadToServer(payload);
       } else {
