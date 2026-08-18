@@ -720,35 +720,54 @@
     }
   
     function saveData() {
-      const noteText = document.getElementById("statusNote")?.value || "";
+      try {
+        const noteInput = document.getElementById("statusNote");
+        const noteText = noteInput ? noteInput.value : "";
     
-      // 1. Update local storage
-      localStorage.setItem("my_emergency_status", JSON.stringify({
-        status: currentStatus,
-        note: noteText
-      }));
+        // 1. Save to Local Storage
+        localStorage.setItem("my_emergency_status", JSON.stringify({
+          status: typeof currentStatus !== "undefined" ? currentStatus : "SAFE",
+          note: noteText
+        }));
     
-      // 2. Build full technical packet payload
-      const payload = {
-        uid: "usr_self_01",
-        status: currentStatus,
-        bat: (typeof liveBattery !== "undefined" && liveBattery !== null) ? `${liveBattery}%` : "100%",
-        gps: (typeof currentCoords !== "undefined" && currentCoords) ? `${currentCoords.lat},${currentCoords.lon}` : "N/A",
-        ts: new Date().toISOString(),
-        note: noteText
-      };
+        // 2. Safely resolve coordinates
+        let gpsVal = "N/A";
+        if (typeof currentCoords !== "undefined" && currentCoords && currentCoords.lat && currentCoords.lon) {
+          gpsVal = `${currentCoords.lat},${currentCoords.lon}`;
+        }
     
-      // 3. Render JSON into the <pre id="rawPayload"> display box
-      const rawElem = document.getElementById("rawPayload");
-      if (rawElem) {
-        rawElem.textContent = JSON.stringify(payload, null, 2);
-      }
+        // 3. Safely resolve battery
+        let batVal = "100%";
+        if (typeof liveBattery !== "undefined" && liveBattery !== null) {
+          batVal = `${liveBattery}%`;
+        }
     
-      // 4. Dispatch to server or offline queue
-      if (navigator.onLine) {
-        sendPayloadToServer(payload);
-      } else {
-        addToOfflineQueue(payload);
+        // 4. Build payload object
+        const payload = {
+          uid: "usr_self_01",
+          status: typeof currentStatus !== "undefined" ? currentStatus : "SAFE",
+          bat: batVal,
+          gps: gpsVal,
+          ts: new Date().toISOString(),
+          note: noteText
+        };
+    
+        // 5. Update <pre id="rawPayload">
+        const rawElem = document.getElementById("rawPayload");
+        if (rawElem) {
+          rawElem.textContent = JSON.stringify(payload, null, 2);
+        } else {
+          console.warn("Could not find element with id 'rawPayload'");
+        }
+    
+        // 6. Network Dispatch
+        if (typeof sendPayloadToServer === "function" && navigator.onLine) {
+          sendPayloadToServer(payload);
+        } else if (typeof addToOfflineQueue === "function") {
+          addToOfflineQueue(payload);
+        }
+      } catch (err) {
+        console.error("Error inside saveData():", err);
       }
     }
 
