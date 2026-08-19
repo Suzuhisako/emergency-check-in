@@ -269,8 +269,18 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label">Phone Number</label>
-            <input type="tel" id="modalMemberPhone" class="form-control bg-dark text-light border-secondary" placeholder="e.g. 09012345678">
+            <label for="modalMemberPhone" class="form-label">Phone Number (for SMS)</label>
+            <input 
+              type="tel" 
+              class="form-control" 
+              id="modalMemberPhone" 
+              placeholder="e.g. +819012345678 or 090-1234-5678"
+              maxlength="20"
+              autocomplete="tel"
+            >
+            <div class="form-text text-secondary" style="font-size: 0.8rem;">
+              Include country code for international numbers (e.g., +1 for US, +81 for Japan).
+            </div>
           </div>
             
           <div class="mb-3">
