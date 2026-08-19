@@ -122,7 +122,7 @@
           <span class="pulse-dot"></span>BLE Mesh Ready
         </span>
         <div class="small text-secondary">
-         🔋 Battery: <span id="displayBattery" class="text-light fw-bold">Detecting...</span>
+          🔋 Battery: <span id="displayBattery" class="text-light fw-bold">Detecting...</span>
         </div>
       </div>
     </header>
@@ -172,14 +172,15 @@
         </button>
       </div>
 
+      <!-- Note & Auto-GPS Input Group -->
       <div class="mb-3">
-        <div class="d-flex justify-content-between align-items-center mb-1">
-            <label for="statusNote" class="form-label small text-secondary mb-0">Optional Short Note / Location</label>
-            <button id="btn-gps" onclick="getGPSLocation(this)" class="btn btn-outline-success w-100 mb-2">
-              📍 Auto-GPS
-            </button>
+        <label for="statusNote" class="form-label small text-secondary mb-1">Optional Short Note / Location</label>
+        <div class="input-group mb-1">
+          <input type="text" class="form-control bg-dark text-light border-secondary" id="statusNote" placeholder="e.g. At Chigasaki Primary Shelter">
+          <button id="btn-gps" type="button" class="btn btn-outline-success" onclick="getGPSLocation(this)">
+            📍 Auto-GPS
+          </button>
         </div>
-        <input type="text" class="form-control bg-dark text-light border-secondary" id="statusNote" placeholder="e.g. At Chigasaki Primary Shelter">
         <div id="gpsStatus" class="form-text text-success small d-none">GPS coordinates captured!</div>
       </div>
       
@@ -205,25 +206,24 @@
         Copied to clipboard! Long-press in +メッセージ or LINE to paste.
       </div>
 
-       
       <div id="broadcastAlert" class="alert alert-success mt-2 py-2 small d-none" role="alert">
         Status saved to offline LocalStorage!
       </div>
     </section>
 
     <!-- Step 2: Family Status Board -->
-    <!-- Family Board Section -->
     <section class="card-dark rounded-3 p-3 mb-3">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="h6 text-uppercase text-secondary fw-bold m-0">2. Family Board</h2>
         <div>
-          <button class="btn btn-sm btn-info py-0 px-2 me-1" onclick="openImportSMSModal()">📥 Import SMS</button>
-          <button class="btn btn-sm btn-success py-0 px-2 me-1" onclick="openAddModal()">+ Add</button>
-          <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="simulateIncomingPacket()">Mesh Hop</button>
+          <button type="button" class="btn btn-sm btn-info py-0 px-2 me-1" onclick="openImportSMSModal()">📥 Import SMS</button>
+          <button type="button" class="btn btn-sm btn-success py-0 px-2 me-1" onclick="openAddModal()">+ Add</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="simulateIncomingPacket()">Mesh Hop</button>
         </div>
       </div>
 
       <div class="list-group list-group-flush" id="familyList"></div>
+
       <!-- Data Management (Export / Import Backup) -->
       <div class="card bg-dark text-light border-secondary my-3 p-3">
         <h6 class="card-title fw-bold mb-1">💾 Data Management</h6>
@@ -248,100 +248,7 @@
       </div>
     </section>
 
-    <!-- Technical Packet Preview -->
-    <section class="card-dark rounded-3 p-3">
-      <h2 class="h6 text-uppercase text-secondary fw-bold mb-2">Technical Packet Payload (JSON)</h2>
-      <pre class="bg-black text-success p-2 rounded border border-secondary small mb-0" style="font-size: 0.75rem;" min-height: 120px; white-space: pre-wrap;" id="rawPayload">
-      </pre>
-    </section>
-  </div>
-
-  <!-- <button type="button" class="btn btn-sm btn-outline-secondary mt-3" onclick="forceAppUpdate()">
-    🔄 Force Reset App Cache
-  </button> -->
-
-  <!-- Family Member Modal -->
-  <div class="modal fade" id="familyModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content bg-dark text-light border-secondary">
-        <div class="modal-header border-secondary">
-          <h5 class="modal-title" id="modalTitle">Add Family Member</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="modalMemberId">
-            
-          <div class="mb-3">
-            <label class="form-label">Name</label>
-            <input type="text" id="modalMemberName" class="form-control bg-dark text-light border-secondary" placeholder="e.g. Taro">
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Phone Number</label>
-            <input type="tel" id="modalMemberPhone" class="form-control bg-dark text-light border-secondary" placeholder="e.g. 09012345678">
-          </div>
-            
-          <div class="mb-3">
-            <label class="form-label">Status</label>
-            <select id="modalMemberStatus" class="form-select bg-dark text-light border-secondary">
-              <option value="SAFE">SAFE</option>
-              <option value="EVACUATED">EVACUATED</option>
-              <option value="NEED HELP">NEED HELP</option>
-              <option value="UNKNOWN">UNKNOWN</option>
-            </select>
-          </div>
-            
-          <div class="mb-3">
-            <label class="form-label">Location / Note</label>
-            <input type="text" id="modalMemberLocation" class="form-control bg-dark text-light border-secondary" placeholder="e.g. At home, Sheltering">
-          </div>
-        </div>
-        <div class="modal-footer border-secondary">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" onclick="saveFamilyMember()">Save</button>
-        </div>
-      </div>
-    </div>
-  </div>  
-    
-  <!-- SMS Import Modal -->
-  <div class="modal fade" id="smsModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content bg-dark text-light border-secondary">
-        <div class="modal-header border-secondary">
-          <h5 class="modal-title">📩 Import Emergency SMS</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">            
-          <!-- Member Dropdown -->
-          <div class="mb-3">
-            <label for="smsSenderSelect" class="form-label text-light fw-bold">Select Family Member (Optional):</label>
-            <select id="smsSenderSelect" class="form-select bg-dark text-light border-secondary">
-              <option value="">-- Auto-detect from SMS text --</option>
-              <!-- JavaScript will insert registered family members here -->
-            </select>
-            <div class="form-text text-secondary mt-1">
-              Pick a member if your SMS text does not include "From: 090-XXXX-XXXX".
-            </div>
-          </div>
-    
-          <!-- Raw Textarea -->
-          <div class="mb-3">
-            <label for="smsTextarea" class="form-label text-light fw-bold">Paste Raw SMS or Broadcast Message:</label>
-            <textarea id="smsTextarea" class="form-control bg-dark text-light border-secondary" rows="4" placeholder="e.g. SAFE At Shibuya Station 85%"></textarea>
-            <div class="form-text text-secondary mt-2">
-              The parser will auto-detect the status, battery level, and location note.
-            </div>
-          </div>
-    
-        </div>
-        <div class="modal-footer border-secondary">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-info" onclick="submitImportSMS()">Parse & Update</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  </div> <!-- End Container -->
   
    <!-- Required for Bootstrap Modals to work -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
