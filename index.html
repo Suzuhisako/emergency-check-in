@@ -84,21 +84,17 @@
       100% { transform: scale(1); }
     }
 
-    /* Disable Bootstrap sticky hover & focus fill on mobile touchscreens */
-    @media (hover: none) {
+    /* Strip Bootstrap sticky hover fill on touchscreens */
+    @media (hover: none), (pointer: coarse) {
       .btn-outline-success:hover,
+      .btn-outline-success:focus,
       .btn-outline-primary:hover,
-      .btn-outline-warning:hover,
-      .btn-outline-danger:hover {
+      .btn-outline-primary:focus {
         background-color: transparent !important;
         color: inherit !important;
-      }
-    
-      .btn:focus, .btn:active {
         box-shadow: none !important;
-        outline: none !important;
       }
-    }  
+    }
 
     .pulse-animation {
       animation: pulseBtn 0.7s infinite;
@@ -572,6 +568,8 @@
           }
     
           saveData();
+          document.body.tabIndex = -1;
+          document.body.focus();
         },
         (error) => {
           console.warn("GPS Error:", error);
