@@ -251,54 +251,41 @@
   </div> <!-- End Container -->
   
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  
-  <script>  
+
+  <script>
+    // ------------------------------------------------------------------
+    // Service Worker Registration
+    // ------------------------------------------------------------------
     if ('serviceWorker' in navigator) {
       let refreshing = false;
       
-      // Only reload the page once the new Service Worker has actually claimed control
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (refreshing) return;
         refreshing = true;
         window.location.reload();
       });
-      
+  
       window.addEventListener('load', () => {
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('./sw.js').then((registration) => {
-        
-            // 1. Check if a worker is already waiting in the background
-            if (registration.waiting) {
-              showUpdatePrompt(registration.waiting);
-            }
-        
-            // 2. Listen for newly discovered updates
-            registration.addEventListener('updatefound', () => {
-              const newWorker = registration.installing;
-                
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  showUpdatePrompt(newWorker);
-                }
-              });
+        navigator.serviceWorker.register('./sw.js').then((registration) => {
+          if (registration.waiting) {
+            showUpdatePrompt(registration.waiting);
+          }
+  
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                showUpdatePrompt(newWorker);
+              }
             });
           });
-        
-          // 3. Automatically refresh the page once the new SW activates
-          let refreshing = false;
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) {
-              refreshing = true;
-              window.location.reload();
-            }
-          });
-        }
-      });   
+        });
+      });
     }
-             
+  
     function showUpdatePrompt(worker) {
       if (document.getElementById('pwa-update-toast')) return;
-    
+  
       const toast = document.createElement('div');
       toast.id = 'pwa-update-toast';
       toast.style.cssText = `
@@ -316,23 +303,24 @@
         gap: 12px;
         font-family: sans-serif;
       `;
-    
+  
       toast.innerHTML = `
         <span>A new version is available!</span>
         <button id="pwa-reload-btn" style="background: white; color: #0d6efd; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer;">
           Reload
         </button>
       `;
-    
+  
       document.body.appendChild(toast);
-    
+  
       document.getElementById('pwa-reload-btn').addEventListener('click', () => {
-        // Send message to SW to trigger skipWaiting()
         worker.postMessage({ type: 'SKIP_WAITING' });
       });
-    } 
+    }
   
+    // ------------------------------------------------------------------
     // State Management
+    // ------------------------------------------------------------------
     const DEFAULT_FAMILY = [
       { id: "dad", name: "Taro (Dad)", status: "SAFE", badgeClass: "bg-success", time: "10:18 AM", location: "📍 Chigasaki Elem. Shelter", battery: "88%", via: "Received via: Direct BLE", viaClass: "text-success" },
       { id: "mom", name: "Hanako (Mom)", status: "IN TRANSIT", badgeClass: "bg-warning text-dark", time: "10:05 AM", location: "📍 Moving toward Station", battery: "41%", via: "Received via: Mesh Hop #3", viaClass: "text-warning" },
@@ -349,6 +337,7 @@
     let liveBattery = 85;
     let currentCoords = null;
     let familyModalInstance = null;
+    let smsModalInstance = null;
   
     // ------------------------------------------------------------------
     // 1. Emergency Siren & Strobe Controls
@@ -390,9 +379,11 @@
   
       const btn = document.getElementById("sirenBtn");
       const status = document.getElementById("sirenStatus");
-      btn.classList.remove("btn-danger");
-      btn.classList.add("btn-warning", "text-dark", "pulse-animation");
-      btn.innerText = "🛑 STOP ALARM";
+      if (btn) {
+        btn.classList.remove("btn-danger");
+        btn.classList.add("btn-warning", "text-dark", "pulse-animation");
+        btn.innerText = "🛑 STOP ALARM";
+      }
       if (status) status.classList.remove("d-none");
     }
   
@@ -404,9 +395,11 @@
       document.body.classList.remove("strobe-active");
       const btn = document.getElementById("sirenBtn");
       const status = document.getElementById("sirenStatus");
-      btn.classList.remove("btn-warning", "text-dark", "pulse-animation");
-      btn.classList.add("btn-danger");
-      btn.innerText = "🔊 START EMERGENCY ALARM";
+      if (btn) {
+        btn.classList.remove("btn-warning", "text-dark", "pulse-animation");
+        btn.classList.add("btn-danger");
+        btn.innerText = "🔊 START EMERGENCY ALARM";
+      }
       if (status) status.classList.add("d-none");
     }
   
@@ -420,10 +413,12 @@
           battery.addEventListener('levelchange', () => updateBatteryUI(battery));
           battery.addEventListener('chargingchange', () => updateBatteryUI(battery));
         }).catch(() => {
-          document.getElementById("displayBattery").innerText = `${liveBattery}% (Default)`;
+          const display = document.getElementById("displayBattery");
+          if (display) display.innerText = `${liveBattery}% (Default)`;
         });
       } else {
-        document.getElementById("displayBattery").innerText = `${liveBattery}% (N/A)`;
+        const display = document.getElementById("displayBattery");
+        if (display) display.innerText = `${liveBattery}% (N/A)`;
       }
     }
   
@@ -442,12 +437,12 @@
             lat: position.coords.latitude.toFixed(5),
             lon: position.coords.longitude.toFixed(5)
           };
-    
+  
           const gpsMsg = document.getElementById("gpsStatus");
           if (gpsMsg) {
             gpsMsg.textContent = "📍 GPS Captured Successfully!";
           }
-    
+  
           saveData();
         },
         (error) => {
@@ -461,7 +456,7 @@
     // ------------------------------------------------------------------
     function updatePayload() {
       const noteText = document.getElementById("statusNote")?.value || "";
-    
+  
       const payload = {
         uid: "usr_self_01",
         status: currentStatus,
@@ -470,28 +465,26 @@
         ts: new Date().toISOString(),
         note: noteText
       };
-    
-      // Inject nicely formatted JSON into <pre id="rawPayload">
+  
       const rawElem = document.getElementById("rawPayload");
       if (rawElem) {
         rawElem.textContent = JSON.stringify(payload, null, 2);
       }
-    
+  
       return payload;
     }  
-       
+  
     function selectStatus(status) {     
       currentStatus = status;
-    
-      // 2. Update UI highlights
+  
       const btnSafe = document.getElementById('btn-safe');
       const btnHelp = document.getElementById('btn-help');
       const btnTransit = document.getElementById('btn-transit');
-    
+  
       if (btnSafe) btnSafe.className = "btn btn-outline-success w-100 status-btn";
       if (btnHelp) btnHelp.className = "btn btn-outline-danger w-100 status-btn";
       if (btnTransit) btnTransit.className = "btn btn-outline-warning w-100 status-btn";
-    
+  
       const norm = String(status).toUpperCase().trim();
       if (norm === 'SAFE' && btnSafe) {
         btnSafe.className = "btn btn-success w-100 status-btn";
@@ -500,30 +493,31 @@
       } else if (norm === 'IN TRANSIT' && btnTransit) {
         btnTransit.className = "btn btn-warning text-dark w-100 status-btn";
       }
-    
-      // 3. Save payload with updated currentStatus
+  
       saveData();
     }
   
     function copyAndOpenSMS() {
       const recipientSelect = document.getElementById("smsRecipient");
       const recipientPhone = recipientSelect ? recipientSelect.value : "";
-    
+  
       if (!recipientPhone) {
         alert("Please select a family member from the dropdown first!");
         return;
       }
       
-      const noteText = document.getElementById("statusNote").value || "No note";
-      const phoneInput = document.getElementById("smsRecipient").value.trim();
-      const cleanPhone = phoneInput.replace(/[^0-9+]/g, '');
+      const noteInput = document.getElementById("statusNote");
+      const noteText = noteInput ? noteInput.value || "No note" : "No note";
+      const cleanPhone = recipientPhone.trim().replace(/[^0-9+]/g, '');
   
       const textToCopy = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: ${liveBattery}% | Note: ${noteText}`;
   
       navigator.clipboard.writeText(textToCopy).then(() => {
         const alertElem = document.getElementById("copyAlert");
-        alertElem.classList.remove("d-none");
-        setTimeout(() => alertElem.classList.add("d-none"), 3000);
+        if (alertElem) {
+          alertElem.classList.remove("d-none");
+          setTimeout(() => alertElem.classList.add("d-none"), 3000);
+        }
   
         setTimeout(() => {
           window.location.href = cleanPhone ? `sms:${cleanPhone}` : `sms:`;
@@ -534,7 +528,7 @@
     }
   
     // ------------------------------------------------------------------
-    // 4. Family Board Logic
+    // 4. Family Board & Modal Logic
     // ------------------------------------------------------------------
     function getBadgeClass(status) {
       if (status === 'SAFE') return 'bg-success';
@@ -545,6 +539,8 @@
   
     function renderBoard() {
       const list = document.getElementById("familyList");
+      if (!list) return;
+  
       if (!familyData || familyData.length === 0) {
         list.innerHTML = `<div class="text-secondary small py-2 text-center">No family members added yet. Tap <strong>+ Add</strong> above.</div>`;
         return;
@@ -571,19 +567,14 @@
         </div>
       `).join('');
     }
-
-    // Function to populate the Outbound Family Mobile Number dropdown
+  
     function populateSmsRecipientDropdown() {
       const select = document.getElementById('smsRecipient');
       if (!select) return;
-    
-      // 1. Store currently selected phone number before clearing HTML
+  
       const currentSelection = select.value;
-    
-      // 2. Reset options
       select.innerHTML = '<option value="">-- Select Family Member --</option>';
-    
-      // 3. Add options from familyData
+  
       familyData.forEach(member => {
         if (member.phone) {
           const option = document.createElement('option');
@@ -592,32 +583,49 @@
           select.appendChild(option);
         }
       });
-    
-      // 4. Restore selected value if it still exists
+  
       if (currentSelection) {
         select.value = currentSelection;
       }
     }
   
+    function populateSenderDropdown() {
+      const select = document.getElementById('smsSenderSelect');
+      if (!select) return;
+  
+      select.innerHTML = '<option value="">-- Auto-detect from SMS text --</option>';
+  
+      familyData.forEach(member => {
+        if (member.phone) {
+          const option = document.createElement('option');
+          option.value = member.phone;
+          option.textContent = `👤 ${member.name} (${member.phone})`;
+          select.appendChild(option);
+        }
+      });
+    }
+  
     function loadData() {
-      // 1. Load family data
       const savedFamily = localStorage.getItem("family_board_status");
       familyData = savedFamily ? JSON.parse(savedFamily) : [...DEFAULT_FAMILY];
-    
-      // 2. Build dropdown options (defaults to value="" naturally)
+  
       populateSmsRecipientDropdown();
-    
-      // 3. Load user's emergency status & notes
+  
       const savedStatus = localStorage.getItem("my_emergency_status");
       if (savedStatus) {
-        const parsed = JSON.parse(savedStatus);
-        currentStatus = parsed.status || "SAFE";
-        document.getElementById("statusNote").value = parsed.note || "";
+        try {
+          const parsed = JSON.parse(savedStatus);
+          currentStatus = parsed.status || "SAFE";
+          const noteInput = document.getElementById("statusNote");
+          if (noteInput) noteInput.value = parsed.note || "";
+        } catch (err) {
+          console.warn("Could not load saved emergency status", err);
+        }
       }
-    
-      // 4. Force dropdown to blank on app open
-      document.getElementById("smsRecipient").value = "";
-    
+  
+      const select = document.getElementById("smsRecipient");
+      if (select) select.value = "";
+  
       selectStatus(currentStatus);
       renderBoard();
     }
@@ -626,25 +634,24 @@
       try {
         const noteInput = document.getElementById("statusNote");
         const noteText = noteInput ? noteInput.value : "";
-    
-        // 1. Persist local state
+  
         localStorage.setItem("my_emergency_status", JSON.stringify({
           status: currentStatus,
           note: noteText
         }));
-    
-        // 2. Resolve coordinates & battery safely
+  
+        localStorage.setItem("family_board_status", JSON.stringify(familyData));
+  
         let gpsVal = "N/A";
         if (currentCoords && currentCoords.lat && currentCoords.lon) {
           gpsVal = `${currentCoords.lat},${currentCoords.lon}`;
         }
-    
+  
         let batVal = "100%";
         if (typeof liveBattery !== "undefined" && liveBattery !== null) {
           batVal = `${liveBattery}%`;
         }
-    
-        // 3. Build payload object
+  
         const payload = {
           uid: "usr_self_01",
           status: currentStatus,
@@ -653,14 +660,12 @@
           ts: new Date().toISOString(),
           note: noteText
         };
-    
-        // 4. Print directly to rawPayload box
+  
         const rawElem = document.getElementById("rawPayload");
         if (rawElem) {
           rawElem.textContent = JSON.stringify(payload, null, 2);
         }
-    
-        // 5. Network dispatch
+  
         if (typeof sendPayloadToServer === "function" && navigator.onLine) {
           sendPayloadToServer(payload);
         } else if (typeof addToOfflineQueue === "function") {
@@ -670,123 +675,57 @@
         console.error("Error inside saveData():", err);
       }
     }
-
-    function loadSavedData() {
-      const savedRaw = localStorage.getItem("my_emergency_status");
-      if (!savedRaw) return;
-    
-      try {
-        const saved = JSON.parse(savedRaw);
-        if (saved.status) {
-          // Re-apply button highlight and set currentStatus
-          selectStatus(saved.status);
-        }
-        if (saved.note) {
-          const noteInput = document.getElementById("statusNote");
-          if (noteInput) noteInput.value = saved.note;
-        }
-      } catch (err) {
-        console.warn("Could not load saved emergency status", err);
-      }
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      loadSavedData();
-      saveData(); // Generates and prints the JSON packet when the page first opens
-    });
-    
+  
     function addToOfflineQueue(payload) {
       const queue = JSON.parse(localStorage.getItem("pending_sync_queue") || "[]");
       queue.push(payload);
       localStorage.setItem("pending_sync_queue", JSON.stringify(queue));
     }
-
+  
     async function sendPayloadToServer(payload) {
-      // Static host (GitHub Pages) cannot receive POST requests.
-      // Save locally in localStorage for UI state.
       console.log("💾 Status saved locally (GitHub Pages static mode):", payload);
       if (typeof showToast === 'function') {
         showToast("✅ Emergency status saved locally!", "success");
       }
     }
-    
+  
     async function flushOfflineQueue() {
-      // No server endpoint on GitHub Pages to flush queue to.
       console.log("ℹ️ Running on static host. Skipping server sync.");
     }
-    
-    /*--- async function sendPayloadToServer(payload) {
-      try {
-        const response = await fetch('/api/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify([payload])
-        });
-    
-        if (response.ok) {
-          if (typeof showToast === 'function') showToast("✅ Status updated on server!", "success");
-        } else if (response.status === 405) {
-          console.warn("⚠️ Server returned 405 (No POST endpoint configured at /api/sync). Queuing locally.");
-          addToOfflineQueue(payload);
-        }
-      } catch (err) {
-        // Network error (offline or unreachable)
-        addToOfflineQueue(payload);
-      }
-    }
-    
-    async function flushOfflineQueue() {
-      if (!navigator.onLine) return;
-    
-      const queue = JSON.parse(localStorage.getItem("pending_sync_queue") || "[]");
-      if (queue.length === 0) return;
-    
-      try {
-        const response = await fetch('/api/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(queue)
-        });
-    
-        if (response.ok) {
-          localStorage.removeItem("pending_sync_queue");
-          if (typeof showToast === 'function') {
-            showToast("✅ Emergency status synced to server!", "success");
-          }
-        }
-      } catch (err) {
-        console.warn("Sync failed — network unreachable.");
-      }
-    } ---*/         
-       
-     
+  
     function openAddModal() {
       document.getElementById("modalTitle").innerText = "Add Family Member";
       document.getElementById("modalMemberId").value = "";
       document.getElementById("modalMemberName").value = "";
-      document.getElementById("modalMemberPhone").value = ""; // Clear phone input
+      document.getElementById("modalMemberPhone").value = "";
       document.getElementById("modalMemberStatus").value = "SAFE";
       document.getElementById("modalMemberLocation").value = "";
-    
-      if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(document.getElementById('familyModal'));
-      familyModalInstance.show();
+  
+      const modalEl = document.getElementById('familyModal');
+      if (modalEl) {
+        if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(modalEl);
+        familyModalInstance.show();
+      }
     }
-    
+  
     function openEditModal(id) {
       const member = familyData.find(m => String(m.id) === String(id));
       if (!member) return;
-    
+  
       document.getElementById("modalTitle").innerText = "Edit Family Member";
       document.getElementById("modalMemberId").value = member.id;
       document.getElementById("modalMemberName").value = member.name;
-      document.getElementById("modalMemberPhone").value = member.phone || ""; // Load phone number
+      document.getElementById("modalMemberPhone").value = member.phone || "";
       document.getElementById("modalMemberStatus").value = member.status;
       document.getElementById("modalMemberLocation").value = member.location || "";
-    
-      if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(document.getElementById('familyModal'));
-      familyModalInstance.show();
+  
+      const modalEl = document.getElementById('familyModal');
+      if (modalEl) {
+        if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(modalEl);
+        familyModalInstance.show();
+      }
     }
-        
+  
     function saveFamilyMember() {
       const id = document.getElementById("modalMemberId").value;
       const name = document.getElementById("modalMemberName").value.trim();
@@ -794,12 +733,12 @@
       const phone = normalizePhone(rawPhone); 
       const status = document.getElementById("modalMemberStatus").value;
       const location = document.getElementById("modalMemberLocation").value.trim();
-    
+  
       if (!name) return alert("Please enter a name.");
-    
+  
       const badgeClass = getBadgeClass(status);
       const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
+  
       if (id) {
         const idx = familyData.findIndex(m => String(m.id) === String(id));
         if (idx !== -1) {
@@ -827,40 +766,45 @@
           viaClass: "text-info"
         });
       }
-    
+  
       saveData();
       renderBoard();
-      populateSmsRecipientDropdown()
+      populateSmsRecipientDropdown(); // Semicolon explicitly restored here
       if (document.activeElement) document.activeElement.blur();
       if (familyModalInstance) familyModalInstance.hide();
     }
-
+  
+    function deleteFamilyMember(id) {
+      if (!confirm("Are you sure you want to remove this member?")) return;
+      familyData = familyData.filter(m => String(m.id) !== String(id));
+      saveData();
+      renderBoard();
+      populateSmsRecipientDropdown();
+    }
+  
     function normalizePhone(phoneStr) {
       if (!phoneStr) return "";
-      // Remove all non-digit characters
       let digits = phoneStr.replace(/\D/g, "");
-      // Convert Japanese country code (+81 90... -> 090...)
       if (digits.startsWith("81") && digits.length === 12) {
         digits = "0" + digits.slice(2);
       }
       return digits;
     }
-     
-    // Formats normalized digits into standard Japanese hyphenated layout
+  
     function formatPhoneDisplay(phoneStr) {
       const clean = normalizePhone(phoneStr);
-      if (clean.length === 11) { // 090-1234-5678
+      if (clean.length === 11) {
         return clean.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
       }
-      if (clean.length === 10) { // 03-1234-5678
+      if (clean.length === 10) {
         return clean.replace(/(\d{2,3})(\d{3,4})(\d{4})/, '$1-$2-$3');
       }
       return clean || phoneStr;
     }
-
-    
-    let smsModalInstance = null;
-
+  
+    // ------------------------------------------------------------------
+    // 5. SMS Parsing Logic
+    // ------------------------------------------------------------------
     function openImportSMSModal() {
       const modalEl = document.getElementById("smsModal");
       if (!modalEl) {
@@ -873,55 +817,50 @@
       }
       smsModalInstance.show();
     }
-
+  
     function submitImportSMS() {
-      const rawText = document.getElementById("smsTextarea").value.trim();
-      if (!rawText) {
-        return alert("Please paste or type SMS text before importing.");
+      const textarea = document.getElementById('smsTextarea');
+      const senderSelect = document.getElementById('smsSenderSelect');
+      
+      const rawText = textarea ? textarea.value : "";
+      const selectedPhone = senderSelect ? senderSelect.value : "";
+  
+      if (!rawText && !selectedPhone) {
+        return alert("Please paste SMS text or select a sender.");
       }
-
-      // Call existing SMS parser function
-      processIncomingSMS(rawText);
-
-      // Blur active element and hide modal on success
+  
+      processIncomingSMS(rawText, selectedPhone);
+  
       if (document.activeElement) document.activeElement.blur();
       if (smsModalInstance) smsModalInstance.hide();
     }
-
+  
     function processIncomingSMS(rawSmsText, senderPhoneInput = "") {
-      if (!rawSmsText && !senderPhoneInput) {
-        return alert("Please paste SMS text or enter a sender phone number.");
-      }
-    
-      // 1. Normalize Japanese IME / Mobile Full-Width Characters
-      let text = rawSmsText
+      let text = (rawSmsText || "")
         .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
         .replace(/：/g, ":")
         .replace(/％/g, "%")
         .replace(/ /g, " ")
         .replace(/[ー−―–—]/g, "-");
-    
-      // 2. Extract Sender Phone Number
+  
       const phoneHeaderPattern = /(?:from|tel|phone)?\s*[:\-]?\s*(\+?\d[\d\-]{8,14}\d|\+?\d{2,4}(?:[\s\-]\d{2,4}){2,4})/gi;
       let detectedPhone = senderPhoneInput;
       const phoneMatches = text.match(phoneHeaderPattern);
-    
+  
       if (phoneMatches && !detectedPhone) {
         detectedPhone = phoneMatches[0];
       }
-    
+  
       const cleanSenderPhone = normalizePhone(detectedPhone);
       if (!cleanSenderPhone) {
         return alert("Could not identify a valid sender phone number in the message.");
       }
-    
-      // 3. Find Matching Family Member
+  
       const memberIndex = familyData.findIndex(m => m.phone && normalizePhone(m.phone) === cleanSenderPhone);
       if (memberIndex === -1) {
         return alert(`No registered family member found for phone number: ${detectedPhone}`);
       }
-    
-      // 4. Extract Status Keyword
+  
       let status = "SAFE";
       const upperText = text.toUpperCase();
       if (upperText.includes("EVACUATED") || upperText.includes("EVAC")) {
@@ -931,33 +870,29 @@
       } else if (upperText.includes("SAFE")) {
         status = "SAFE";
       }
-    
-      // 5. Extract Battery Level
+  
       let battery = null;
       const batteryMatch = text.match(/(\d{1,3})\s*%/);
       if (batteryMatch) {
         battery = `${batteryMatch[1]}%`;
       }
-    
-      // 6. Multi-Pass Cleaning for Location/Note
+  
       let cleanNote = text
-        .replace(phoneHeaderPattern, "")                                   // Remove phone & "From:"
-        .replace(/SAFE|EVACUATED|EVAC|NEED HELP|HELP|SOS|UNKNOWN/gi, "")   // Remove status keywords
-        .replace(/\b\d{1,3}\s*%?/gi, "")                                   // Remove digits with or without % sign
-        .replace(/[:,\-]/g, " ")                                           // Remove standalone punctuation
-        .replace(/\s+/g, " ")                                              // Collapse duplicate spaces
+        .replace(phoneHeaderPattern, "")
+        .replace(/SAFE|EVACUATED|EVAC|NEED HELP|HELP|SOS|UNKNOWN/gi, "")
+        .replace(/\b\d{1,3}\s*%?/gi, "")
+        .replace(/[:,\-]/g, " ")
+        .replace(/\s+/g, " ")
         .trim();
-    
-      // Handle fallback when no location is provided
+  
       if (!cleanNote) {
         cleanNote = "📍 No location provided";
       } else {
         cleanNote = cleanNote.startsWith("📍") ? cleanNote : `📍 ${cleanNote}`;
       }
-    
-      // 7. Update Record & Render UI
+  
       const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
+  
       familyData[memberIndex].status = status;
       familyData[memberIndex].badgeClass = getBadgeClass(status);
       familyData[memberIndex].location = cleanNote;
@@ -967,71 +902,65 @@
       if (battery) {
         familyData[memberIndex].battery = battery;
       }
-    
+  
       saveData();
       renderBoard();
-    
+  
       alert(`Updated ${familyData[memberIndex].name}! Status: ${status}`);
     }
-
-    // Populate dropdown from familyData
-    function populateSenderDropdown() {
-      const select = document.getElementById('smsSenderSelect');
-      if (!select) return;
-    
-      select.innerHTML = '<option value="">-- Auto-detect from SMS text --</option>';
-    
-      familyData.forEach(member => {
-        if (member.phone) {
-          const option = document.createElement('option');
-          option.value = member.phone;
-          option.textContent = `👤 ${member.name} (${member.phone})`;
-          select.appendChild(option);
-        }
-      });
-    }
-    
-    // Automatically refresh dropdown when modal opens
-    const smsModalEl = document.getElementById('smsModal');
-    if (smsModalEl) {
-      smsModalEl.addEventListener('show.bs.modal', () => {
-        populateSenderDropdown();
-        document.getElementById('smsTextarea').value = ''; // Reset text
-      });
-    }
-    
-    // Submit function triggered by Parse & Update button
-    function submitImportSMS() {
-      const rawText = document.getElementById('smsTextarea').value;
-      const selectedPhone = document.getElementById('smsSenderSelect').value;
-    
-      // Pass selectedPhone into your parser
-      processIncomingSMS(rawText, selectedPhone);
-    
-      // Close modal
-      const modalInstance = bootstrap.Modal.getInstance(smsModalEl);
-      if (modalInstance) modalInstance.hide();
-    }
-  
-    function deleteFamilyMember(id) {
-      if (!confirm("Are you sure you want to remove this member?")) return;
-      familyData = familyData.filter(m => String(m.id) !== String(id));
-      saveData();
-      renderBoard();
-      populateSmsRecipientDropdown(); // Refresh dropdown
-    }
   
     // ------------------------------------------------------------------
-    // 5. Single DOM Initialization
+    // 6. Utility Functions & Event Initialization
     // ------------------------------------------------------------------
+    function forceAppUpdate() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+          caches.keys().then((names) => {
+            for (let name of names) caches.delete(name);
+          }).then(() => {
+            alert("App cache cleared! Reloading...");
+            window.location.reload(true);
+          });
+        });
+      } else {
+        window.location.reload(true);
+      }
+    }
+  
+    function exportFamilyData() {
+      if (!familyData || familyData.length === 0) {
+        alert("No family data available to export.");
+        return;
+      }
+  
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(familyData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      const dateStr = new Date().toISOString().slice(0, 10);
+  
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `family_board_backup_${dateStr}.json`);
+      document.body.appendChild(downloadAnchor);
+  
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+  
+    // Consolidated Single Event Listener
     document.addEventListener("DOMContentLoaded", () => {
       loadData();
       initBatteryAPI();
+      saveData();
   
-      document.getElementById("statusNote").addEventListener("input", () => {
-        updatePayload();
-        saveData();
-      });
+      const noteInput = document.getElementById("statusNote");
+      if (noteInput) {
+        noteInput.addEventListener("input", () => {
+          updatePayload();
+          saveData();
+        });
+      }
   
       const smsRecipient = document.getElementById("smsRecipient");
       if (smsRecipient) {
@@ -1040,47 +969,16 @@
           updatePayload();
         });
       }
-    });
-
-    function forceAppUpdate() {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          for (let registration of registrations) {
-            registration.unregister(); // Delete active SW
-          }
-          caches.keys().then((names) => {
-            for (let name of names) caches.delete(name); // Delete all caches
-          }).then(() => {
-            alert("App cache cleared! Reloading...");
-            window.location.reload(true); // Hard reload from network
-          });
+  
+      const smsModalEl = document.getElementById('smsModal');
+      if (smsModalEl) {
+        smsModalEl.addEventListener('show.bs.modal', () => {
+          populateSenderDropdown();
+          const textarea = document.getElementById('smsTextarea');
+          if (textarea) textarea.value = '';
         });
-      } else {
-        window.location.reload(true);
       }
-    }
-
-    function exportFamilyData() {
-      if (!familyData || familyData.length === 0) {
-        alert("No family data available to export.");
-        return;
-      }
-    
-      // Convert array to clean JSON string
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(familyData, null, 2));
-      
-      // Create temporary download link
-      const downloadAnchor = document.createElement('a');
-      const dateStr = new Date().toISOString().slice(0, 10); // e.g. "2026-08-14"
-      
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `family_board_backup_${dateStr}.json`);
-      document.body.appendChild(downloadAnchor);
-      
-      // Trigger download & clean up
-      downloadAnchor.click();
-      downloadAnchor.remove();
-    }
+    });
 
     function importFamilyData(event) {
       const file = event.target.files[0];
