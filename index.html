@@ -77,6 +77,14 @@
       50% { transform: scale(1.02); }
       100% { transform: scale(1); }
     }
+    
+    /* Fix mobile sticky hover/focus on buttons */
+    @media (hover: none) {
+      .btn:focus, .btn:active {
+        box-shadow: none !important;
+        outline: none !important;
+      }
+    }
 
     .pulse-animation {
       animation: pulseBtn 0.7s infinite;
@@ -151,7 +159,7 @@
       <div class="mb-3">
         <div class="d-flex justify-content-between align-items-center mb-1">
             <label for="statusNote" class="form-label small text-secondary mb-0">Optional Short Note / Location</label>
-            <button type="button" id="gpsBtn" class="btn btn-sm btn-outline-success py-0 px-2 fw-bold" onclick="getGPSLocation()">
+            <button type="button" id="gpsBtn" class="btn btn-sm btn-outline-success py-0 px-2 fw-bold" onclick="getGPSLocation(event)">
             📍 Auto-GPS
             </button>
         </div>
@@ -506,38 +514,35 @@
       updatePayload();
     }
   
-    function getGPSLocation() {
-      // (Optional: visual indicator while fetching)
-      
+    function getGPSLocation(e) {
+      // 1. Grab reference to the button BEFORE the async call
+      const btn = e ? e.currentTarget : null;
+    
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          // 1. Store coordinates
+          // Store coordinates
           currentCoords = {
             lat: position.coords.latitude.toFixed(5),
             lon: position.coords.longitude.toFixed(5)
           };
     
-          // 2. Update UI status message
+          // Update UI status message
           const gpsMsg = document.getElementById("gpsStatus");
           if (gpsMsg) {
             gpsMsg.textContent = "📍 GPS Captured Successfully!";
           }
     
-          // 3. Update payload with new coordinates
+          // Update payload
           saveData();
     
-          // 🌟 FIX FOR MOBILE: Force the button to drop focus and return to original color
-          if (document.activeElement && typeof document.activeElement.blur === "function") {
-            document.activeElement.blur();
+          // 🌟 Explicitly blur the button target
+          if (btn) {
+            btn.blur();
           }
         },
         (error) => {
           console.warn("GPS Error:", error);
-          
-          // Also remove focus on error/cancel
-          if (document.activeElement && typeof document.activeElement.blur === "function") {
-            document.activeElement.blur();
-          }
+          if (btn) btn.blur();
         }
       );
     }
