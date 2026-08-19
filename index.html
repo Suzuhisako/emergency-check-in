@@ -84,16 +84,18 @@
       100% { transform: scale(1); }
     }
 
-    /* Fix mobile sticky focus: Keep background transparent AND text green */
+    /* Unified Mobile Fix: Keep transparent background and green text/border */
     @media (hover: none), (pointer: coarse) {
       #btn-gps:focus,
+      #btn-gps:focus-visible,
       #btn-gps:active,
       #btn-gps:hover,
       .btn-outline-success:focus,
+      .btn-outline-success:focus-visible,
       .btn-outline-success:active,
       .btn-outline-success:hover {
         background-color: transparent !important;
-        color: #198754 !important; /* Forces standard Bootstrap green text */
+        color: #198754 !important;
         border-color: #198754 !important;
         box-shadow: none !important;
       }
@@ -102,16 +104,7 @@
     .pulse-animation {
       animation: pulseBtn 0.7s infinite;
     }
-
-    /* Strip mobile focus fill for Auto GPS button specifically */
-    #btn-gps:focus,
-    #btn-gps:focus-visible,
-    #btn-gps:active {
-      background-color: transparent !important;
-      color: #198754 !important; /* Bootstrap success green text */
-      box-shadow: none !important;
-    }
-    
+        
   </style>
 </head>
 <body class="text-light">
@@ -396,17 +389,7 @@
         }
       });   
     }
-
-    function clearMobileHover(btn) {
-      if (!btn) return;
-      btn.blur();
-      // Temporarily disable pointer events to force mobile browser to drop :hover
-      btn.style.pointerEvents = 'none';
-      setTimeout(() => {
-        btn.style.pointerEvents = '';
-      }, 100);
-    }
-          
+             
     function showUpdatePrompt(worker) {
       if (document.getElementById('pwa-update-toast')) return;
     
@@ -546,18 +529,7 @@
       updatePayload();
     }
   
-    function getGPSLocation(btnElement) {
-      // 🌟 FIX: Force blur AFTER mobile OS finishes setting focus (200ms delay)
-      setTimeout(() => {
-        if (btnElement && typeof btnElement.blur === 'function') {
-          btnElement.blur();
-        }
-        if (document.activeElement && typeof document.activeElement.blur === 'function') {
-          document.activeElement.blur();
-        }
-      }, 200);
-    
-      // Normal GPS Fetching Logic
+    function getGPSLocation() {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           currentCoords = {
@@ -571,8 +543,6 @@
           }
     
           saveData();
-          document.body.tabIndex = -1;
-          document.body.focus();
         },
         (error) => {
           console.warn("GPS Error:", error);
