@@ -84,14 +84,17 @@
       100% { transform: scale(1); }
     }
 
-    /* Strip Bootstrap sticky hover fill on touchscreens */
+    /* Fix mobile sticky focus: Keep background transparent AND text green */
     @media (hover: none), (pointer: coarse) {
-      .btn-outline-success:hover,
+      #btn-gps:focus,
+      #btn-gps:active,
+      #btn-gps:hover,
       .btn-outline-success:focus,
-      .btn-outline-primary:hover,
-      .btn-outline-primary:focus {
+      .btn-outline-success:active,
+      .btn-outline-success:hover {
         background-color: transparent !important;
-        color: inherit !important;
+        color: #198754 !important; /* Forces standard Bootstrap green text */
+        border-color: #198754 !important;
         box-shadow: none !important;
       }
     }
