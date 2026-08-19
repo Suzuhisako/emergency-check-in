@@ -594,6 +594,8 @@
       
       const noteInput = document.getElementById("statusNote");
       const noteText = noteInput ? noteInput.value || "No note" : "No note";
+    
+      // 📍 ADD/UPDATE THIS LINE HERE (preserves '+' for international numbers):
       const cleanPhone = recipientPhone.trim().replace(/[^0-9+]/g, '');
     
       const textToCopy = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: ${liveBattery}% | Note: ${noteText}`;
@@ -602,14 +604,12 @@
         const alertElem = document.getElementById("copyAlert");
         if (alertElem) {
           alertElem.classList.remove("d-none");
-          // Keeps alert visible for 4 seconds if user returns to app
-          setTimeout(() => alertElem.classList.add("d-none"), 4000); 
+          setTimeout(() => alertElem.classList.add("d-none"), 4000);
         }
     
-        // Increased from 400ms to 1500ms (1.5s delay before switching apps)
         setTimeout(() => {
           window.location.href = cleanPhone ? `sms:${cleanPhone}` : `sms:`;
-        }, 2000); 
+        }, 1500); 
       }).catch(() => {
         alert("Text: " + textToCopy);
       });
