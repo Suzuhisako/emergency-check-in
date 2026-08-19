@@ -609,7 +609,7 @@
         // Increased from 400ms to 1500ms (1.5s delay before switching apps)
         setTimeout(() => {
           window.location.href = cleanPhone ? `sms:${cleanPhone}` : `sms:`;
-        }, 1500); 
+        }, 2000); 
       }).catch(() => {
         alert("Text: " + textToCopy);
       });
