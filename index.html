@@ -507,45 +507,38 @@
     }
   
     function getGPSLocation() {
-      const gpsBtn = document.getElementById("gpsBtn");
-      const noteInput = document.getElementById("statusNote");
-      const gpsStatus = document.getElementById("gpsStatus");
-  
-      if (!('geolocation' in navigator)) {
-        alert("Geolocation is not supported by your browser.");
-        return;
-      }
-  
-      gpsBtn.disabled = true;
-      gpsBtn.innerText = "⏳ Locating...";
-  
+      // (Optional: visual indicator while fetching)
+      
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const lat = position.coords.latitude.toFixed(4);
-          const lon = position.coords.longitude.toFixed(4);
-          currentCoords = { lat, lon };
-  
-          const gpsString = `GPS: ${lat},${lon}`;
-          const cleanExistingNote = noteInput.value.replace(/\(?GPS: [-?\d.]+,[-?\d.]+\)?/g, '').trim();
-          noteInput.value = cleanExistingNote ? `${cleanExistingNote} (${gpsString})` : gpsString;
-  
-          gpsBtn.disabled = false;
-          gpsBtn.innerText = "📍 Auto-GPS";
-  
-          updatePayload();
+          // 1. Store coordinates
+          currentCoords = {
+            lat: position.coords.latitude.toFixed(5),
+            lon: position.coords.longitude.toFixed(5)
+          };
+    
+          // 2. Update UI status message
+          const gpsMsg = document.getElementById("gpsStatus");
+          if (gpsMsg) {
+            gpsMsg.textContent = "📍 GPS Captured Successfully!";
+          }
+    
+          // 3. Update payload with new coordinates
           saveData();
-  
-          if (gpsStatus) {
-            gpsStatus.classList.remove("d-none");
-            setTimeout(() => gpsStatus.classList.add("d-none"), 3000);
+    
+          // 🌟 FIX FOR MOBILE: Force the button to drop focus and return to original color
+          if (document.activeElement && typeof document.activeElement.blur === "function") {
+            document.activeElement.blur();
           }
         },
         (error) => {
-          gpsBtn.disabled = false;
-          gpsBtn.innerText = "📍 Auto-GPS";
-          alert(`Location Error: ${error.message}`);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          console.warn("GPS Error:", error);
+          
+          // Also remove focus on error/cancel
+          if (document.activeElement && typeof document.activeElement.blur === "function") {
+            document.activeElement.blur();
+          }
+        }
       );
     }
   
