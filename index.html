@@ -103,6 +103,15 @@
     .pulse-animation {
       animation: pulseBtn 0.7s infinite;
     }
+
+    /* Strip mobile focus fill for Auto GPS button specifically */
+    #btn-gps:focus,
+    #btn-gps:focus-visible,
+    #btn-gps:active {
+      background-color: transparent !important;
+      color: #198754 !important; /* Bootstrap success green text */
+      box-shadow: none !important;
+    }
     
   </style>
 </head>
@@ -174,8 +183,8 @@
       <div class="mb-3">
         <div class="d-flex justify-content-between align-items-center mb-1">
             <label for="statusNote" class="form-label small text-secondary mb-0">Optional Short Note / Location</label>
-            <button type="button" id="gpsBtn" onclick="getGPSLocation(this)" class="btn btn-outline-success w-100 mb-2" >
-            📍 Auto-GPS
+            <button id="btn-gps" onclick="getGPSLocation(this)" class="btn btn-outline-success w-100 mb-2">
+              📍 Auto-GPS
             </button>
         </div>
         <input type="text" class="form-control bg-dark text-light border-secondary" id="statusNote" placeholder="e.g. At Chigasaki Primary Shelter">
@@ -538,10 +547,18 @@
       updatePayload();
     }
   
-    function getGPSLocation(e) {
-      // Grab button reference (works whether 'this' or 'event' was passed)
-      const btn = e && e.currentTarget ? e.currentTarget : (e instanceof HTMLElement ? e : null);
+    function getGPSLocation(btnElement) {
+      // 🌟 FIX: Force blur AFTER mobile OS finishes setting focus (200ms delay)
+      setTimeout(() => {
+        if (btnElement && typeof btnElement.blur === 'function') {
+          btnElement.blur();
+        }
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
+      }, 200);
     
+      // Normal GPS Fetching Logic
       navigator.geolocation.getCurrentPosition(
         (position) => {
           currentCoords = {
@@ -555,13 +572,9 @@
           }
     
           saveData();
-    
-          // 🌟 Force mobile browser to drop sticky :hover state
-          clearMobileHover(btn);
         },
         (error) => {
           console.warn("GPS Error:", error);
-          clearMobileHover(btn);
         }
       );
     }
