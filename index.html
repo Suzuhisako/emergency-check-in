@@ -83,18 +83,27 @@
       50% { transform: scale(1.02); }
       100% { transform: scale(1); }
     }
-    
-    /* Fix mobile sticky hover/focus on buttons */
+
+    /* Disable Bootstrap sticky hover & focus fill on mobile touchscreens */
     @media (hover: none) {
+      .btn-outline-success:hover,
+      .btn-outline-primary:hover,
+      .btn-outline-warning:hover,
+      .btn-outline-danger:hover {
+        background-color: transparent !important;
+        color: inherit !important;
+      }
+    
       .btn:focus, .btn:active {
         box-shadow: none !important;
         outline: none !important;
       }
-    }
+    }  
 
     .pulse-animation {
       animation: pulseBtn 0.7s infinite;
     }
+    
   </style>
 </head>
 <body class="text-light">
@@ -165,7 +174,7 @@
       <div class="mb-3">
         <div class="d-flex justify-content-between align-items-center mb-1">
             <label for="statusNote" class="form-label small text-secondary mb-0">Optional Short Note / Location</label>
-            <button type="button" id="gpsBtn" class="btn btn-outline-primary w-100 mb-2" onclick="getGPSLocation(this)" onpointerup="this.blur()" >
+            <button type="button" id="gpsBtn" onclick="getGPSLocation(this)" class="btn btn-outline-success w-100 mb-2" >
             📍 Auto-GPS
             </button>
         </div>
@@ -338,7 +347,7 @@
   
   <script>  
     if ('serviceWorker' in navigator) {
-    let refreshing = false;
+      let refreshing = false;
       
       // Only reload the page once the new Service Worker has actually claimed control
       navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -379,8 +388,17 @@
         }
       });   
     }
-      
-    
+
+    function clearMobileHover(btn) {
+      if (!btn) return;
+      btn.blur();
+      // Temporarily disable pointer events to force mobile browser to drop :hover
+      btn.style.pointerEvents = 'none';
+      setTimeout(() => {
+        btn.style.pointerEvents = '';
+      }, 100);
+    }
+          
     function showUpdatePrompt(worker) {
       if (document.getElementById('pwa-update-toast')) return;
     
@@ -520,13 +538,10 @@
       updatePayload();
     }
   
-    function getGPSLocation(btnElement) {
-      // 1. Instantly remove focus/active state while inside the user touch event loop
-      if (btnElement && typeof btnElement.blur === "function") {
-        btnElement.blur();
-      }
+    function getGPSLocation(e) {
+      // Grab button reference (works whether 'this' or 'event' was passed)
+      const btn = e && e.currentTarget ? e.currentTarget : (e instanceof HTMLElement ? e : null);
     
-      // 2. Run GPS request
       navigator.geolocation.getCurrentPosition(
         (position) => {
           currentCoords = {
@@ -540,9 +555,13 @@
           }
     
           saveData();
+    
+          // 🌟 Force mobile browser to drop sticky :hover state
+          clearMobileHover(btn);
         },
         (error) => {
           console.warn("GPS Error:", error);
+          clearMobileHover(btn);
         }
       );
     }
