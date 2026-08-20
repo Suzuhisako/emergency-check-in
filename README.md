@@ -27,22 +27,17 @@ Generate Payload: Tap Copy Status & Open Text App. The app formats your status, 
 
 Send & Import: Paste the payload into the message input box and hit send. The recipient copies the received SMS string into their app's Import SMS tool to update their local board.
 
-🛠️ Deployment & Usage
-1. Host Static Files
+## 🛠️ Deployment & Usage
+### 1. Host Static Files
 Deploy the single-page web app to any free static host supporting HTTPS:
+* **GitHub Pages**
+* **Cloudflare Pages**
+* **Vercel / Netlify**
 
-GitHub Pages
-
-Cloudflare Pages
-
-Vercel / Netlify
-
-2. Pre-Disaster Family Setup (Essential)
-Add to Home Screen: Open the hosted app URL on mobile browsers (Safari/Chrome) and select Add to Home Screen to install the PWA.
-
-Initial Offline Cache: Launch the app once while connected to the internet so the Service Worker can cache all necessary assets locally.
-
-Pre-Register Contacts: Add family members' phone numbers into the local Family Board (include country codes for international numbers, e.g., +14155550100).
+### 2. Pre-Disaster Family Setup (Essential)
+1. **Install as Standalone App (Critical):** Open the app URL on your mobile browser (Safari on iOS, Chrome on Android) and select **Add to Home Screen**. You **must** install it as a standalone app rather than running it inside a browser tab. This locks all files into permanent local storage, prevents the operating system from clearing your offline cache, and guarantees instant 1-tap access during a crisis.
+2. **Execute Initial Offline Cache:** Launch the app from your Home Screen at least once while connected to the internet so the Service Worker can cache all necessary files for complete offline availability.
+3. **Pre-Register Contacts:** Open the app and save your family members' phone numbers into the local Family Board ahead of time (include country codes for international numbers, e.g., `+819012345678` or `+14155550100`).
 
 🌍 Global Compatibility
 The application utilizes the universal sms: URI scheme (RFC 5724) combined with clipboard API fallbacks, rendering it compatible across all global cellular operators and smartphone operating systems.
