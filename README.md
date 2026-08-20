@@ -1,60 +1,51 @@
-# 🚨 Family Emergency Board
+🚨 Global Emergency Check-In (Offline PWA)
+A serverless, offline-first Progressive Web Application (PWA) designed to maintain critical family safety communications during major disasters when internet infrastructure and mobile data networks fail.
 
-A Progressive Web App (PWA) designed to quickly and safely share emergency status updates among family members during disasters or network disruptions, working completely offline.
+🌟 Key Features
+100% Offline-First Architecture: Operates entirely inside the mobile browser using localStorage and Service Worker caching. Zero backend server dependency.
 
----
+Resilient SMS Mesh Transport: Uses low-bandwidth cellular SMS to transmit structured safety status updates when 4G/5G/Wi-Fi networks are congested or down.
 
-## 🌟 Key Features
+Universal Phone Number Support: Full E.164 international support (+1, +44, +81) with automatic normalization for domestic Japanese formats (090, 03).
 
-- **Full Offline Support**: Launches and operates without an active internet or cellular data connection.
-- **Real-Time Battery Detection**: Automatically attaches your phone's current battery percentage to outbound emergency status updates.
-- **Misdelivery Guardrail**: Resets the recipient dropdown to blank on app launch to prevent accidental texts.
-- **Cross-Platform PWA**: Runs as a standalone full-screen application on both iOS (Safari) and Android (Chrome).
-- **JSON Data Management**: Easily export and restore family contacts via lightweight `.json` backup files across devices.
+Automated Data Payload Generation: Encodes current status, live battery level, notes, and timestamps into a standardized clipboard text payload.
 
----
+Cross-Platform Compatibility: Works with default native text messaging apps globally (Apple Messages, Google Messages, Samsung Messages, +メッセージ).
 
-## 🔘 Buttons & Features Guide
+Private & Secure: All data remains strictly on your local device. No personal information is ever collected or transmitted to a server.
 
-Below is a detailed guide explaining the controls and interactive features in the application:
+📱 How It Works
+[ Sender Device ]                                      [ Recipient Device ]
+┌────────────────────────┐                             ┌────────────────────────┐
+│ 1. Select Status       │                             │ 4. Receive SMS         │
+│ 2. Tap "Copy Status"   │ ─── (Cellular SMS Channel) ─>│ 5. Paste payload into  │
+│ 3. Paste into Text App │                             │    Import SMS Modal    │
+└────────────────────────┘                             └────────────────────────┘
+Update Status: Choose your safety condition (SAFE, NEED HELP, IN TRANSIT) and add an optional note.
 
-### 1. Select Recipient (Dropdown Menu)
-- **Function**: Selects which family member to contact.
-- **Safety Guardrail**: Automatically defaults to `-- Select Family Member --` (blank) every time the app opens. If you tap the send button without choosing a recipient, an alert triggers to prevent accidental misdelivery.
+Generate Payload: Tap Copy Status & Open Text App. The app formats your status, copies it to your clipboard, and launches your device's native messaging app.
 
-### 2. 📲 Copy Status & Open SMS (Button)
-- **Function**: Compiles your status into a clean, structured message, copies it directly to your phone's clipboard, and launches your default messaging application (SMS, iMessage, +メッセージ, etc.).
-  - **Formatted Message Example**:  
-    `[EMERGENCY CHECK-IN] Status: SAFE | Batt: 95% | Note: At shelter near school`
-- **Offline Reliability**: Even if your phone is out of service range or in Airplane Mode, the status payload is safely saved to your clipboard. Once cellular connectivity returns, simply paste the message into your chat thread and send.
+Send & Import: Paste the payload into the message input box and hit send. The recipient copies the received SMS string into their app's Import SMS tool to update their local board.
 
-### 3. 📤 Export Backup (Button)
-- **Function**: Downloads your saved family list (names, phone numbers, and notes) as a `.json` backup file (`family_board_backup_YYYY-MM-DD.json`) to your device's **Downloads** folder.
-- **Use Cases**: 
-  - Creating a local safety backup of your configuration.
-  - Transferring your configured family list to another family member's phone without manual data entry.
+🛠️ Deployment & Usage
+1. Host Static Files
+Deploy the single-page web app to any free static host supporting HTTPS:
 
-### 4. 📥 Import Backup (Button)
-- **Function**: Opens your device's file picker to select a previously saved `.json` backup file and restore (overwrite) the family board data instantly.
-- **Mobile Optimized**: Configured with a universal filter (`accept="*/*"`) so mobile web browsers (Safari & Chrome) can easily select `.json` files from local storage. Triggers a confirmation pop-up prior to overwriting data.
+GitHub Pages
 
----
+Cloudflare Pages
 
-## 📱 Installation Guide (Standalone App)
+Vercel / Netlify
 
-Installing the app on your home screen allows it to open full-screen like a native application without browser address bars.
+2. Pre-Disaster Family Setup (Essential)
+Add to Home Screen: Open the hosted app URL on mobile browsers (Safari/Chrome) and select Add to Home Screen to install the PWA.
 
-### iOS (iPhone / iPad - Safari)
-1. Open the app link in **Safari**.
-2. Tap the **Share button** (square with an upward arrow) at the bottom of the screen.
-3. Scroll down and tap **"Add to Home Screen"**.
+Initial Offline Cache: Launch the app once while connected to the internet so the Service Worker can cache all necessary assets locally.
 
-### Android (Google Chrome)
-1. Open the app link in **Google Chrome**.
-2. Tap the **three vertical dots** (menu icon) in the top-right corner.
-3. Tap **"Install app"** or **"Add to Home screen"**.
+Pre-Register Contacts: Add family members' phone numbers into the local Family Board (include country codes for international numbers, e.g., +14155550100).
 
----
+🌍 Global Compatibility
+The application utilizes the universal sms: URI scheme (RFC 5724) combined with clipboard API fallbacks, rendering it compatible across all global cellular operators and smartphone operating systems.
 
-## 📄 License
-Personal / Family Use
+📄 License
+MIT License — Free to use, modify, and distribute worldwide for disaster preparedness.
