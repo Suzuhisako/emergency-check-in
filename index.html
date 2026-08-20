@@ -527,6 +527,7 @@
     }
   
     function getGPSLocation() {
+      const options = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
       navigator.geolocation.getCurrentPosition(
         (position) => {
           currentCoords = {
@@ -543,7 +544,10 @@
         },
         (error) => {
           console.warn("GPS Error:", error);
+          const gpsMsg = document.getElementById("gpsStatus");
+          if (gpsMsg) gpsMsg.textContent = "⚠️ Unable to capture GPS location.";
         }
+        options
       );
     }
   
