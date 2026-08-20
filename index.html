@@ -528,25 +528,22 @@
   
     function getGPSLocation() {
       const options = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
+      
       navigator.geolocation.getCurrentPosition(
         (position) => {
           currentCoords = {
             lat: position.coords.latitude.toFixed(5),
             lon: position.coords.longitude.toFixed(5)
           };
-  
           const gpsMsg = document.getElementById("gpsStatus");
-          if (gpsMsg) {
-            gpsMsg.textContent = "📍 GPS Captured Successfully!";
-          }
-  
+          if (gpsMsg) gpsMsg.textContent = "📍 GPS Captured Successfully!";
           saveData();
         },
         (error) => {
           console.warn("GPS Error:", error);
           const gpsMsg = document.getElementById("gpsStatus");
           if (gpsMsg) gpsMsg.textContent = "⚠️ Unable to capture GPS location.";
-        }
+        },
         options
       );
     }
