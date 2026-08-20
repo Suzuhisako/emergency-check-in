@@ -672,7 +672,11 @@
       if (!select) return;
   
       const currentSelection = select.value;
-      select.innerHTML = '<option value="">-- Select Family Member --</option>';
+      if (!familyData || familyData.length === 0) {
+        select.innerHTML = '<option value="">-- No members added yet (Add below) --</option>';
+      } else {
+        select.innerHTML = '<option value="">-- Select Family Member --</option>';
+      }
   
       familyData.forEach(member => {
         if (member.phone) {
