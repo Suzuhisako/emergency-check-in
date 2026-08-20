@@ -1,4 +1,4 @@
-🚨 Global Emergency Check-In (Offline PWA)
+#🚨 Global Emergency Check-In (Offline PWA)
 A serverless, offline-first Progressive Web Application (PWA) designed to maintain critical family safety communications during major disasters when internet infrastructure and mobile data networks fail.
 
 🌟 Key Features
