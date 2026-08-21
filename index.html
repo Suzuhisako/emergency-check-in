@@ -608,11 +608,16 @@
         alert("Please select a family member from the dropdown first!");
         return;
       }
+
+      // Automatically save status locally before opening SMS
+      if (typeof broadcastStatus === 'function') {
+        broadcastStatus();
+      }
       
       const noteInput = document.getElementById("statusNote");
       const noteText = noteInput ? noteInput.value || "No note" : "No note";
     
-      // 📍 ADD/UPDATE THIS LINE HERE (preserves '+' for international numbers):
+      // Clean phone number preserves '+' for international numbers):
       const cleanPhone = recipientPhone.trim().replace(/[^0-9+]/g, '');
     
       const textToCopy = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: ${liveBattery}% | Note: ${noteText}`;
