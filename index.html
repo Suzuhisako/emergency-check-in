@@ -608,20 +608,39 @@
         alert("Please select a family member from the dropdown first!");
         return;
       }
-
-      // Automatically save status locally before opening SMS
-      if (typeof broadcastStatus === 'function') {
+    
+      // 1. 💾 Save data locally first
+      if (typeof saveData === 'function') {
         saveData();
       }
-      
-      const noteInput = document.getElementById("statusNote");
-      const noteText = noteInput ? noteInput.value || "No note" : "No note";
     
-      // Clean phone number preserves '+' for international numbers):
+      // 2. 🎯 Read the active status directly from UI or variable
+      let activeStatus = typeof currentStatus !== 'undefined' ? currentStatus : 'SAFE';
+      
+      // Optional UI fallback: If you use active classes on status buttons (e.g. .active or .selected)
+      const activeBtn = document.querySelector('.status-btn.active, [data-status].active');
+      if (activeBtn) {
+        activeStatus = activeBtn.getAttribute('data-status') || activeBtn.innerText.trim();
+      }
+    
+      // 3. 🔋 Read live battery directly from UI or variable
+      let batteryVal = typeof liveBattery !== 'undefined' && liveBattery !== null ? liveBattery : '--';
+      const batteryElem = document.getElementById("batteryLevel") || document.getElementById("batDisplay");
+      if (batteryElem && batteryElem.innerText) {
+        batteryVal = batteryElem.innerText.replace('%', '').trim();
+      }
+    
+      // 4. 📝 Read note input directly
+      const noteInput = document.getElementById("statusNote");
+      const noteText = noteInput && noteInput.value.trim() !== "" ? noteInput.value.trim() : "No note";
+    
+      // 5. 📱 Clean phone number
       const cleanPhone = recipientPhone.trim().replace(/[^0-9+]/g, '');
     
-      const textToCopy = `[EMERGENCY CHECK-IN] Status: ${currentStatus} | Batt: ${liveBattery}% | Note: ${noteText}`;
+      // 6. ✉️ Construct the final SMS string
+      const textToCopy = `[EMERGENCY CHECK-IN] Status: ${activeStatus} | Batt: ${batteryVal}% | Note: ${noteText}`;
     
+      // 7. 📋 Copy to clipboard & launch SMS
       navigator.clipboard.writeText(textToCopy).then(() => {
         const alertElem = document.getElementById("copyAlert");
         if (alertElem) {
@@ -632,8 +651,9 @@
         setTimeout(() => {
           window.location.href = cleanPhone ? `sms:${cleanPhone}` : `sms:`;
         }, 1500); 
-      }).catch(() => {
-        alert("Text: " + textToCopy);
+      }).catch((err) => {
+        console.error("Clipboard write failed:", err);
+        alert("Text to send: " + textToCopy);
       });
     }
   
