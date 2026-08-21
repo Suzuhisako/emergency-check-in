@@ -53,6 +53,27 @@ The application utilizes the universal `sms:` URI scheme (RFC 5724) combined wit
 
 ---
 
+## 📲 Offline SMS Status Syncing
+
+In a disaster scenario, cellular data (LTE/5G) and Wi-Fi networks often fail, but standard text messaging (SMS) frequently remains operational. This app uses a low-bandwidth SMS payload system to keep family members updated off-grid.
+
+### How It Works:
+
+1. **Sending Your Status (Offline):**
+   - Select your current status (e.g., *Safe*, *Needs Help*), location/Auto GPS, and battery level in 1. Broadcast Your Status.
+   - Select a family contact and Tap **Copy Status & Open Text App **.
+   - The app formats your telemetry into a compact string (e.g., `FROM: Dad | STATUS: SAFE | BATT: 85% | LOC: Shelter A`) and opens your phone's native messaging app to send as a standard text.
+
+2. **Receiving & Importing Family Status:**
+   - When you receive a formatted status text from a family member, **copy the text message**.
+   - Open this app, navigate to **Import SMS** on 2. Family Board, and paste the text into the box.
+   - Click **Parse & Update**. 
+   - The app's built-in parser automatically extracts the sender's name, status, battery level, and location, instantly updating their entry on your **Family Board**.
+
+> **Note:** If the incoming message is plain text or missing a name tag, simply select the family member's name manually from the optional dropdown before tapping *Parse & Update*.
+
+---
+
 ## 📄 License
 
 **MIT License** — Free to use, modify, and distribute worldwide for disaster preparedness.
