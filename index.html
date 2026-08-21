@@ -73,6 +73,15 @@
       border-color: #066f8f;
     }
 
+    .status-circle-custom {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      background-color: #066f8f;
+      border-radius: 50%;
+      vertical-align: middle;
+    }
+
     /* Global Touch & Mobile Button Overrides */
     .btn:focus, .btn:active, .btn:focus-visible {
       outline: none !important;
@@ -180,7 +189,10 @@
       
         <!-- 🟣 EVACUATED -->
         <button id="btn-evacuated" type="button" class="btn btn-outline-blue status-btn fw-bold text-center px-3 py-2 w-100 d-flex flex-column align-items-center" onclick="selectStatus('EVACUATED')">
-          <span class="d-block text-center">🟣 EVACUATED</span>
+          <span class="d-block text-center d-flex align-items-center justify-content-center gap-2">
+            <span class="status-circle-custom"></span>
+            EVACUATED
+          </span>
           <small class="text-muted fw-normal mt-1 fs-7 text-center" id="label-evacuated">Tap to set</small>
         </button>
       
