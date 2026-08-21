@@ -182,7 +182,7 @@
       </div>
       
       <!-- Save & Localstorage Button -->
-      <button id="saveOfflineBtn" type="button" class="btn btn-secondary w-100 py-2 fw-bold mb-1" onclick="broadcastStatus()">
+      <button id="saveOfflineBtn" type="button" class="btn btn-secondary w-100 py-2 fw-bold mb-1" onclick="saveData()">
         💾 Save Status (Offline)
       </button>
       <small class="text-muted d-block mb-3">
@@ -611,7 +611,7 @@
 
       // Automatically save status locally before opening SMS
       if (typeof broadcastStatus === 'function') {
-        broadcastStatus();
+        saveData();
       }
       
       const noteInput = document.getElementById("statusNote");
