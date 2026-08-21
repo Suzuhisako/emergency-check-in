@@ -151,20 +151,25 @@
     <section class="card-dark rounded-3 p-3 mb-3">
       <h2 class="h6 text-uppercase text-secondary fw-bold mb-3">1. Broadcast Your Status</h2>     
       
-      <div class="d-grid gap-2 mb-3">
-        <button id="btn-safe" type="button" class="btn btn-success status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center" onclick="selectStatus('SAFE')">
-          <span>🟢 I AM SAFE</span>
-          <span class="fs-6 text-muted fw-normal" id="label-safe">Tap to set</span>
-        </button>
-
-        <button id="btn-help" type="button" class="btn btn-outline-danger status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center" onclick="selectStatus('NEED HELP')">
-          <span>🔴 I NEED HELP</span>
-          <span class="fs-6 text-muted fw-normal" id="label-help">Tap to set</span>
-        </button>
-
-        <button id="btn-transit" type="button" class="btn btn-outline-warning status-btn fw-bold text-start px-3 d-flex justify-content-between align-items-center" onclick="selectStatus('IN TRANSIT')">
+      <div class="d-grid gap-2 mb-3">       
+        <button id="btn-safe" type="button" class="btn btn-outline-success status-btn fw-bold text-start px-3 py-2 w-100 d-flex flex-column align-items-start" onclick="selectStatus('SAFE')">
+          <span>🟢 SAFE</span>
+          <small class="text-muted fw-normal mt-1 fs-7" id="label-safe">Tap to set</small>
+        </button>      
+        
+        <button id="btn-transit" type="button" class="btn btn-outline-warning status-btn fw-bold text-start px-3 py-2 w-100 d-flex flex-column align-items-start" onclick="selectStatus('IN TRANSIT')">
           <span>🟡 IN TRANSIT / RELOCATING</span>
-          <span class="fs-6 text-muted fw-normal" id="label-transit">Tap to set</span>
+          <small class="text-muted fw-normal mt-1 fs-7" id="label-transit">Tap to set</small>
+        </button>      
+        
+        <button id="btn-evacuated" type="button" class="btn btn-outline-purple status-btn fw-bold text-start px-3 py-2 w-100 d-flex flex-column align-items-start" onclick="selectStatus('EVACUATED')">
+          <span>🟣 EVACUATED</span>
+          <small class="text-muted fw-normal mt-1 fs-7" id="label-evacuated">Tap to set</small>
+        </button>      
+        
+        <button id="btn-needhelp" type="button" class="btn btn-outline-danger status-btn fw-bold text-start px-3 py-2 w-100 d-flex flex-column align-items-start" onclick="selectStatus('NEED HELP')">
+          <span>🔴 NEED HELP</span>
+          <small class="text-muted fw-normal mt-1 fs-7" id="label-needhelp">Tap to set</small>
         </button>
       </div>
 
