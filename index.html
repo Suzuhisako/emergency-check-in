@@ -75,8 +75,8 @@
 
     .status-circle-custom {
       display: inline-block;
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       background-color: #066f8f;
       border-radius: 50%;
       vertical-align: middle;
@@ -650,10 +650,8 @@
         saveData();
       }
     
-      // 2. FORCE READ STATUS FROM UI: Look for checked radio buttons, active buttons, or dropdowns
-      let selectedStatus = currentStatus; // default fallback
-    
-      // Check if you use radio buttons for status:
+      // 2. Read Status from UI
+      let selectedStatus = typeof currentStatus !== 'undefined' ? currentStatus : "SAFE";  
       const checkedRadio = document.querySelector('input[name="statusRadio"]:checked');
       if (checkedRadio) {
         selectedStatus = checkedRadio.value;
@@ -672,14 +670,34 @@
     
       // 4. Read Battery level directly
       const batteryVal = (typeof liveBattery !== "undefined" && liveBattery !== null) ? liveBattery : "100";
+
+      // 5. Read GPS Coordinates (with localStorage fallback)
+      let gpsString = "N/A";
+       // Try memory first, or fallback to saved localStorage data
+      let coords = (typeof currentCoords !== 'undefined' && currentCoords) ? currentCoords : null;
+      if (!coords) {
+        const savedData = localStorage.getItem("my_emergency_status");
+        if (savedData) {
+          try {
+            const parsed = JSON.parse(savedData);
+            if (parsed.coords) coords = parsed.coords;
+          } catch (e) {
+            console.warn("Could not parse saved coords", e);
+          }
+        }
+      }
     
-      // 5. Clean phone number
+      // Construct Google Maps URL (or change to `${coords.lat},${coords.lon}` for raw text)
+      if (coords && coords.lat && coords.lon) {
+        gpsString = `https://maps.google.com/?q=${coords.lat},${coords.lon}`;
+      }
+    
+      // 6. Clean phone number
       const cleanPhone = recipientPhone.trim().replace(/[^0-9+]/g, '');
     
-      // 6. Construct message payload
-      const textToCopy = `[EMERGENCY CHECK-IN] Status: ${selectedStatus} | Batt: ${batteryVal}% | Note: ${noteText}`;
-    
-      // 7. Copy and redirect to SMS
+      // 7. Construct message payload
+      const textToCopy = `[EMERGENCY CHECK-IN] Status: ${selectedStatus} | GPS: ${gpsString} | Batt: ${batteryVal}% | Note: ${noteText}`;
+      // 8. Copy to Clipboard and launch SMS app
       navigator.clipboard.writeText(textToCopy).then(() => {
         const alertElem = document.getElementById("copyAlert");
         if (alertElem) {
@@ -809,9 +827,10 @@
   
         localStorage.setItem("my_emergency_status", JSON.stringify({
           status: currentStatus,
-          note: noteText
+          note: noteText,
+          coords: currentCoords
         }));
-  
+          
         localStorage.setItem("family_board_status", JSON.stringify(familyData));
   
         let gpsVal = "N/A";
