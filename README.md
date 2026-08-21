@@ -53,24 +53,54 @@ The application utilizes the universal `sms:` URI scheme (RFC 5724) combined wit
 
 ---
 
-## 📲 Offline SMS Status Syncing
+# Offline SMS Check-In Workflow
 
-In a disaster scenario, cellular data (LTE/5G) and Wi-Fi networks often fail, but standard text messaging (SMS) frequently remains operational. This app uses a low-bandwidth SMS payload system to keep family members updated off-grid.
+When cellular data or Wi-Fi networks fail during an emergency, the application transitions to an **Off-Grid SMS Dispatch Mode**. Mobile web applications are restricted by operating system security policies from sending SMS messages directly in the background without user intervention. To bypass these limitations, the app utilizes a reliable, **one-tap handoff workflow** combining local storage persistence, automatic clipboard encoding, and native SMS deep linking.
 
-### How It Works:
+```
++--------------------------+
+|  User Taps               |
+| "Copy Status & Open Text"|
++------------+-------------+
+             |
+             v
++--------------------------+
+| 1. Saves Status Locally  | ---> Updates localStorage & Family Board
++------------+-------------+
+             |
+             v
++--------------------------+
+| 2. Encodes & Copies      | ---> Formats status payload & copies to Clipboard
++------------+-------------+
+             |
+             v
++--------------------------+
+| 3. Launches Native SMS   | ---> Opens device SMS app via `sms:<phone_number>`
++------------+-------------+
+             |
+             v
++--------------------------+
+| 4. User Long-Presses     | ---> User long-presses text area & taps "Paste" to send
++--------------------------+
+```
 
-1. **Sending Your Status (Offline):**
-   - Select your current status (e.g., *Safe*, *Needs Help*), location/Auto GPS, and battery level in 1. Broadcast Your Status.
-   - Select a family contact and Tap **Copy Status & Open Text App **.
-   - The app formats your telemetry into a compact string (e.g., `FROM: Dad | STATUS: SAFE | BATT: 85% | LOC: Shelter A`) and opens your phone's native messaging app to send as a standard text.
+---
 
-2. **Receiving & Importing Family Status:**
-   - When you receive a formatted status text from a family member, **copy the text message**.
-   - Open this app, navigate to **Import SMS** on 2. Family Board, and paste the text into the box.
-   - Click **Parse & Update**. 
-   - The app's built-in parser automatically extracts the sender's name, status, battery level, and location, instantly updating their entry on your **Family Board**.
+## Key Features & Mechanics
 
-> **Note:** If the incoming message is plain text or missing a name tag, simply select the family member's name manually from the optional dropdown before tapping *Parse & Update*.
+* **Automatic Local Sync:** Tapping **Copy Status & Open Text App** immediately calls `saveData()`, updating your status on your local device and Family Board simultaneously before opening the messaging app.
+* **Universal Device Compatibility:** Rather than relying on inconsistent browser-specific URL query parameters (like `sms:number?body=text`), status payloads are copied directly to the system clipboard using `navigator.clipboard.writeText()`. This ensures zero truncated strings across both iOS Safari and Android Chrome.
+* **Native SMS Handoff:** Triggers a clean `sms:<phone_number>` protocol link that automatically opens your default messaging app (iMessage, Google Messages, etc.) with the selected recipient's phone number pre-filled.
+
+---
+
+## How to Use (User Guide)
+
+1. **Select Status:** Tap your current condition (`🟢 SAFE`, `🟡 IN TRANSIT`, `🟣 EVACUATED`, or `🔴 NEED HELP`).
+2. **Select Recipient:** Choose a family member from the dropdown list.
+3. **Tap "Copy Status & Open Text":** 
+   > *Note: If you only wish to log your status on your own device without sending a text, tap **💾 Save Status (Offline)** instead.*
+4. **Paste & Send:** When your phone’s SMS app opens to the selected contact, long-press the text input field, tap **Paste**, and hit **Send**.
 
 ---
 
