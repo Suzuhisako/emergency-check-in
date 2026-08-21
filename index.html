@@ -598,6 +598,8 @@
       }
   
       saveData();
+      // Update visual selection (optional/UI highlighting)
+      console.log("Selected status:", currentStatus);
     }
   
     function copyAndOpenSMS() {
@@ -609,38 +611,41 @@
         return;
       }
     
-      // 1. 💾 Save data locally first
+      // 1. Save data locally
       if (typeof saveData === 'function') {
         saveData();
       }
     
-      // 2. 🎯 Read the active status directly from UI or variable
-      let activeStatus = typeof currentStatus !== 'undefined' ? currentStatus : 'SAFE';
-      
-      // Optional UI fallback: If you use active classes on status buttons (e.g. .active or .selected)
-      const activeBtn = document.querySelector('.status-btn.active, [data-status].active');
-      if (activeBtn) {
-        activeStatus = activeBtn.getAttribute('data-status') || activeBtn.innerText.trim();
+      // 2. FORCE READ STATUS FROM UI: Look for checked radio buttons, active buttons, or dropdowns
+      let selectedStatus = currentStatus; // default fallback
+    
+      // Check if you use radio buttons for status:
+      const checkedRadio = document.querySelector('input[name="statusRadio"]:checked');
+      if (checkedRadio) {
+        selectedStatus = checkedRadio.value;
+      } 
+      // Or check if you use active CSS classes on buttons:
+      else {
+        const activeBtn = document.querySelector('.status-btn.active, .btn-check:checked + label');
+        if (activeBtn) {
+          selectedStatus = activeBtn.innerText.trim();
+        }
       }
     
-      // 3. 🔋 Read live battery directly from UI or variable
-      let batteryVal = typeof liveBattery !== 'undefined' && liveBattery !== null ? liveBattery : '--';
-      const batteryElem = document.getElementById("batteryLevel") || document.getElementById("batDisplay");
-      if (batteryElem && batteryElem.innerText) {
-        batteryVal = batteryElem.innerText.replace('%', '').trim();
-      }
-    
-      // 4. 📝 Read note input directly
+      // 3. Read Note input directly
       const noteInput = document.getElementById("statusNote");
       const noteText = noteInput && noteInput.value.trim() !== "" ? noteInput.value.trim() : "No note";
     
-      // 5. 📱 Clean phone number
+      // 4. Read Battery level directly
+      const batteryVal = (typeof liveBattery !== "undefined" && liveBattery !== null) ? liveBattery : "100";
+    
+      // 5. Clean phone number
       const cleanPhone = recipientPhone.trim().replace(/[^0-9+]/g, '');
     
-      // 6. ✉️ Construct the final SMS string
-      const textToCopy = `[EMERGENCY CHECK-IN] Status: ${activeStatus} | Batt: ${batteryVal}% | Note: ${noteText}`;
+      // 6. Construct message payload
+      const textToCopy = `[EMERGENCY CHECK-IN] Status: ${selectedStatus} | Batt: ${batteryVal}% | Note: ${noteText}`;
     
-      // 7. 📋 Copy to clipboard & launch SMS
+      // 7. Copy and redirect to SMS
       navigator.clipboard.writeText(textToCopy).then(() => {
         const alertElem = document.getElementById("copyAlert");
         if (alertElem) {
@@ -651,9 +656,8 @@
         setTimeout(() => {
           window.location.href = cleanPhone ? `sms:${cleanPhone}` : `sms:`;
         }, 1500); 
-      }).catch((err) => {
-        console.error("Clipboard write failed:", err);
-        alert("Text to send: " + textToCopy);
+      }).catch(() => {
+        alert("Text: " + textToCopy);
       });
     }
   
