@@ -182,9 +182,12 @@
       </div>
       
       <!-- Save & Localstorage Button -->
-      <button type="button" class="btn btn-primary w-100 py-2 fw-bold mb-2" onclick="broadcastStatus()">
-        📡  <strong>Save Status:</strong> Logs your status to this device only.
+      <button id="saveOfflineBtn" type="button" class="btn btn-secondary w-100 py-2 fw-bold mb-1" onclick="broadcastStatus()">
+        💾 Save Status (Offline)
       </button>
+      <small class="text-muted d-block mb-3">
+        💡 Tap this to save your current status on this phone without sending a text message.
+      </small>
 
       <div class="mb-2">
         <label for="smsRecipient" class="form-label small text-secondary">Family Mobile Number (for SMS)</label>
