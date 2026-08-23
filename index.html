@@ -59,7 +59,31 @@
       animation: pulseBtn 0.7s infinite;
     }
 
+    .btn-outline-blue {
+      color: #066f8f;
+      border: 1px solid #066f8f;
+      background-color: transparent;
+      -webkit-tap-highlight-color: transparent; /* Prevents gray/white mobile touch overlay */
+    }
     
+    /* Hover state (mainly for desktop mouse devices) */
+    @media (hover: hover) {
+      .btn-outline-blue:hover {
+        color: #fff;
+        background-color: #066f8f;
+        border-color: #066f8f;
+      }
+    }
+    
+    /* Active & Focused states (Handles tap state on mobile phones) */
+    .btn-outline-blue:focus,
+    .btn-outline-blue:active,
+    .btn-outline-blue.active {
+      color: #fff !important;
+      background-color: #066f8f !important;
+      border-color: #066f8f !important;
+      box-shadow: none !important; /* Removes default Bootstrap white/blue glow ring */
+    }
 
     @media (hover: none), (pointer: coarse) {
       #btn-gps:focus,
