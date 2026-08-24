@@ -8,24 +8,37 @@ When cellular data (4G/5G) or Wi-Fi networks fail, traditional messaging apps (L
 
 ## ✨ Features
 
-- 📱 **Offline-First (PWA):** Works completely offline directly in mobile browsers without requiring app store installation.
+- 📱 **Offline-First:** Works completely offline directly in mobile browsers without requiring continuous network connectivity.
 - 💬 **SMS Fallback:** Formats location, health status, and urgent needs into structured SMS text blocks ready for instant sending.
-- ⚡ **Lite Edition (`index_lite.html`):** Ultra-lightweight version stripped of heavy assets for instant loading on older phones or weak signals.
-- 🌐 **Independent Language Versions:** Available in dedicated English and Japanese interfaces for intuitive emergency access.
-- 🔐 **Privacy-Focused:** No central server or data collection. All contact data remains locally stored on your phone.
+- ⚡ **Lite Edition (`index_lite.html`):** Ultra-lightweight standalone web app stripped of heavy assets for instant loading on older devices or congested networks.
+- 📱 **Full PWA Edition (`index.html`):** Feature-rich Progressive Web App that can be installed directly onto your device with standalone app integration.
+- 🌐 **Multi-Language Interface:** Available in dedicated English and Japanese options for clear, fast navigation.
+- 🔐 **Privacy-Focused:** No central server or data collection. All contact details remain strictly on your local device.
 
 ---
 
-## 🚀 Live Demos
+## 🚀 Live Demos & Installation Guide
 
-You can access or bookmark the live web apps directly on your smartphone:
+You can access and bookmark both versions directly on your smartphone:
 
-| Edition | English Version | Japanese Version (日本語) |
+| Edition | Direct URL | Installation Method |
 | :--- | :--- | :--- |
-| **Lite Edition** | [Launch Lite (EN)](https://suzuhisako.github.io/emergency-check-in/index_lite.html) | *(Coming Soon)* |
-| **Full Edition** | [Launch Full (EN)](https://suzuhisako.github.io/emergency-check-in/index.html) | *(Coming Soon)* |
+| **Full Edition (PWA)** | [Launch Full App](https://suzuhisako.github.io/emergency-check-in/index.html) | **Standalone PWA App** (Installs to App Drawer & Home Screen) |
+| **Lite Edition** | [Launch Lite Page](https://suzuhisako.github.io/emergency-check-in/index_lite.html) | **Home Screen Web Shortcut** (Direct web access) |
 
-> **Pro Tip:** Open the link on your mobile phone, open your browser menu (`⋮` or Share icon), and tap **"Add to Home Screen"** for offline access during emergencies.
+---
+
+### 📲 How to Install on Smartphone
+
+#### 1. Full Edition (Standalone PWA)
+- **Android (Chrome):** Open `index.html` ➔ Tap menu (`⋮`) ➔ Select **"Install app"**.
+- **iOS (Safari):** Open `index.html` ➔ Tap **Share icon** ➔ Select **"Add to Home Screen"**.
+
+#### 2. Lite Edition (Home Screen Shortcut)
+- **Android (Chrome):** Open `index_lite.html` ➔ Tap menu (`⋮`) ➔ Select **"Add to Home screen"**.
+- **iOS (Safari):** Open `index_lite.html` ➔ Tap **Share icon** ➔ Select **"Add to Home Screen"**.
+
+> **Note:** Installing the Full Edition as a PWA and adding the Lite Edition as a home screen shortcut allows both apps to sit side-by-side on your home screen without conflicts, while keeping offline capability for both!
 
 ---
 
@@ -52,7 +65,7 @@ emergency-check-in/
 ├── index.html          # Full PWA Application (English)
 ├── index_lite.html     # Ultra-lightweight standalone version (English)
 ├── sw.js               # Service Worker for offline caching
-├── manifest.json       # PWA Configuration File
+├── manifest.json       # PWA Configuration File (Full Edition)
 └── README.md           # Documentation
 📄 License
 This project is open-source and available under the MIT License.
