@@ -1,115 +1,66 @@
-const CACHE_NAME = 'family-board-v3';
+const CACHE_NAME = 'emergency-checkin-v3';
 
-// Add any CDN links (Bootstrap CSS/JS, Fonts) if hosted externally!
-const STATIC_ASSETS = [
+// All files required for offline operation
+const CACHE_URLS = [
   './',
   './index.html',
+  './index_lite.html',
+  './index_ja.html',
+  './index_lite_ja.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
-  // 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
-  // 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'
+  './icon-512.png',
+  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'
 ];
 
-// ------------------------------------------------------------------
-// 1. Install Event: Pre-cache App Shell
-// ------------------------------------------------------------------
+// 1. Install Event: Pre-cache all essential app shell files
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Use addAll, but catch errors to prevent whole SW failing if an icon is missing
-      return cache.addAll(STATIC_ASSETS).catch((err) => {
-        console.warn('[SW] Pre-cache warning (some assets may be missing):', err);
-      });
-    })
+      console.log('[Service Worker] Pre-caching offline resources');
+      return cache.addAll(CACHE_URLS);
+    }).then(() => self.skipWaiting())
   );
 });
 
-// ------------------------------------------------------------------
-// 2. Activate Event: Wipe Legacy Caches & Claim Clients
-// ------------------------------------------------------------------
+// 2. Activate Event: Clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            console.log('[Service Worker] Clearing old cache:', cache);
+            return caches.delete(cache);
+          }
+        })
       );
     }).then(() => self.clients.claim())
   );
 });
 
-// ------------------------------------------------------------------
-// 3. Fetch Event: Cache-First for Instant Offline Speed
-// ------------------------------------------------------------------
+// 3. Fetch Event: Cache-First strategy with Network Fallback
 self.addEventListener('fetch', (event) => {
-  // Only handle standard GET HTTP(S) requests
-  if (event.request.method !== 'GET') return;
-  if (!event.request.url.startsWith('http')) return;
-
-  // Bypasses Service Worker entirely for index_lite.html
-  if (event.request.url.includes('index_lite.html')) {
-    event.respondWith(fetch(event.request));
-    return;
-  }
-
-  // A. Navigation Requests (Loading HTML / App Shell)
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      caches.match('./index.html')
-        .then((cachedResponse) => {
-          if (cachedResponse) {
-            // Serve cached HTML instantly, update cache in background if online
-            fetch(event.request).then((networkResponse) => {
-              if (networkResponse && networkResponse.status === 200) {
-                caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
-              }
-            }).catch(() => {/* Ignore background network failure */});
-
-            return cachedResponse;
-          }
-
-          // Fallback if index.html wasn't pre-cached under exact key
-          return fetch(event.request);
-        })
-        .catch(async () => {
-          // Robust multi-fallback promise resolution
-          const fallback = await caches.match('./index.html') 
-                        || await caches.match('./') 
-                        || await caches.match('/');
-          return fallback;
-        })
-    );
-    return;
-  }
-
-  // B. Asset & Static Resource Requests (Cache First, Network Fallback)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse;
-
+      if (cachedResponse) {
+        return cachedResponse;
+      }
       return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || (networkResponse.status !== 200 && networkResponse.type !== 'opaque')) {
-          return networkResponse;
+        // Cache newly fetched dynamic resources on the fly
+        if (event.request.method === 'GET' && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
         return networkResponse;
       });
+    }).catch(() => {
+      // Offline fallback for navigation requests
+      if (event.request.mode === 'navigate') {
+        return caches.match('./index_ja.html') || caches.match('./index.html');
+      }
     })
   );
-});
-
-// ------------------------------------------------------------------
-// 4. Message Listener: Instant Skip Waiting
-// ------------------------------------------------------------------
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
 });
