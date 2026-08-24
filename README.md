@@ -67,5 +67,8 @@ emergency-check-in/
 ├── sw.js               # Service Worker for offline caching
 ├── manifest.json       # PWA Configuration File (Full Edition)
 └── README.md           # Documentation
+
+---
+
 📄 License
 This project is open-source and available under the MIT License.
