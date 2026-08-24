@@ -1,7 +1,6 @@
-const CACHE_NAME = 'emergency-checkin-v3';
+const CACHE_NAME = 'emergency-checkin-v4';
 
-// All files required for offline operation
-const CACHE_URLS = [
+const LOCAL_URLS = [
   './',
   './index.html',
   './index_lite.html',
@@ -9,46 +8,50 @@ const CACHE_URLS = [
   './index_lite_ja.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'
+  './icon-512.png'
 ];
 
-// 1. Install Event: Pre-cache all essential app shell files
+// Install Event - Resilient caching
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Pre-caching offline resources');
-      return cache.addAll(CACHE_URLS);
+    caches.open(CACHE_NAME).then(async (cache) => {
+      console.log('[SW] Pre-caching local files...');
+      // Uses individual fetches so one missing file won't break the whole offline setup
+      await Promise.allSettled(
+        LOCAL_URLS.map(url => 
+          fetch(url).then(response => {
+            if (response.ok) return cache.put(url, response);
+          }).catch(err => console.warn(`Failed to cache ${url}:`, err))
+        )
+      );
     }).then(() => self.skipWaiting())
   );
 });
 
-// 2. Activate Event: Clean up old caches
+// Activate Event
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('[Service Worker] Clearing old cache:', cache);
-            return caches.delete(cache);
-          }
+        keys.map((key) => {
+          if (key !== CACHE_NAME) return caches.delete(key);
         })
       );
     }).then(() => self.clients.claim())
   );
 });
 
-// 3. Fetch Event: Cache-First strategy with Network Fallback
+// Fetch Event - Serve from cache when offline
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
       return fetch(event.request).then((networkResponse) => {
-        // Cache newly fetched dynamic resources on the fly
-        if (event.request.method === 'GET' && networkResponse.status === 200) {
+        if (networkResponse.status === 200) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
