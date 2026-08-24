@@ -300,7 +300,7 @@
       const recipientSelect = document.getElementById("smsRecipient");
       const recipientPhone = recipientSelect ? recipientSelect.value : "";
   
-      if (!recipientPhone) {
+      if (recipientSelect && recipientSelect.selectedIndex === 0) {
         alert("Please select a recipient from the dropdown first!");
         return;
       }
@@ -391,15 +391,18 @@
     function updateRecipientDropdown() {
       const select = document.getElementById("smsRecipient");
       if (!select) return;
-  
+    
       select.innerHTML = '<option value="">-- Choose Family Member --</option>';
       familyData.forEach((member) => {
-        if (member.phone) {
-          const opt = document.createElement("option");
-          opt.value = member.phone;
-          opt.textContent = `${member.name} (${member.phone})`;
-          select.appendChild(opt);
-        }
+        const opt = document.createElement("option");
+        // Use the phone number if available, otherwise fallback to empty string
+        opt.value = member.phone || ""; 
+        
+        // Display phone number in label if present, otherwise just show name
+        const phoneDisplay = member.phone ? ` (${member.phone})` : " (Note to Self)";
+        opt.textContent = `${member.name}${phoneDisplay}`;
+        
+        select.appendChild(opt);
       });
     }
   
