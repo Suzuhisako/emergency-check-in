@@ -3,6 +3,7 @@
   "short_name": "Check-In Lite",
   "id": "/emergency-check-in/index_lite.html",
   "start_url": "./index_lite.html",
+  "scope": "./index_lite.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#dc2626",
