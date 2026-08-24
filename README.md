@@ -23,7 +23,7 @@ You can access or bookmark the live web apps directly on your smartphone:
 | Edition | English Version | Japanese Version (日本語) |
 | :--- | :--- | :--- |
 | **Lite Edition** | [Launch Lite (EN)](https://suzuhisako.github.io/emergency-check-in/index_lite.html) | *(Coming Soon)* |
-| **Full Edition** | [Launch Full (EN)](https://suzuhisako.github.io/emergency-check-in/) | *(Coming Soon)* |
+| **Full Edition** | [Launch Full (EN)](https://suzuhisako.github.io/emergency-check-in/index.html) | *(Coming Soon)* |
 
 > **Pro Tip:** Open the link on your mobile phone, open your browser menu (`⋮` or Share icon), and tap **"Add to Home Screen"** for offline access during emergencies.
 
