@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>緊急安否確認（ライト版）</title>
+  
+  <!-- Icons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+
+  <style>
+    :root {
+      --primary: #dc2626;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --border: #cbd5e1;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 1.25rem;
+      margin-top: 0;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-top: 12px;
+      font-size: 0.9rem;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+    button {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: bold;
+      margin-top: 18px;
+      cursor: pointer;
+    }
+    button:active {
+      opacity: 0.9;
+    }
+    .output-box {
+      margin-top: 16px;
+      background: #f1f5f9;
+      padding: 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .toast {
+      display: none;
+      background: #16a34a;
+      color: white;
+      text-align: center;
+      padding: 8px;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>🚨 緊急安否確認（簡易版）</h1>
+    
+    <label for="status">安否状況</label>
+    <select id="status">
+      <option value="【無事】">【無事】怪我なし・安全</option>
+      <option value="【要救助】">【要救助】助けが必要</option>
+      <option value="【避難中】">【避難中】避難場所へ移動中/滞在中</option>
+    </select>
+  
+    <label for="name">名前</label>
+    <input type="text" id="name" placeholder="例：山田 太郎">
+  
+    <label for="location">現在地・避難場所</label>
+    <input type="text" id="location" placeholder="例：自宅2階 / ○○小学校体育館">
+  
+    <label for="notes">状況・連絡事項</label>
+    <textarea id="notes" rows="3" placeholder="例：停電中だが水と備蓄あり。充電節約中。"></textarea>
+  
+    <button onclick="generateSMS()">安否確認テキストを作成</button>
+  
+    <div id="toast" class="toast">クリップボードにコピーしました！</div>
+  
+    <div id="output" class="output-box" style="display:none;"></div>
+  </div>
+  
+  <script>
+    function generateSMS() {
+      const status = document.getElementById('status').value;
+      const name = document.getElementById('name').value.trim() || '未設定';
+      const location = document.getElementById('location').value.trim() || '現在地不明';
+      const notes = document.getElementById('notes').value.trim() || '特記事項なし';
+      
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+  
+      const smsText = `${status} 名前: ${name} | 場所: ${location} | 状況: ${notes} | 時刻: ${timeStr}`;
+  
+      const outputDiv = document.getElementById('output');
+      outputDiv.innerText = smsText;
+      outputDiv.style.display = 'block';
+  
+      navigator.clipboard.writeText(smsText).then(() => {
+        const toast = document.getElementById('toast');
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 3000);
+      });
+    }
+  
+    // Register existing service worker for offline caching
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
+
+</body>
+</html>
