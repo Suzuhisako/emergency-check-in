@@ -1,6 +1,7 @@
 {
   "name": "Emergency Check-In Lite",
   "short_name": "Check-In Lite",
+  "id": "/emergency-check-in/index_lite.html",
   "start_url": "./index_lite.html",
   "display": "standalone",
   "background_color": "#ffffff",
