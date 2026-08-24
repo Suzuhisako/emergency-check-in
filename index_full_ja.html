@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>緊急家族安否確認</title>
+  
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
+  <link rel="manifest" href="./manifest.json">
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #dc2626;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --border: #cbd5e1;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+    .app-container {
+      width: 100%;
+      max-width: 600px;
+    }
+    .card-box {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 1.4rem;
+      margin-top: 0;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    h2 {
+      font-size: 1.1rem;
+      margin-top: 0;
+      margin-bottom: 12px;
+      border-bottom: 2px solid var(--bg);
+      padding-bottom: 6px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-top: 12px;
+      font-size: 0.9rem;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+    .btn-main {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: bold;
+      margin-top: 18px;
+      cursor: pointer;
+    }
+    .btn-secondary-custom {
+      background: #475569;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .btn-main:active, .btn-secondary-custom:active {
+      opacity: 0.9;
+    }
+    .output-box {
+      margin-top: 16px;
+      background: #f1f5f9;
+      padding: 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .toast-msg {
+      display: none;
+      background: #16a34a;
+      color: white;
+      text-align: center;
+      padding: 8px;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-size: 0.85rem;
+    }
+    .member-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #fafafa;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    .status-safe { background: #dcfce7; color: #166534; }
+    .status-moving { background: #fef9c3; color: #854d0e; }
+    .status-sheltered { background: #dbeafe; color: #1e40af; }
+    .status-danger { background: #fee2e2; color: #991b1b; }
+    .status-unknown { background: #f1f5f9; color: #475569; }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- SECTION 1: MY STATUS FORM -->
+  <div class="card-box">
+    <h1>🚨 緊急家族安否確認</h1>
+    
+    <label for="status">安否状況</label>
+    <select id="status">
+      <option value="【無事】">🟢 【無事】怪我なし・安全</option>
+      <option value="【移動中】">🟡 【移動中】避難中・移動中</option>
+      <option value="【避難済み】">🔵 【避難済み】指定避難所に到着</option>
+      <option value="【要救助】">🔴 【要救助】助けが必要</option>
+    </select>
+
+    <label for="name">名前</label>
+    <input type="text" id="name" placeholder="例：山田 太郎">
+
+    <label for="location">現在地・避難場所</label>
+    <input type="text" id="location" placeholder="例：自宅2階 / ○○小学校体育館">
+    <button type="button" class="btn-secondary-custom" onclick="getGPS()">📍 現在地(GPS)を取得</button>
+
+    <label for="battery">バッテリー残量</label>
+    <input type="text" id="battery" readonly placeholder="自動取得中...">
+
+    <label for="notes">状況・連絡事項</label>
+    <textarea id="notes" rows="2" placeholder="例：停電中だが備蓄あり。充電節約のため電源切ります。"></textarea>
+
+    <label for="recipient">送信先（家族・緊急連絡先）</label>
+    <select id="recipient"></select>
+
+    <button class="btn-main" onclick="generateAndSendSMS()">安否送信テキスト作成 & SMS起動</button>
+
+    <div id="toast" class="toast-msg">クリップボードにコピーしました！</div>
+    <div id="output" class="output-box" style="display:none;"></div>
+  </div>
+
+  <!-- SECTION 2: INCOMING SMS PARSER -->
+  <div class="card-box">
+    <h2>📥 受信SMSの読み込み</h2>
+    <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 8px;">
+      家族から届いた安否メッセージ（SMS）をここに貼り付けると、下のボードに自動反映されます。
+    </p>
+    <textarea id="incomingSMS" rows="2" placeholder="例: 【無事】 名前: 山田 花子 | 場所: 〇〇中学 | バッテリー: 85% | 状況: 無事です | 時刻: 14:30"></textarea>
+    <button type="button" class="btn-secondary-custom" onclick="parseIncomingSMS()">ボードに取り込み</button>
+  </div>
+
+  <!-- SECTION 3: FAMILY STATUS BOARD -->
+  <div class="card-box">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h2 class="m-0">👨‍👩‍👧‍👦 家族の安否状況ボード</h2>
+      <button class="btn-secondary-custom" onclick="addFamilyMember()">＋ メンバー追加</button>
+    </div>
+    <div id="familyBoard"></div>
+  </div>
+
+</div>
+
+<script>
+  let familyData = [];
+
+  // Initialize App Data & Monitors
+  document.addEventListener('DOMContentLoaded', () => {
+    loadContactsAndBoard();
+    initBattery();
+  });
+
+  // Battery Level Monitor
+  function initBattery() {
+    const batteryInput = document.getElementById('battery');
+    if ('getBattery' in navigator) {
+      navigator.getBattery().then(battery => {
+        const updateBattery = () => {
+          batteryInput.value = `${Math.round(battery.level * 100)}%`;
+        };
+        updateBattery();
+        battery.addEventListener('levelchange', updateBattery);
+      });
+    } else {
+      batteryInput.value = '手動入力または取得不可';
+      batteryInput.removeAttribute('readonly');
+    }
+  }
+
+  // Get GPS Location Link
+  function getGPS() {
+    const locationInput = document.getElementById('location');
+    if ('geolocation' in navigator) {
+      locationInput.placeholder = "位置情報を取得中...";
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude.toFixed(5);
+          const lon = pos.coords.longitude.toFixed(5);
+          locationInput.value = `GPS: https://maps.google.com/?q=${lat},${lon}`;
+        },
+        (err) => {
+          alert("位置情報の取得に失敗しました。");
+          locationInput.placeholder = "例：自宅2階 / ○○小学校体育館";
+        },
+        { timeout: 10000 }
+      );
+    } else {
+      alert("お使いのブラウザはGPS機能をサポートしていません。");
+    }
+  }
+
+  // Load Contacts and Family Board Data
+  function loadContactsAndBoard() {
+    const storedContacts = localStorage.getItem('emergency_contacts_ja');
+    if (storedContacts) {
+      familyData = JSON.parse(storedContacts);
+    } else {
+      familyData = [
+        { name: '自分', phone: '', status: '未確認', location: '-', battery: '-', notes: '-', time: '-' },
+        { name: '家族1', phone: '', status: '未確認', location: '-', battery: '-', notes: '-', time: '-' }
+      ];
+      saveBoard();
+    }
+    renderRecipientOptions();
+    renderFamilyBoard();
+  }
+
+  function saveBoard() {
+    localStorage.setItem('emergency_contacts_ja', JSON.stringify(familyData));
+  }
+
+  function renderRecipientOptions() {
+    const recipientSelect = document.getElementById('recipient');
+    recipientSelect.innerHTML = '<option value="">(特定の宛先を指定しない)</option>';
+    familyData.forEach(member => {
+      const option = document.createElement('option');
+      option.value = member.phone || '';
+      option.textContent = member.phone ? `${member.name} (${member.phone})` : member.name;
+      recipientSelect.appendChild(option);
+    });
+  }
+
+  function renderFamilyBoard() {
+    const board = document.getElementById('familyBoard');
+    board.innerHTML = '';
+
+    familyData.forEach((member, index) => {
+      let badgeClass = 'status-unknown';
+      if (member.status.includes('無事')) badgeClass = 'status-safe';
+      else if (member.status.includes('移動')) badgeClass = 'status-moving';
+      else if (member.status.includes('避難')) badgeClass = 'status-sheltered';
+      else if (member.status.includes('救助')) badgeClass = 'status-danger';
+
+      const card = document.createElement('div');
+      card.className = 'member-card';
+      card.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <strong>${member.name}</strong>
+          <span class="status-badge ${badgeClass}">${member.status}</span>
+        </div>
+        <div style="font-size: 0.85rem; color: #475569;">
+          <div>📍 場所: ${member.location}</div>
+          <div>🔋 充電: ${member.battery} | 🕒 更新: ${member.time}</div>
+          <div>📝 状況: ${member.notes}</div>
+          ${member.phone ? `<div style="font-size: 0.75rem;" class="mt-1">📞 ${member.phone}</div>` : ''}
+        </div>
+        <div class="text-end mt-2">
+          <button class="btn-secondary-custom" style="padding: 2px 8px; font-size: 0.75rem;" onclick="editMember(${index})">編集</button>
+          <button class="btn-secondary-custom" style="padding: 2px 8px; font-size: 0.75rem; background: #ef4444;" onclick="deleteMember(${index})">削除</button>
+        </div>
+      `;
+      board.appendChild(card);
+    });
+  }
+
+  // Generate SMS & Trigger SMS App
+  function generateAndSendSMS() {
+    const status = document.getElementById('status').value;
+    const name = document.getElementById('name').value.trim() || '未設定';
+    const location = document.getElementById('location').value.trim() || '不明';
+    const battery = document.getElementById('battery').value || '不明';
+    const notes = document.getElementById('notes').value.trim() || '特記事項なし';
+    const recipientPhone = document.getElementById('recipient').value;
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+
+    const smsText = `${status} 名前: ${name} | 場所: ${location} | バッテリー: ${battery} | 状況: ${notes} | 時刻: ${timeStr}`;
+
+    const outputDiv = document.getElementById('output');
+    outputDiv.innerText = smsText;
+    outputDiv.style.display = 'block';
+
+    // Copy to Clipboard
+    navigator.clipboard.writeText(smsText).then(() => {
+      const toast = document.getElementById('toast');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    });
+
+    // Also update Self on Board automatically
+    const selfIndex = familyData.findIndex(m => m.name === name || m.name === '自分');
+    if (selfIndex !== -1) {
+      familyData[selfIndex].status = status;
+      familyData[selfIndex].location = location;
+      familyData[selfIndex].battery = battery;
+      familyData[selfIndex].notes = notes;
+      familyData[selfIndex].time = timeStr;
+      saveBoard();
+      renderFamilyBoard();
+    }
+
+    // Launch Native SMS client
+    if (recipientPhone) {
+      window.location.href = `sms:${recipientPhone}?body=${encodeURIComponent(smsText)}`;
+    }
+  }
+
+  // Parse Received SMS Text
+  function parseIncomingSMS() {
+    const rawText = document.getElementById('incomingSMS').value.trim();
+    if (!rawText) return;
+
+    try {
+      const statusMatch = rawText.match(/(【.*?】)/);
+      const nameMatch = rawText.match(/名前:\s*([^|]+)/);
+      const locationMatch = rawText.match(/場所:\s*([^|]+)/);
+      const batteryMatch = rawText.match(/バッテリー:\s*([^|]+)/);
+      const notesMatch = rawText.match(/状況:\s*([^|]+)/);
+      const timeMatch = rawText.match(/時刻:\s*([^|]+)/);
+
+      const name = nameMatch ? nameMatch[1].trim() : '不明な送信者';
+      
+      const targetIndex = familyData.findIndex(m => m.name === name);
+      const memberData = {
+        name: name,
+        phone: targetIndex !== -1 ? familyData[targetIndex].phone : '',
+        status: statusMatch ? statusMatch[1].trim() : '要確認',
+        location: locationMatch ? locationMatch[1].trim() : '-',
+        battery: batteryMatch ? batteryMatch[1].trim() : '-',
+        notes: notesMatch ? notesMatch[1].trim() : '-',
+        time: timeMatch ? timeMatch[1].trim() : 'たった今'
+      };
+
+      if (targetIndex !== -1) {
+        familyData[targetIndex] = memberData;
+      } else {
+        familyData.push(memberData);
+      }
+
+      saveBoard();
+      renderFamilyBoard();
+      renderRecipientOptions();
+      document.getElementById('incomingSMS').value = '';
+      alert(`${name} さんの最新安否情報を取り込みました。`);
+    } catch(e) {
+      alert("メッセージ形式を解析できませんでした。");
+    }
+  }
+
+  // Board CRUD Operations
+  function addFamilyMember() {
+    const name = prompt("メンバーの名前を入力してください:");
+    if (!name) return;
+    const phone = prompt(`${name} さんの電話番号を入力してください (任意):`) || '';
+    familyData.push({
+      name: name,
+      phone: phone,
+      status: '未確認',
+      location: '-',
+      battery: '-',
+      notes: '-',
+      time: '-'
+    });
+    saveBoard();
+    renderFamilyBoard();
+    renderRecipientOptions();
+  }
+
+  function editMember(index) {
+    const member = familyData[index];
+    const newName = prompt("名前を編集:", member.name) || member.name;
+    const newPhone = prompt("電話番号を編集:", member.phone) || member.phone;
+    familyData[index].name = newName;
+    familyData[index].phone = newPhone;
+    saveBoard();
+    renderFamilyBoard();
+    renderRecipientOptions();
+  }
+
+  function deleteMember(index) {
+    if (confirm(`${familyData[index].name} さんを削除しますか？`)) {
+      familyData.splice(index, 1);
+      saveBoard();
+      renderFamilyBoard();
+      renderRecipientOptions();
+    }
+  }
+
+  // Register Service Worker
+  
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('SW Registered successfully:', reg.scope))
+        .catch(err => console.error('SW Registration failed:', err));
+    });
+  }
+</script>
+
+</body>
+</html>
