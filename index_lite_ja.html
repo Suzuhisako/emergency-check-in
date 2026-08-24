@@ -122,34 +122,78 @@
     <div id="output" class="output-box" style="display:none;"></div>
   </div>
   
-  <script>
-    function generateSMS() {
-      const status = document.getElementById('status').value;
-      const name = document.getElementById('name').value.trim() || '未設定';
-      const location = document.getElementById('location').value.trim() || '現在地不明';
-      const notes = document.getElementById('notes').value.trim() || '特記事項なし';
-      
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
-  
-      const smsText = `${status} 名前: ${name} | 場所: ${location} | 状況: ${notes} | 時刻: ${timeStr}`;
-  
-      const outputDiv = document.getElementById('output');
-      outputDiv.innerText = smsText;
-      outputDiv.style.display = 'block';
-  
-      navigator.clipboard.writeText(smsText).then(() => {
-        const toast = document.getElementById('toast');
-        toast.style.display = 'block';
-        setTimeout(() => { toast.style.display = 'none'; }, 3000);
-      });
+ <script>
+  // 1. Load contacts into dropdown
+  function loadContacts() {
+    const contactSelect = document.getElementById('recipient');
+    if (!contactSelect) return;
+
+    contactSelect.innerHTML = '';
+
+    // Retrieve contacts stored by Full version or load defaults
+    let contacts = [];
+    try {
+      contacts = JSON.parse(localStorage.getItem('emergency_contacts')) || [];
+    } catch(e) {
+      contacts = [];
     }
-  
-    // Register existing service worker for offline caching
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js');
+
+    // Default contact set if localStorage is empty
+    if (contacts.length === 0) {
+      contacts = [
+        { name: '自分（備忘録） / Self', phone: '' },
+        { name: '家族連絡先 / Family', phone: '' },
+        { name: '緊急連絡先 / Emergency Contact', phone: '' }
+      ];
     }
-  </script>
+
+    // Loop through ALL items and append options
+    contacts.forEach(contact => {
+      const option = document.createElement('option');
+      option.value = contact.phone || '';
+      option.textContent = contact.phone ? `${contact.name} (${contact.phone})` : contact.name;
+      contactSelect.appendChild(option);
+    });
+  }
+
+  // 2. Generate and copy/send SMS
+  function generateSMS() {
+    const status = document.getElementById('status').value;
+    const name = document.getElementById('name').value.trim() || '未設定';
+    const location = document.getElementById('location').value.trim() || '現在地不明';
+    const notes = document.getElementById('notes').value.trim() || '特記事項なし';
+    const recipientPhone = document.getElementById('recipient').value;
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+
+    const smsText = `${status} 名前: ${name} | 場所: ${location} | 状況: ${notes} | 時刻: ${timeStr}`;
+
+    const outputDiv = document.getElementById('output');
+    outputDiv.innerText = smsText;
+    outputDiv.style.display = 'block';
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(smsText).then(() => {
+      const toast = document.getElementById('toast');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    });
+
+    // If a phone number is selected, trigger sms: link
+    if (recipientPhone) {
+      window.location.href = `sms:${recipientPhone}?body=${encodeURIComponent(smsText)}`;
+    }
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', loadContacts);
+
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js');
+  }
+</script>
 
 </body>
 </html>
