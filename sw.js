@@ -48,6 +48,12 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (!event.request.url.startsWith('http')) return;
 
+  // Bypasses Service Worker entirely for index_lite.html
+  if (event.request.url.includes('index_lite.html')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   // A. Navigation Requests (Loading HTML / App Shell)
   if (event.request.mode === 'navigate') {
     event.respondWith(
