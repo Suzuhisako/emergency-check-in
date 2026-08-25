@@ -131,8 +131,8 @@
     <!-- システム & 接続ヘッダー -->
     <header class="d-flex justify-content-between align-items-center p-3 mb-3 card-dark rounded-3">
       <div>
-        <h1 class="h6 m-0 fw-bold text-danger">🚨 緊急安否確認 (CHECK-IN)</h1>
-        <small class="text-secondary" id="offlineStatus">ステータス: オフライン対応 (PWA)</small>
+        <h1 class="h6 m-0 fw-bold text-danger">🚨 緊急安否確認 </h1>
+        <small class="text-secondary" id="offlineStatus">現状: オフライン対応 (PWA)</small>
       </div>
       <div class="text-end">
         <span class="badge badge-mesh rounded-pill px-2 py-1 mb-1 d-inline-flex align-items-center">
@@ -163,36 +163,36 @@
       </button>
       
       <div id="sirenStatus" class="form-text text-danger text-center fw-bold small mt-2 d-none">
-        ⚠️ アラーム作動中: 音量を最大にし、画面を空やひらけた場所に向けてください！
+        ⚠️ アラーム作動中: 音量を最大にし、居場所に気づいてもらいましょう！
       </div>
     </section>
 
-    <!-- ステップ 1: 現在の安否ステータス送信 -->
+    <!-- ステップ 1: 現在の安否を送信 -->
     <section class="card-dark rounded-3 p-3 mb-3">
       <h2 class="h6 text-uppercase text-secondary fw-bold mb-3">1. 安否ステータスを発信</h2>     
       
       <div class="d-grid gap-2 mb-3">
-        <!-- 🟢 無事 (SAFE) -->
+        <!-- 🟢 無事 -->
         <button id="btn-safe" type="button" class="btn btn-outline-success status-btn fw-bold text-center px-3 py-2 w-100" onclick="selectStatus('SAFE')">
-          <span class="d-block text-center">🟢 無事 / 安全 (SAFE)</span>
+          <span class="d-block text-center">🟢 無事 / 安全　</span>
           <small class="text-muted fw-normal mt-1 fs-7 d-block text-center" id="label-safe">タップして設定</small>
         </button>
       
-        <!-- 🟡 移動中 (IN TRANSIT) -->
+        <!-- 🟡 移動中 -->
         <button id="btn-transit" type="button" class="btn btn-outline-warning status-btn fw-bold text-center px-3 py-2 w-100 d-flex flex-column align-items-center" onclick="selectStatus('IN TRANSIT')">
-          <span class="d-block text-center">🟡 移動中 / 避難中 (IN TRANSIT)</span>
+          <span class="d-block text-center">🟡 移動中 / 避難中 </span>
           <small class="text-muted fw-normal mt-1 fs-7 text-center" id="label-transit">タップして設定</small>
         </button>
       
         <!-- 🔵 避難完了 (EVACUATED) -->
         <button id="btn-evacuated" type="button" class="btn btn-outline-blue status-btn fw-bold text-center px-3 py-2 w-100" onclick="selectStatus('EVACUATED')">
-          <span class="d-block text-center">🔵 避難所到着 (EVACUATED)</span>
+          <span class="d-block text-center">🔵 避難完了 </span>
           <small class="text-muted fw-normal mt-1 fs-7 d-block text-center" id="label-evacuated">タップして設定</small>
         </button>
       
-        <!-- 🔴 救助が必要 (NEED HELP) -->
+        <!-- 🔴 救助が必要 -->
         <button id="btn-needhelp" type="button" class="btn btn-outline-danger status-btn fw-bold text-center px-3 py-2 w-100 d-flex flex-column align-items-center" onclick="selectStatus('NEED HELP')">
-          <span class="d-block text-center">🔴 救助が必要 (NEED HELP)</span>
+          <span class="d-block text-center">🔴 救助が必要　</span>
           <small class="text-muted fw-normal mt-1 fs-7 text-center" id="label-needhelp">タップして設定</small>
         </button>
       </div>
@@ -211,7 +211,7 @@
       
       <!-- 保存 & ローカルストレージボタン -->
       <button id="saveOfflineBtn" type="button" class="btn btn-secondary w-100 py-2 fw-bold mb-1" onclick="saveData()">
-        💾 ステータスを保存 (オフライン)
+        💾 現状を保存 (オフライン)
       </button>
       <small class="text-muted d-block mb-3">
         💡 タップすると、SMSメッセージを送信せずに端末内（オフライン）に現在の安否を保存します。
@@ -235,7 +235,7 @@
       </div>
 
       <div id="broadcastAlert" class="alert alert-success mt-2 py-2 small d-none" role="alert">
-        ステータスをオフラインのローカルストレージに保存しました！
+        現状をオフラインで端末に保存しました！
       </div>
     </section>
 
@@ -245,7 +245,7 @@
         <h2 class="h6 text-uppercase text-secondary fw-bold m-0">2. 家族の安否掲示板</h2>
         <div>
           <button type="button" class="btn btn-sm btn-info py-0 px-2 me-1" onclick="openImportSMSModal()">📥 SMS取り込み</button>
-          <button type="button" class="btn btn-sm btn-success py-0 px-2 me-1" onclick="openAddModal()">+ 追加</button>
+          <button type="button" class="btn btn-sm btn-success py-0 px-2 me-1" onclick="openAddModal()">+ 追加する</button>
           <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="simulateIncomingPacket()">メッシュホップ</button>
         </div>
       </div>
@@ -300,7 +300,7 @@
           </div>
 
           <div class="mb-3">
-            <label for="modalMemberPhone" class="form-label">電話番号 (SMS用)</label>
+            <label for="modalMemberPhone" class="form-label">携帯電話番号 (SMS用)</label>
             <input 
               type="tel" 
               class="form-control" 
@@ -354,7 +354,7 @@
               <!-- JavaScriptによって登録済みの家族が挿入されます -->
             </select>
             <div class="form-text text-secondary mt-1">
-              SMS本文に「From: 090-XXXX-XXXX」が含まれていない場合は、ここでメンバーを選択してください。
+              SMS本文に「From: 090-XXXX-XXXX」が含まれていない場合は、メンバーを選択してください。
             </div>
           </div>
     
@@ -366,7 +366,7 @@
             </p>
             <textarea id="smsTextarea" class="form-control bg-dark text-light border-secondary" rows="4" placeholder="例: SAFE 渋谷駅にいます 85%"></textarea>
             <div class="form-text text-secondary mt-2">
-              パーサーがステータス、バッテリー残量、位置メモを自動的に抽出します。
+              パーサーが現状、バッテリー残量、位置メモを自動的に抽出します。
             </div>
           </div>
     
