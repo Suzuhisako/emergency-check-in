@@ -719,32 +719,45 @@
     function renderBoard() {
       const list = document.getElementById("familyList");
       if (!list) return;
-  
+    
       if (!familyData || familyData.length === 0) {
         list.innerHTML = `<div class="text-secondary small py-2 text-center">家族メンバーがまだ追加されていません。上の <strong>+ 追加</strong> をタップしてください。</div>`;
         return;
       }
-  
-      list.innerHTML = familyData.map(m => `
-        <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <span class="fw-bold fs-6">${m.name}</span>
-              <span class="badge ${m.badgeClass || getBadgeClass(m.status)} ms-2">${m.status}</span>
+    
+      // Japanese status translation mapping
+      const statusLabels = {
+        "SAFE": "無事・安全",
+        "IN TRANSIT": "移動中",
+        "EVACUATED": "避難完了",
+        "NEED HELP": "要救助"
+      };
+    
+      list.innerHTML = familyData.map(m => {
+        // Convert status key to Japanese label (or fallback to original text)
+        const displayStatus = statusLabels[m.status] || m.status;
+    
+        return `
+          <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <span class="fw-bold fs-6">${m.name}</span>
+                <span class="badge ${m.badgeClass || getBadgeClass(m.status)} ms-2">${displayStatus}</span>
+              </div>
+              <div>
+                <button class="btn btn-sm btn-outline-warning py-0 px-2 me-1" onclick="openEditModal('${m.id}')">✏️</button>
+                <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="deleteFamilyMember('${m.id}')">🗑️</button>
+              </div>
             </div>
-            <div>
-              <button class="btn btn-sm btn-outline-warning py-0 px-2 me-1" onclick="openEditModal('${m.id}')">✏️</button>
-              <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="deleteFamilyMember('${m.id}')">🗑️</button>
+            
+            <div class="small text-secondary mt-1">
+              ${m.phone ? `<a href="tel:${normalizePhone(m.phone)}" class="text-info me-2" style="text-decoration:none;">📞 ${formatPhoneDisplay(m.phone)}</a> • ` : ''}
+              ${m.location || '📍 場所不明'} • 🔋 ${m.battery || '100%'}
             </div>
+            <div class="small ${m.viaClass || 'text-secondary'} mt-1" style="font-size: 0.75rem;">${m.via || '直接連絡'} • <span class="text-secondary">${m.time || ''}</span></div>
           </div>
-          
-          <div class="small text-secondary mt-1">
-            ${m.phone ? `<a href="tel:${normalizePhone(m.phone)}" class="text-info me-2" style="text-decoration:none;">📞 ${formatPhoneDisplay(m.phone)}</a> • ` : ''}
-            ${m.location || '📍 場所不明'} • 🔋 ${m.battery || '100%'}
-          </div>
-          <div class="small ${m.viaClass || 'text-secondary'} mt-1" style="font-size: 0.75rem;">${m.via || '直接連絡'} • <span class="text-secondary">${m.time || ''}</span></div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
   
     function populateSmsRecipientDropdown() {
