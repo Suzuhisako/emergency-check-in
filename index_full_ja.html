@@ -132,7 +132,7 @@
     <header class="d-flex justify-content-between align-items-center p-3 mb-3 card-dark rounded-3">
       <div>
         <h1 class="h6 m-0 fw-bold text-danger">🚨 緊急安否確認 </h1>
-        <small class="text-secondary" id="offlineStatus">現状: オフライン対応 (PWA)</small>
+        <small class="text-secondary" id="offlineStatus">安否/状況: オフライン対応 (PWA)</small>
       </div>
       <div class="text-end">
         <span class="badge badge-mesh rounded-pill px-2 py-1 mb-1 d-inline-flex align-items-center">
@@ -169,7 +169,7 @@
 
     <!-- ステップ 1: 現在の安否を送信 -->
     <section class="card-dark rounded-3 p-3 mb-3">
-      <h2 class="h6 text-uppercase text-secondary fw-bold mb-3">1. 安否ステータスを発信</h2>     
+      <h2 class="h6 text-uppercase text-secondary fw-bold mb-3">1. 安否/状況を発信</h2>     
       
       <div class="d-grid gap-2 mb-3">
         <!-- 🟢 無事 -->
@@ -192,7 +192,7 @@
       
         <!-- 🔴 救助が必要 -->
         <button id="btn-needhelp" type="button" class="btn btn-outline-danger status-btn fw-bold text-center px-3 py-2 w-100 d-flex flex-column align-items-center" onclick="selectStatus('NEED HELP')">
-          <span class="d-block text-center">🔴 救助が必要　</span>
+          <span class="d-block text-center">🔴 要救助　</span>
           <small class="text-muted fw-normal mt-1 fs-7 text-center" id="label-needhelp">タップして設定</small>
         </button>
       </div>
@@ -211,7 +211,7 @@
       
       <!-- 保存 & ローカルストレージボタン -->
       <button id="saveOfflineBtn" type="button" class="btn btn-secondary w-100 py-2 fw-bold mb-1" onclick="saveData()">
-        💾 現状を保存 (オフライン)
+        💾 安否/状況を保存 (オフライン)
       </button>
       <small class="text-muted d-block mb-3">
         💡 タップすると、SMSメッセージを送信せずに端末内（オフライン）に現在の安否を保存します。
@@ -235,7 +235,7 @@
       </div>
 
       <div id="broadcastAlert" class="alert alert-success mt-2 py-2 small d-none" role="alert">
-        現状をオフラインで端末に保存しました！
+        安否/状況をオフラインで端末に保存しました！
       </div>
     </section>
 
@@ -315,12 +315,12 @@
           </div>
             
           <div class="mb-3">
-            <label class="form-label">ステータス</label>
+            <label class="form-label">安否/状況</label>
             <select id="modalMemberStatus" class="form-select bg-dark text-light border-secondary">
-              <option value="SAFE">SAFE (無事)</option>              
-              <option value="UNKNOWN">IN TRANSIT (移動中/避難中)</option>
-              <option value="EVACUATED">EVACUATED (避難完了)</option>
-              <option value="NEED HELP">NEED HELP (要救助)</option>
+              <option value="SAFE">無事</option>              
+              <option value="UNKNOWN">移動中/避難中</option>
+              <option value="EVACUATED">避難完了</option>
+              <option value="NEED HELP">要救助</option>
             </select>
           </div>
             
@@ -366,7 +366,7 @@
             </p>
             <textarea id="smsTextarea" class="form-control bg-dark text-light border-secondary" rows="4" placeholder="例: SAFE 渋谷駅にいます 85%"></textarea>
             <div class="form-text text-secondary mt-2">
-              パーサーが現状、バッテリー残量、位置メモを自動的に抽出します。
+              パーサーが安否/状況、バッテリー残量、位置メモを自動的に抽出します。
             </div>
           </div>
     
