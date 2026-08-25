@@ -727,15 +727,26 @@
     
       // Japanese status translation mapping
       const statusLabels = {
-        "SAFE": "無事・安全",
-        "IN TRANSIT": "移動中",
+        "SAFE": "無事",
+        "IN TRANSIT": "移動中/避難中",
         "EVACUATED": "避難完了",
         "NEED HELP": "要救助"
       };
     
+      // Japanese source/method translation mapping
+      const viaLabels = {
+        "Imported SMS": "SMS読込",
+        "Local entry": "手動入力",
+        "Direct contact": "直接連絡",
+        "Mesh Transfer": "メッシュ転送",
+        "Self Check-In": "本人更新"
+      };
+    
       list.innerHTML = familyData.map(m => {
-        // Convert status key to Japanese label (or fallback to original text)
         const displayStatus = statusLabels[m.status] || m.status;
+        
+        // Map m.via to Japanese, or fallback to original/default text
+        const displayVia = viaLabels[m.via] || m.via || "直接連絡";
     
         return `
           <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2">
@@ -754,7 +765,7 @@
               ${m.phone ? `<a href="tel:${normalizePhone(m.phone)}" class="text-info me-2" style="text-decoration:none;">📞 ${formatPhoneDisplay(m.phone)}</a> • ` : ''}
               ${m.location || '📍 場所不明'} • 🔋 ${m.battery || '100%'}
             </div>
-            <div class="small ${m.viaClass || 'text-secondary'} mt-1" style="font-size: 0.75rem;">${m.via || '直接連絡'} • <span class="text-secondary">${m.time || ''}</span></div>
+            <div class="small ${m.viaClass || 'text-secondary'} mt-1" style="font-size: 0.75rem;">${displayVia} • <span class="text-secondary">${m.time || ''}</span></div>
           </div>
         `;
       }).join('');
