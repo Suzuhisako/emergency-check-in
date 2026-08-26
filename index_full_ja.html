@@ -552,7 +552,7 @@
       const chargingIcon = battery.charging ? " ⚡" : "";
       const display = document.getElementById("displayBattery");
       if (display) display.innerText = `${liveBattery}%${chargingIcon}`;
-      updatePayload();
+      saveData();
     }
   
     function getGPSLocation() {
@@ -574,12 +574,7 @@
           if (coordsDisplay) {
             coordsDisplay.textContent = `緯度: ${currentCoords.lat} | 経度: ${currentCoords.lon}`;
             coordsDisplay.classList.remove("d-none");
-          }
-    
-          // Auto-update Self card on the board as soon as GPS fixes
-          if (typeof updateSelfCardAuto === "function") {
-            updateSelfCardAuto();
-          }
+          }    
         },
         (error) => {
           console.warn("GPS Error:", error);
@@ -847,28 +842,25 @@
       try {
         const noteInput = document.getElementById("statusNote");
         const noteText = noteInput ? noteInput.value : "";
-    
-        // 1. Save local status state
+  
         localStorage.setItem("my_emergency_status", JSON.stringify({
           status: currentStatus,
           note: noteText,
           coords: currentCoords
         }));
           
-        // 2. Save family board state
         localStorage.setItem("family_board_status", JSON.stringify(familyData));
-    
-        // 3. Optional: Sync payload to server/offline queue if applicable
+  
         let gpsVal = "利用不可";
         if (currentCoords && currentCoords.lat && currentCoords.lon) {
           gpsVal = `${currentCoords.lat},${currentCoords.lon}`;
         }
-    
+  
         let batVal = "100%";
         if (typeof liveBattery !== "undefined" && liveBattery !== null) {
           batVal = `${liveBattery}%`;
         }
-    
+  
         const payload = {
           uid: "usr_self_01",
           status: currentStatus,
@@ -877,7 +869,12 @@
           ts: new Date().toISOString(),
           note: noteText
         };
-    
+  
+        const rawElem = document.getElementById("rawPayload");
+        if (rawElem) {
+          rawElem.textContent = JSON.stringify(payload, null, 2);
+        }
+  
         if (typeof sendPayloadToServer === "function" && navigator.onLine) {
           sendPayloadToServer(payload);
         } else if (typeof addToOfflineQueue === "function") {
