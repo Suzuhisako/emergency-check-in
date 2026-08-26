@@ -171,27 +171,30 @@
     <section class="card-dark rounded-3 p-3 mb-3">
       <h2 class="h6 text-uppercase text-secondary fw-bold mb-3">1. 安否/状況を発信</h2>     
       
-      <div class="row g-2 mb-3">
-        <div class="col-6">
-          <button type="button" class="btn btn-outline-success status-btn fw-bold w-100 py-2 active" onclick="setStatus('🟢 SAFE', this)">
-            🟢 無事/安全
-          </button>
-        </div>
-        <div class="col-6">
-          <button type="button" class="btn btn-outline-warning status-btn fw-bold w-100 py-2" onclick="setStatus('🟡 IN TRANSIT', this)">
-            🟡 移動中
-          </button>
-        </div>
-        <div class="col-6">
-          <button type="button" class="btn btn-outline-blue status-btn fw-bold w-100 py-2" onclick="setStatus('🔵 EVACUATED', this)">
-            🔵 避難完了
-          </button>
-        </div>
-        <div class="col-6">
-          <button type="button" class="btn btn-outline-danger status-btn fw-bold w-100 py-2" onclick="setStatus('🔴 NEED HELP', this)">
-            🔴 要救援
-          </button>
-        </div>
+      <div class="d-grid gap-2 mb-3">
+        <!-- 🟢 無事 -->
+        <button id="btn-safe" type="button" class="btn btn-outline-success status-btn fw-bold text-center px-3 py-2 w-100" onclick="selectStatus('SAFE')">
+          <span class="d-block text-center">🟢 無事 / 安全　</span>
+          <small class="text-muted fw-normal mt-1 fs-7 d-block text-center" id="label-safe">タップして設定</small>
+        </button>
+      
+        <!-- 🟡 移動中 -->
+        <button id="btn-transit" type="button" class="btn btn-outline-warning status-btn fw-bold text-center px-3 py-2 w-100 d-flex flex-column align-items-center" onclick="selectStatus('IN TRANSIT')">
+          <span class="d-block text-center">🟡 移動中 / 避難中 </span>
+          <small class="text-muted fw-normal mt-1 fs-7 text-center" id="label-transit">タップして設定</small>
+        </button>
+      
+        <!-- 🔵 避難完了 (EVACUATED) -->
+        <button id="btn-evacuated" type="button" class="btn btn-outline-blue status-btn fw-bold text-center px-3 py-2 w-100" onclick="selectStatus('EVACUATED')">
+          <span class="d-block text-center">🔵 避難完了 </span>
+          <small class="text-muted fw-normal mt-1 fs-7 d-block text-center" id="label-evacuated">タップして設定</small>
+        </button>
+      
+        <!-- 🔴 救助が必要 -->
+        <button id="btn-needhelp" type="button" class="btn btn-outline-danger status-btn fw-bold text-center px-3 py-2 w-100 d-flex flex-column align-items-center" onclick="selectStatus('NEED HELP')">
+          <span class="d-block text-center">🔴 要救助　</span>
+          <small class="text-muted fw-normal mt-1 fs-7 text-center" id="label-needhelp">タップして設定</small>
+        </button>
       </div>
 
       <!-- Location Capture -->
