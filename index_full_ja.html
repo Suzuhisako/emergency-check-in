@@ -582,29 +582,29 @@
       );
     }    
      
-    function selectStatus(status) {     
-      currentStatus = status;
-  
-      const btnSafe = document.getElementById('btn-safe');
-      const btnHelp = document.getElementById('btn-help');
-      const btnTransit = document.getElementById('btn-transit');
-  
-      if (btnSafe) btnSafe.className = "btn btn-outline-success w-100 status-btn";
-      if (btnHelp) btnHelp.className = "btn btn-outline-danger w-100 status-btn";
-      if (btnTransit) btnTransit.className = "btn btn-outline-warning w-100 status-btn";
-  
-      const norm = String(status).toUpperCase().trim();
-      if (norm === 'SAFE' && btnSafe) {
-        btnSafe.className = "btn btn-success w-100 status-btn";
-      } else if ((norm === 'NEED HELP' || norm === 'NEED_HELP') && btnHelp) {
-        btnHelp.className = "btn btn-danger w-100 status-btn";
-      } else if (norm === 'IN TRANSIT' && btnTransit) {
-        btnTransit.className = "btn btn-warning text-dark w-100 status-btn";
+    function selectStatus(statusKey, btnElement) {
+      currentStatus = statusKey;
+    
+      // Remove active state from all status buttons
+      document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
+    
+      // Highlight selected button
+      if (btnElement) {
+        btnElement.classList.add('active');
+      } else {
+        // Fallback lookup by ID if btnElement is not passed
+        const idMap = {
+          'SAFE': 'btn-safe',
+          'IN TRANSIT': 'btn-transit',
+          'EVACUATED': 'btn-evacuated',
+          'NEED HELP': 'btn-needhelp'
+        };
+        const target = document.getElementById(idMap[statusKey]);
+        if (target) target.classList.add('active');
       }
-  
+    
+      // Persist updated status
       saveData();
-      // 選択状態の更新確認ログ
-      console.log("Selected status:", currentStatus);
     }
   
     function copyAndOpenSMS() {
