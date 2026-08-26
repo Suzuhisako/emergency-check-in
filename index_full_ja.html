@@ -751,14 +751,17 @@
     function populateSmsRecipientDropdown() {
       const select = document.getElementById('smsRecipient');
       if (!select) return;
-  
+    
       const currentSelection = select.value;
+    
+      // 1. Set default placeholder option based on familyData state
       if (!familyData || familyData.length === 0) {
-        select.innerHTML = '<option value="">-- 家族がまだ登録されていません (以下から追加) --</option>';
+        select.innerHTML = '<option value="">-- 家族がまだ登録されていません (下から追加) --</option>';
       } else {
-        select.innerHTML = '<option value="">-- 家族を選択して,下のボタンを押してください --</option>';
+        select.innerHTML = '<option value="">-- 家族を選択して、下のボタンを押してください --</option>';
       }
-  
+    
+      // 2. Append options for each family member with a valid phone number
       familyData.forEach(member => {
         if (member.phone) {
           const option = document.createElement('option');
@@ -767,7 +770,8 @@
           select.appendChild(option);
         }
       });
-  
+    
+      // 3. Restore previous selection if it exists
       if (currentSelection) {
         select.value = currentSelection;
       }
