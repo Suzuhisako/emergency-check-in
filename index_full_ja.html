@@ -583,29 +583,8 @@
         },
         options
       );
-    }
-  
-    
-    /*---function updatePayload() {
-      const noteText = document.getElementById("statusNote")?.value || "";
-  
-      const payload = {
-        uid: "usr_self_01",
-        status: currentStatus,
-        bat: (typeof liveBattery !== "undefined" && liveBattery !== null) ? `${liveBattery}%` : "100%",
-        gps: typeof currentCoords !== "undefined" && currentCoords ? `${currentCoords.lat},${currentCoords.lon}` : "N/A",
-        ts: new Date().toISOString(),
-        note: noteText
-      };
-  
-      const rawElem = document.getElementById("rawPayload");
-      if (rawElem) {
-        rawElem.textContent = JSON.stringify(payload, null, 2);
-      }
-  
-      return payload;
-    } ---*/
-  
+    }    
+     
     function selectStatus(status) {     
       currentStatus = status;
   
