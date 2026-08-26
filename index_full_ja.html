@@ -277,23 +277,17 @@
       </div>
     </section>
 
-    <!-- テクニカルパケットプレビュー 
-    <section class="card-dark rounded-3 p-3">
-      <h2 class="h6 text-uppercase text-secondary fw-bold mb-2">テクニカルパケットペイロード (JSON)</h2>
-      <pre class="bg-black text-success p-2 rounded border border-secondary small mb-0" style="font-size: 0.75rem; min-height: 120px; white-space: pre-wrap;" id="rawPayload">
-      </pre>
-    </section>　--!>
-
-   <!-- 家族メンバーモーダル -->
-   <div class="modal fade" id="familyModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content bg-dark text-light border-secondary">
-        <div class="modal-header border-secondary">
-          <h5 class="modal-title" id="modalTitle">家族メンバーを追加</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="modalMemberId">
+    <!-- 家族メンバーモーダル -->
+    <div class="modal fade" id="familyModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light border-secondary">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title" id="modalTitle">家族メンバーを追加</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="modalMemberId">
+          </div>
             
           <div class="mb-3">
             <label class="form-label">名前</label>
@@ -596,10 +590,8 @@
       );
     }
   
-    // ------------------------------------------------------------------
-    // 3. App State & Payload Updates
-    // ------------------------------------------------------------------
-    function updatePayload() {
+    
+    /*---function updatePayload() {
       const noteText = document.getElementById("statusNote")?.value || "";
   
       const payload = {
@@ -617,7 +609,7 @@
       }
   
       return payload;
-    }  
+    } ---*/
   
     function selectStatus(status) {     
       currentStatus = status;
