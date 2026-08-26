@@ -1224,7 +1224,6 @@
       const noteInput = document.getElementById("statusNote");
       if (noteInput) {
         noteInput.addEventListener("input", () => {
-          updatePayload();
           saveData();
         });
       }
@@ -1233,7 +1232,6 @@
       if (smsRecipient) {
         smsRecipient.addEventListener("input", () => {
           saveData();
-          updatePayload();
         });
       }
   
