@@ -216,9 +216,9 @@
       </small>
 
       <div class="mb-2">
-        <label for="smsRecipient" class="form-label small text-secondary">家族の携帯番号 (SMS送信先)</label>
+        <label for="smsRecipient" class="form-label small text-secondary">SMS送信先(家族の携帯番号)</label>
         <select class="form-select bg-dark text-light border-secondary" id="smsRecipient">
-          <option value="">-- 家族を選択してください --</option>
+          <option value="">-- 家族を選択して、下のボタンを押してください --</option>
           <!-- 登録された家族の選択肢がここに動的に生成されます -->
         </select>
       </div>
@@ -240,7 +240,7 @@
     <!-- ステップ 2: 家族の安否掲示板 -->
     <section class="card-dark rounded-3 p-3 mb-3">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="h6 text-uppercase text-secondary fw-bold m-0">2. 家族の安否掲示板</h2>
+        <h2 class="h6 text-uppercase text-secondary fw-bold m-0">2. 家族の安否情報</h2>
         <div>
           <button type="button" class="btn btn-sm btn-info py-0 px-2 me-1" onclick="openImportSMSModal()">📥 SMS取り込み</button>
           <button type="button" class="btn btn-sm btn-success py-0 px-2 me-1" onclick="openAddModal()">+ 追加する</button>
@@ -346,7 +346,7 @@
               <!-- JavaScriptによって登録済みの家族が挿入されます -->
             </select>
             <div class="form-text text-secondary mt-1">
-              SMS本文に「From: 090-XXXX-XXXX」が含まれていない場合は、メンバーを選択してください。
+              SMS本文に「From: 090-XXXX-XXXX」電話番号が含まれていない場合は、メンバーを選択してください。
             </div>
           </div>
     
