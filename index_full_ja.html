@@ -773,7 +773,8 @@
       };
       
       // Safe lookup with fallback when rendering badge text:
-      const displayStatus = statusLabels[member.status] || member.status || "無事";
+      familyData.forEach(member => {
+        const displayStatus = statusLabels[member.status] || member.status || "無事";
     
       // Japanese source/method translation mapping
       const viaLabels = {
