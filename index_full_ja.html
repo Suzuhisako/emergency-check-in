@@ -962,17 +962,45 @@
     }
   
     function openAddModal() {
-      document.getElementById("modalTitle").innerText = "家族メンバーの追加";
-      document.getElementById("modalMemberId").value = "";
-      document.getElementById("modalMemberName").value = "";
-      document.getElementById("modalMemberPhone").value = "";
-      document.getElementById("modalMemberStatus").value = "SAFE";
-      document.getElementById("modalMemberLocation").value = "";
-  
-      const modalEl = document.getElementById('familyModal');
-      if (modalEl) {
-        if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(modalEl);
-        familyModalInstance.show();
+      try {
+        // Reset modal title and form inputs
+        const modalTitle = document.getElementById("modalTitle");
+        if (modalTitle) modalTitle.innerText = "家族メンバーの追加";
+    
+        const idInput = document.getElementById("modalMemberId");
+        if (idInput) idInput.value = "";
+    
+        const nameInput = document.getElementById("modalMemberName");
+        if (nameInput) nameInput.value = "";
+    
+        const phoneInput = document.getElementById("modalMemberPhone");
+        if (phoneInput) phoneInput.value = "";
+    
+        const statusInput = document.getElementById("modalMemberStatus");
+        if (statusInput) statusInput.value = "SAFE";
+    
+        const locInput = document.getElementById("modalMemberLocation");
+        if (locInput) locInput.value = "";
+    
+        // Show Bootstrap Modal safely
+        const modalEl = document.getElementById('familyModal');
+        if (modalEl) {
+          // Re-initialize or reuse Bootstrap modal instance safely
+          if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            let instance = bootstrap.Modal.getInstance(modalEl);
+            if (!instance) {
+              instance = new bootstrap.Modal(modalEl);
+            }
+            familyModalInstance = instance;
+            familyModalInstance.show();
+          } else {
+            alert("Bootstrap JS is not loaded properly.");
+          }
+        } else {
+          alert("Modal HTML element 'familyModal' was not found.");
+        }
+      } catch (err) {
+        alert("Error opening modal: " + err.message);
       }
     }
   
