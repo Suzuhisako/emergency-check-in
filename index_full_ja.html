@@ -995,59 +995,77 @@
     }
   
     function saveFamilyMember() {
-      const id = document.getElementById("modalMemberId").value;
-      const name = document.getElementById("modalMemberName").value.trim();
-      const rawPhone = document.getElementById("modalMemberPhone").value.trim();
-      const phone = normalizePhone(rawPhone); 
-      const status = document.getElementById("modalMemberStatus").value;
-      const location = document.getElementById("modalMemberLocation").value.trim();
-  
-      if (!name) return alert("お名前を入力してください。");
-  
-      const badgeClass = getBadgeClass(status);
-      const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
-      if (id) {
-        const idx = familyData.findIndex(m => String(m.id) === String(id));
-        if (idx !== -1) {
-          familyData[idx] = { 
-            ...familyData[idx], 
-            name, 
-            phone, 
-            status, 
-            badgeClass, 
-            location: location || "📍 状況更新済み", 
-            time: currentTime 
-          };
+      try {
+        const id = document.getElementById("modalMemberId") ? document.getElementById("modalMemberId").value : "";
+        const nameInput = document.getElementById("modalMemberName");
+        const name = nameInput ? nameInput.value.trim() : "";
+        
+        const phoneInput = document.getElementById("modalMemberPhone");
+        const rawPhone = phoneInput ? phoneInput.value.trim() : "";
+        const phone = typeof normalizePhone === 'function' ? normalizePhone(rawPhone) : rawPhone; 
+        
+        const statusInput = document.getElementById("modalMemberStatus");
+        const status = (statusInput && statusInput.value) ? statusInput.value : "SAFE";
+        
+        const locationInput = document.getElementById("modalMemberLocation");
+        const location = locationInput ? locationInput.value.trim() : "";
+    
+        if (!name) return alert("お名前を入力してください。");
+    
+        // Map badge classes reliably inside the function
+        const badgeMap = {
+          'SAFE': 'bg-success',
+          'IN TRANSIT': 'bg-warning text-dark',
+          'EVACUATED': 'bg-primary',
+          'NEED HELP': 'bg-danger'
+        };
+        const badgeClass = badgeMap[status] || 'bg-secondary';
+    
+        const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+        if (id) {
+          // Update existing member
+          const idx = familyData.findIndex(m => String(m.id) === String(id));
+          if (idx !== -1) {
+            familyData[idx] = { 
+              ...familyData[idx], 
+              name, 
+              phone, 
+              status, 
+              badgeClass, 
+              location: location || "📍 状況更新済み", 
+              time: currentTime 
+            };
+          }
+        } else {
+          // Add new member
+          familyData.push({
+            id: "mem_" + Date.now(),
+            name,
+            phone,
+            status,
+            badgeClass,
+            location: location || "📍 位置情報不明",
+            battery: "100%",
+            time: currentTime,
+            via: "手動登録",
+            viaClass: "text-info"
+          });
         }
-      } else {
-        familyData.push({
-          id: "mem_" + Date.now(),
-          name,
-          phone,
-          status,
-          badgeClass,
-          location: location || "📍 位置情報不明",
-          battery: "100%",
-          time: currentTime,
-          via: "手動登録",
-          viaClass: "text-info"
-        });
+    
+        // Persist and re-render
+        if (typeof saveData === 'function') saveData();
+        if (typeof renderBoard === 'function') renderBoard();
+        if (typeof populateSmsRecipientDropdown === 'function') populateSmsRecipientDropdown();
+    
+        if (document.activeElement) document.activeElement.blur();
+        
+        if (typeof familyModalInstance !== 'undefined' && familyModalInstance) {
+          familyModalInstance.hide();
+        }
+      } catch (err) {
+        alert("保存中にエラーが発生しました: " + err.message);
       }
-  
-      saveData();
-      renderBoard();
-      populateSmsRecipientDropdown();
-      if (document.activeElement) document.activeElement.blur();
-      if (familyModalInstance) familyModalInstance.hide();
-    }
-  
-    function deleteFamilyMember(id) {
-      if (!confirm("本当にこのメンバーを削除しますか？")) return;
-      familyData = familyData.filter(m => String(m.id) !== String(id));
-      saveData();
-      renderBoard();
-      populateSmsRecipientDropdown();
     }
   
     function normalizePhone(phoneStr) {
