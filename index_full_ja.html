@@ -178,22 +178,22 @@
       <label class="form-label fw-bold mb-2 small text-light">安否/状況を選択</label>
       <div class="row g-2 mb-3">
         <div class="col-6">
-          <button id="btn-safe" type="button" class="btn btn-outline-success status-btn fw-bold w-100 py-2 active" style="touch-action: manipulation;" onclick="selectStatus('SAFE', this)">
+          <button id="btn-status-safe" type="button" class="btn btn-outline-success status-btn fw-bold w-100 py-2 active" onclick="selectStatus('SAFE', event)">
             🟢 無事・安全
-          </button>          
+          </button>
         </div>
         <div class="col-6">
-          <button id="btn-transit" type="button" class="btn btn-outline-warning status-btn fw-bold w-100 py-2" onclick="selectStatus('IN TRANSIT', this)">
+          <button id="btn-status-transit" type="button" class="btn btn-outline-warning status-btn fw-bold w-100 py-2" onclick="selectStatus('IN TRANSIT', event)">
             🟡 移動中
           </button>
         </div>
         <div class="col-6">
-          <button id="btn-evacuated" type="button" class="btn btn-outline-blue status-btn fw-bold w-100 py-2" onclick="selectStatus('EVACUATED', this)">
+          <button id="btn-status-evacuated" type="button" class="btn btn-outline-blue status-btn fw-bold w-100 py-2" onclick="selectStatus('EVACUATED', event)">
             🔵 避難完了
           </button>
         </div>
         <div class="col-6">
-          <button id="btn-needhelp" type="button" class="btn btn-outline-danger status-btn fw-bold w-100 py-2" onclick="selectStatus('NEED HELP', this)">
+          <button id="btn-status-needhelp" type="button" class="btn btn-outline-danger status-btn fw-bold w-100 py-2" onclick="selectStatus('NEED HELP', event)">
             🔴 要救助
           </button>
         </div>
@@ -593,34 +593,41 @@
       );
     }    
      
-    function selectStatus(statusKey, btnElement) {
+   function selectStatus(statusKey, evtOrElem) {
       currentStatus = statusKey || 'SAFE';
     
-      // 1. Force-remove .active class from ALL status buttons
-      const allBtns = document.querySelectorAll('.status-btn');
-      allBtns.forEach(btn => {
+      // 1. Clear active state from ALL status buttons
+      document.querySelectorAll('.status-btn').forEach(btn => {
         btn.classList.remove('active');
-        btn.blur(); // Clears stuck focus states on mobile iOS/Android
+        btn.blur();
       });
     
-      // 2. Identify target button (either passed via 'this' or looked up by ID)
-      let targetBtn = btnElement;
-      if (!targetBtn) {
+      // 2. Identify clicked button safely
+      let targetBtn = null;
+    
+      if (evtOrElem && evtOrElem.currentTarget) {
+        // Triggered directly by tap/click event
+        targetBtn = evtOrElem.currentTarget;
+      } else if (evtOrElem && evtOrElem.tagName) {
+        // Triggered by DOM element reference
+        targetBtn = evtOrElem;
+      } else {
+        // Lookup by unique ID map (for loadData / programmatic calls)
         const idMap = {
-          'SAFE': 'btn-safe',
-          'IN TRANSIT': 'btn-transit',
-          'EVACUATED': 'btn-evacuated',
-          'NEED HELP': 'btn-needhelp'
+          'SAFE': 'btn-status-safe',
+          'IN TRANSIT': 'btn-status-transit',
+          'EVACUATED': 'btn-status-evacuated',
+          'NEED HELP': 'btn-status-needhelp'
         };
         targetBtn = document.getElementById(idMap[currentStatus]);
       }
     
-      // 3. Highlight the selected button
+      // 3. Highlight selected button
       if (targetBtn) {
         targetBtn.classList.add('active');
       }
     
-      // 4. Save state
+      // 4. Persist data
       saveData();
     }
   
