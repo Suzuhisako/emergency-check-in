@@ -1059,23 +1059,27 @@
   
     function saveFamilyMember() {
       try {
-        const id = document.getElementById("modalMemberId") ? document.getElementById("modalMemberId").value : "";
-        const nameInput = document.getElementById("modalMemberName");
-        const name = nameInput ? nameInput.value.trim() : "";
-        
-        const phoneInput = document.getElementById("modalMemberPhone");
-        const rawPhone = phoneInput ? phoneInput.value.trim() : "";
-        const phone = typeof normalizePhone === 'function' ? normalizePhone(rawPhone) : rawPhone; 
-        
-        const statusInput = document.getElementById("modalMemberStatus");
-        const status = (statusInput && statusInput.value) ? statusInput.value : "SAFE";
-        
-        const locationInput = document.getElementById("modalMemberLocation");
-        const location = locationInput ? locationInput.value.trim() : "";
+        // 1. Safely gather form inputs
+        const idEl = document.getElementById("modalMemberId");
+        const nameEl = document.getElementById("modalMemberName");
+        const phoneEl = document.getElementById("modalMemberPhone");
+        const statusEl = document.getElementById("modalMemberStatus");
+        const locEl = document.getElementById("modalMemberLocation");
     
-        if (!name) return alert("お名前を入力してください。");
+        const id = idEl ? idEl.value : "";
+        const name = nameEl ? nameEl.value.trim() : "";
+        const rawPhone = phoneEl ? phoneEl.value.trim() : "";
+        const phone = (typeof normalizePhone === 'function') ? normalizePhone(rawPhone) : rawPhone;
+        const status = (statusEl && statusEl.value) ? statusEl.value : "SAFE";
+        const location = locEl ? locEl.value.trim() : "";
     
-        // Map badge classes reliably inside the function
+        // 2. Validation
+        if (!name) {
+          alert("お名前を入力してください。");
+          return;
+        }
+    
+        // 3. Status Badge Color mapping
         const badgeMap = {
           'SAFE': 'bg-success',
           'IN TRANSIT': 'bg-warning text-dark',
@@ -1083,31 +1087,31 @@
           'NEED HELP': 'bg-danger'
         };
         const badgeClass = badgeMap[status] || 'bg-secondary';
-    
         const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
+        // 4. Update or Create Member
         if (id) {
-          // Update existing member
+          // Edit existing member
           const idx = familyData.findIndex(m => String(m.id) === String(id));
           if (idx !== -1) {
-            familyData[idx] = { 
-              ...familyData[idx], 
-              name, 
-              phone, 
-              status, 
-              badgeClass, 
-              location: location || "📍 状況更新済み", 
-              time: currentTime 
+            familyData[idx] = {
+              ...familyData[idx],
+              name: name,
+              phone: phone,
+              status: status,
+              badgeClass: badgeClass,
+              location: location || "📍 状況更新済み",
+              time: currentTime
             };
           }
         } else {
           // Add new member
           familyData.push({
             id: "mem_" + Date.now(),
-            name,
-            phone,
-            status,
-            badgeClass,
+            name: name,
+            phone: phone,
+            status: status,
+            badgeClass: badgeClass,
             location: location || "📍 位置情報不明",
             battery: "100%",
             time: currentTime,
@@ -1116,18 +1120,19 @@
           });
         }
     
-        // Persist and re-render
+        // 5. Persist & Refresh UI
         if (typeof saveData === 'function') saveData();
         if (typeof renderBoard === 'function') renderBoard();
         if (typeof populateSmsRecipientDropdown === 'function') populateSmsRecipientDropdown();
     
-        if (document.activeElement) document.activeElement.blur();
-        
-        if (typeof familyModalInstance !== 'undefined' && familyModalInstance) {
-          familyModalInstance.hide();
+        // 6. Close Modal cleanly
+        const modalEl = document.getElementById('familyModal');
+        if (modalEl && typeof bootstrap !== 'undefined') {
+          const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+          if (modalInstance) modalInstance.hide();
         }
       } catch (err) {
-        alert("保存中にエラーが発生しました: " + err.message);
+        alert("保存中にエラーが発生しました:\n" + err.message);
       }
     }
   
