@@ -589,27 +589,29 @@
     }    
      
     function selectStatus(statusKey, btnElement) {
-      currentStatus = statusKey;
+      currentStatus = statusKey || 'SAFE';
     
-      // Remove active state from all status buttons
+      // 1. Clear active styling from all 4 buttons
       document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
     
-      // Highlight selected button
-      if (btnElement) {
-        btnElement.classList.add('active');
-      } else {
-        // Fallback lookup by ID if btnElement is not passed
+      // 2. Identify target button (either passed via 'this' or looked up by ID)
+      let targetBtn = btnElement;
+      if (!targetBtn) {
         const idMap = {
           'SAFE': 'btn-safe',
           'IN TRANSIT': 'btn-transit',
           'EVACUATED': 'btn-evacuated',
           'NEED HELP': 'btn-needhelp'
         };
-        const target = document.getElementById(idMap[statusKey]);
-        if (target) target.classList.add('active');
+        targetBtn = document.getElementById(idMap[statusKey]);
       }
     
-      // Persist updated status
+      // 3. Highlight the selected button
+      if (targetBtn) {
+        targetBtn.classList.add('active');
+      }
+    
+      // 4. Save state
       saveData();
     }
   
@@ -799,27 +801,40 @@
           });
         }
       
-    function loadData() {
+   function loadData() {
+      // 1. Load family board status
       const savedFamily = localStorage.getItem("family_board_status");
       familyData = savedFamily ? JSON.parse(savedFamily) : [...DEFAULT_FAMILY];
-  
+    
       populateSmsRecipientDropdown();
-  
+    
+      // 2. Load my emergency status
       const savedStatus = localStorage.getItem("my_emergency_status");
+      let restoredNote = "";
+    
       if (savedStatus) {
         try {
           const parsed = JSON.parse(savedStatus);
           currentStatus = parsed.status || "SAFE";
-          const noteInput = document.getElementById("statusNote");
-          if (noteInput) noteInput.value = parsed.note || "";
+          restoredNote = parsed.note || "";
         } catch (err) {
           console.warn("保存された安否状況の読み込みに失敗しました", err);
+          currentStatus = "SAFE";
         }
+      } else {
+        // Default to SAFE when no stored status exists
+        currentStatus = "SAFE";
       }
-  
+    
+      // Restore note text
+      const noteInput = document.getElementById("statusNote");
+      if (noteInput) noteInput.value = restoredNote;
+    
+      // Reset SMS dropdown selection
       const select = document.getElementById("smsRecipient");
       if (select) select.value = "";
-  
+    
+      // 3. Highlight button & sync UI
       selectStatus(currentStatus);
       renderBoard();
     }
