@@ -36,6 +36,11 @@
       font-size: 1.2rem;
       border-width: 2px;
     }
+    .status-btn.active {
+      opacity: 1 !important;
+      font-weight: bold !important;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    }
     .badge-mesh {
       background-color: #1e3a29;
       color: #3dd68c;
@@ -173,9 +178,9 @@
       <label class="form-label fw-bold mb-2 small text-light">安否/状況を選択</label>
       <div class="row g-2 mb-3">
         <div class="col-6">
-          <button id="btn-safe" type="button" class="btn btn-outline-success status-btn fw-bold w-100 py-2 active" onclick="selectStatus('SAFE', this)">
+          <button id="btn-safe" type="button" class="btn btn-outline-success status-btn fw-bold w-100 py-2 active" style="touch-action: manipulation;" onclick="selectStatus('SAFE', this)">
             🟢 無事・安全
-          </button>
+          </button>          
         </div>
         <div class="col-6">
           <button id="btn-transit" type="button" class="btn btn-outline-warning status-btn fw-bold w-100 py-2" onclick="selectStatus('IN TRANSIT', this)">
@@ -591,8 +596,12 @@
     function selectStatus(statusKey, btnElement) {
       currentStatus = statusKey || 'SAFE';
     
-      // 1. Clear active styling from all 4 buttons
-      document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
+      // 1. Force-remove .active class from ALL status buttons
+      const allBtns = document.querySelectorAll('.status-btn');
+      allBtns.forEach(btn => {
+        btn.classList.remove('active');
+        btn.blur(); // Clears stuck focus states on mobile iOS/Android
+      });
     
       // 2. Identify target button (either passed via 'this' or looked up by ID)
       let targetBtn = btnElement;
