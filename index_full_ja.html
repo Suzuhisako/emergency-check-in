@@ -194,21 +194,24 @@
         </div>
       </div>
 
-      <!-- Location Capture -->
+      <!-- メモ / 補足位置情報 (任意) -->
       <div class="mb-3">
-        <label for="statusNote" class="form-label small text-secondary mb-1">メモ / 補足位置情報 (任意)</label>
-        <div class="input-group mb-1">
-          <input type="text" class="form-control bg-dark text-light border-secondary" id="statusNote" placeholder="例: 茅ヶ崎一次避難所にいます">
+        <label for="statusNote" class="form-label fw-bold small text-light mb-1">メモ / 補足位置情報 (任意)</label>
+        <input type="text" class="form-control bg-dark text-light border-secondary" id="statusNote" placeholder="例: 茅ヶ崎一次避難所にいます">
+      </div>
+
+      <!-- 位置情報の取得 (GPS) -->
+      <div class="mb-3">
         <label class="form-label fw-bold small text-light mb-1">位置情報の取得</label>
         <button type="button" class="btn btn-secondary w-100 py-2 fw-bold" onclick="getGPSLocation()">
           📍 GPS位置情報を自動取得
         </button>
-        
         <div class="text-center mt-2">
           <div id="gpsStatus" class="fw-bold text-light small">上のボタンを押して位置情報を添付</div>
           <div id="gpsCoordsDisplay" class="font-monospace text-info fw-bold mt-1 fs-6 d-none"></div>
         </div>
-      </div>
+      </div>   
+              
       
       <!-- 保存 & ローカルストレージボタン -->
       <button id="saveOfflineBtn" type="button" class="btn btn-secondary w-100 py-2 fw-bold mb-1" onclick="saveData()">
