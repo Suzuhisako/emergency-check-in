@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-title" content="緊急安否">
 
   <!-- マニフェスト & ローカルアイコン -->
-  <!-- <link rel="manifest" href="./manifest.json"> -->
+  <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
 
@@ -21,13 +21,6 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
-    /* Fix mobile touch blocking caused by orphaned backdrops */
-    .modal-backdrop {
-      z-index: 1050 !important;
-    }
-    .modal {
-      z-index: 1055 !important;
-    }
     /* 基本レイアウト & カード */
     body {
       background-color: #000000; /* OLEDのバッテリー消費を抑える完全な黒 */
@@ -43,11 +36,6 @@
       font-size: 1.2rem;
       border-width: 2px;
     }
-    .status-btn.active {
-      opacity: 1 !important;
-      font-weight: bold !important;
-      box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
-    }
     .badge-mesh {
       background-color: #1e3a29;
       color: #3dd68c;
@@ -55,11 +43,6 @@
     }
 
     /* インジケーター & 視覚効果 */
-    @keyframes strobeFlash {
-      0%, 100% { background-color: #000000; }
-      50% { background-color: #dc3545; }
-    }
-    
     .pulse-dot {
       display: inline-block;
       width: 8px;
@@ -75,8 +58,6 @@
     .pulse-animation {
       animation: pulseBtn 0.7s infinite;
     }
-    
-    
 
     .btn-outline-blue {
       color: #066f8f;
@@ -192,48 +173,39 @@
       <label class="form-label fw-bold mb-2 small text-light">安否/状況を選択</label>
       <div class="row g-2 mb-3">
         <div class="col-6">
-          <!-- <button id="btn-status-safe" type="button" class="btn btn-outline-success status-btn fw-bold w-100 py-2 active" onclick="testSafeButton(this)">
-            🟢 無事・安全
-          </button> -->
-          <button id="btn-status-safe" type="button" class="btn btn-outline-success status-btn fw-bold w-100 py-2 active" onclick="selectStatus('SAFE', this)">
+          <button id="btn-safe" type="button" class="btn btn-outline-success status-btn fw-bold w-100 py-2 active" onclick="selectStatus('SAFE', this)">
             🟢 無事・安全
           </button>
         </div>
         <div class="col-6">
-          <button id="btn-status-transit" type="button" class="btn btn-outline-warning status-btn fw-bold w-100 py-2" onclick="selectStatus('IN TRANSIT', this)">
+          <button id="btn-transit" type="button" class="btn btn-outline-warning status-btn fw-bold w-100 py-2" onclick="selectStatus('IN TRANSIT', this)">
             🟡 移動中
           </button>
         </div>
         <div class="col-6">
-          <button id="btn-status-evacuated" type="button" class="btn btn-outline-blue status-btn fw-bold w-100 py-2" onclick="selectStatus('EVACUATED', this)">
+          <button id="btn-evacuated" type="button" class="btn btn-outline-blue status-btn fw-bold w-100 py-2" onclick="selectStatus('EVACUATED', this)">
             🔵 避難完了
           </button>
         </div>
         <div class="col-6">
-          <button id="btn-status-needhelp" type="button" class="btn btn-outline-danger status-btn fw-bold w-100 py-2" onclick="selectStatus('NEED HELP', this)">
+          <button id="btn-needhelp" type="button" class="btn btn-outline-danger status-btn fw-bold w-100 py-2" onclick="selectStatus('NEED HELP', this)">
             🔴 要救助
           </button>
         </div>
       </div>
 
-      <!-- メモ / 補足位置情報 (任意) -->
-      <div class="mb-3">
-        <label for="statusNote" class="form-label fw-bold small text-light mb-1">メモ / 補足位置情報 (任意)</label>
-        <input type="text" class="form-control bg-dark text-light border-secondary" id="statusNote" placeholder="例: 茅ヶ崎一次避難所にいます">
-      </div>
-
-      <!-- 位置情報の取得 (GPS) -->
+      <!-- Location Capture -->
       <div class="mb-3">
         <label class="form-label fw-bold small text-light mb-1">位置情報の取得</label>
         <button type="button" class="btn btn-secondary w-100 py-2 fw-bold" onclick="getGPSLocation()">
           📍 GPS位置情報を自動取得
         </button>
+        
         <div class="text-center mt-2">
           <div id="gpsStatus" class="fw-bold text-light small">上のボタンを押して位置情報を添付</div>
           <div id="gpsCoordsDisplay" class="font-monospace text-info fw-bold mt-1 fs-6 d-none"></div>
         </div>
-      </div>   
-              
+      </div>
       
       <!-- 保存 & ローカルストレージボタン -->
       <button id="saveOfflineBtn" type="button" class="btn btn-secondary w-100 py-2 fw-bold mb-1" onclick="saveData()">
@@ -270,15 +242,9 @@
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h2 class="h6 text-uppercase text-secondary fw-bold m-0 text-nowrap">2. 家族の安否情報</h2>
         <div class="d-flex flex-wrap gap-1 ms-auto">
-          <button type="button" class="btn btn-sm btn-info py-0 px-2" data-bs-toggle="modal" data-bs-target="#importSMSModal" onclick="prepareImportSMSModal()">
-            📥 SMS取り込み
-          </button>
-          <button type="button" class="btn btn-sm btn-success py-0 px-2" data-bs-toggle="modal" data-bs-target="#familyModal" onclick="prepareAddModal()">
-            + 追加
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="simulateIncomingPacket()">
-            メッシュホップ
-          </button>
+          <button type="button" class="btn btn-sm btn-info py-0 px-2" onclick="openImportSMSModal()">📥 SMS取り込み</button>
+          <button type="button" class="btn btn-sm btn-success py-0 px-2" onclick="openAddModal()">+ 追加</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="simulateIncomingPacket()">メッシュホップ</button>
         </div>
       </div>
 
@@ -309,8 +275,7 @@
     </section>
 
     <!-- 家族メンバーモーダル -->
-    <!-- <div class="modal fade" id="familyModal" tabindex="-1"> -->
-    <div class="modal fade" id="familyModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true"> 
+    <div class="modal fade" id="familyModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-light border-secondary">
           <div class="modal-header border-secondary">
@@ -410,17 +375,6 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    // Catch and display any mobile JS errors directly on screen
-   /*--- window.onerror = function(message, source, lineno, colno, error) {
-      alert("🚨 Error on Phone:\n" + message + "\nLine: " + lineno);
-      return false;
-    }; ---*/
-
-    window.onerror = function(message, source, lineno, colno, error) {
-      alert("🚨 JS Crash Detected!\nMessage: " + message + "\nLine: " + lineno);
-      return false;
-    };
-    
     // ------------------------------------------------------------------
     // Service Worker Registration
     // ------------------------------------------------------------------
@@ -510,62 +464,56 @@
     // ------------------------------------------------------------------
     // 1. Emergency Siren & Strobe Controls
     // ------------------------------------------------------------------
-   async function startSiren() {
-      try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!audioCtx) {
-          audioCtx = new AudioContext();
-        }
-        
-        // Web Audio API on Android requires awaiting resume() on user touch
-        if (audioCtx.state === 'suspended') {
-          await audioCtx.resume();
-        }
-    
-        oscillator = audioCtx.createOscillator();
-        gainNode = audioCtx.createGain();
-    
-        oscillator.type = 'sawtooth';
-        gainNode.gain.setValueAtTime(0.8, audioCtx.currentTime);
-    
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-    
-        oscillator.start();
-        isSirenActive = true;
-    
-        let highTone = false;
-        sirenInterval = setInterval(() => {
-          if (!oscillator || !audioCtx) return;
-          oscillator.frequency.setValueAtTime(highTone ? 800 : 1200, audioCtx.currentTime);
-          highTone = !highTone;
-        }, 350);
-    
-        if (document.getElementById("strobeToggle")?.checked) {
-          document.body.classList.add("strobe-active");
-        }
-    
-        const btn = document.getElementById("sirenBtn");
-        const status = document.getElementById("sirenStatus");
-        if (btn) {
-          btn.classList.remove("btn-danger");
-          btn.classList.add("btn-warning", "text-dark", "pulse-animation");
-          btn.innerText = "🛑 アラーム停止";
-        }
-        if (status) status.classList.remove("d-none");
-      } catch (err) {
-        alert("アラーム起動エラー: " + err.message);
-      }
+    function toggleSiren() {
+      isSirenActive ? stopSiren() : startSiren();
     }
-    
+  
+    function startSiren() {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+      } else if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+  
+      oscillator = audioCtx.createOscillator();
+      gainNode = audioCtx.createGain();
+  
+      oscillator.type = 'sawtooth';
+      gainNode.gain.setValueAtTime(0.8, audioCtx.currentTime);
+  
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+  
+      oscillator.start();
+      isSirenActive = true;
+  
+      let highTone = false;
+      sirenInterval = setInterval(() => {
+        if (!oscillator || !audioCtx) return;
+        oscillator.frequency.setValueAtTime(highTone ? 800 : 1200, audioCtx.currentTime);
+        highTone = !highTone;
+      }, 350);
+  
+      if (document.getElementById("strobeToggle")?.checked) {
+        document.body.classList.add("strobe-active");
+      }
+  
+      const btn = document.getElementById("sirenBtn");
+      const status = document.getElementById("sirenStatus");
+      if (btn) {
+        btn.classList.remove("btn-danger");
+        btn.classList.add("btn-warning", "text-dark", "pulse-animation");
+        btn.innerText = "🛑 アラーム停止";
+      }
+      if (status) status.classList.remove("d-none");
+    }
+  
     function stopSiren() {
       if (sirenInterval) { clearInterval(sirenInterval); sirenInterval = null; }
-      if (oscillator) { 
-        try { oscillator.stop(); oscillator.disconnect(); } catch(e){} 
-        oscillator = null; 
-      }
+      if (oscillator) { oscillator.stop(); oscillator.disconnect(); oscillator = null; }
       isSirenActive = false;
-    
+  
       document.body.classList.remove("strobe-active");
       const btn = document.getElementById("sirenBtn");
       const status = document.getElementById("sirenStatus");
@@ -634,71 +582,29 @@
       );
     }    
      
-  /*--- function selectStatus(statusKey, evtOrElem) {
-      currentStatus = statusKey || 'SAFE';
+    function selectStatus(statusKey, btnElement) {
+      currentStatus = statusKey;
     
-      // 1. Clear active state from ALL status buttons
-      document.querySelectorAll('.status-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (typeof btn.blur === 'function') btn.blur();
-      });
+      // Remove active state from all status buttons
+      document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
     
-      // 2. Identify the button element to highlight
-      let targetBtn = element;
-      if (!targetBtn || !targetBtn.classList) {
+      // Highlight selected button
+      if (btnElement) {
+        btnElement.classList.add('active');
+      } else {
+        // Fallback lookup by ID if btnElement is not passed
         const idMap = {
-          'SAFE': 'btn-status-safe',
-          'IN TRANSIT': 'btn-status-transit',
-          'EVACUATED': 'btn-status-evacuated',
-          'NEED HELP': 'btn-status-needhelp'
+          'SAFE': 'btn-safe',
+          'IN TRANSIT': 'btn-transit',
+          'EVACUATED': 'btn-evacuated',
+          'NEED HELP': 'btn-needhelp'
         };
-        targetBtn = document.getElementById(idMap[currentStatus]);
+        const target = document.getElementById(idMap[statusKey]);
+        if (target) target.classList.add('active');
       }
     
-      // 3. Highlight the target button
-      if (targetBtn) {
-        targetBtn.classList.add('active');
-      }
-    
-      // 4. Save state
-      if (typeof saveData === 'function') {
-        saveData();
-      }
-    } ---*/
-
-    function selectStatus(statusKey, element) {
-      try {
-        currentStatus = statusKey || 'SAFE';
-    
-        // Reset buttons
-        document.querySelectorAll('.status-btn').forEach(btn => {
-          btn.classList.remove('active');
-          if (typeof btn.blur === 'function') btn.blur();
-        });
-    
-        // Find target button
-        let targetBtn = element;
-        if (!targetBtn || !targetBtn.classList) {
-          const idMap = {
-            'SAFE': 'btn-status-safe',
-            'IN TRANSIT': 'btn-status-transit',
-            'EVACUATED': 'btn-status-evacuated',
-            'NEED HELP': 'btn-status-needhelp'
-          };
-          targetBtn = document.getElementById(idMap[currentStatus]);
-        }
-    
-        if (targetBtn) {
-          targetBtn.classList.add('active');
-        }
-    
-        // Call saveData safely
-        if (typeof saveData === 'function') {
-          saveData();
-        }
-      } catch (err) {
-        alert("🚨 Error inside selectStatus:\n" + err.message);
-      }
+      // Persist updated status
+      saveData();
     }
   
     function copyAndOpenSMS() {
@@ -799,14 +705,10 @@
       // Japanese status translation mapping
       const statusLabels = {
         "SAFE": "無事",
-        "IN TRANSIT": "移動中",
+        "IN TRANSIT": "移動中/避難中",
         "EVACUATED": "避難完了",
         "NEED HELP": "要救助"
       };
-      
-      // Safe lookup with fallback when rendering badge text:
-      familyData.forEach(member => {
-        const displayStatus = statusLabels[member.status] || member.status || "無事";
     
       // Japanese source/method translation mapping
       const viaLabels = {
@@ -891,40 +793,27 @@
           });
         }
       
-   function loadData() {
-      // 1. Load family board status
+    function loadData() {
       const savedFamily = localStorage.getItem("family_board_status");
       familyData = savedFamily ? JSON.parse(savedFamily) : [...DEFAULT_FAMILY];
-    
+  
       populateSmsRecipientDropdown();
-    
-      // 2. Load my emergency status
+  
       const savedStatus = localStorage.getItem("my_emergency_status");
-      let restoredNote = "";
-    
       if (savedStatus) {
         try {
           const parsed = JSON.parse(savedStatus);
           currentStatus = parsed.status || "SAFE";
-          restoredNote = parsed.note || "";
+          const noteInput = document.getElementById("statusNote");
+          if (noteInput) noteInput.value = parsed.note || "";
         } catch (err) {
           console.warn("保存された安否状況の読み込みに失敗しました", err);
-          currentStatus = "SAFE";
         }
-      } else {
-        // Default to SAFE when no stored status exists
-        currentStatus = "SAFE";
       }
-    
-      // Restore note text
-      const noteInput = document.getElementById("statusNote");
-      if (noteInput) noteInput.value = restoredNote;
-    
-      // Reset SMS dropdown selection
+  
       const select = document.getElementById("smsRecipient");
       if (select) select.value = "";
-    
-      // 3. Highlight button & sync UI
+  
       selectStatus(currentStatus);
       renderBoard();
     }
@@ -992,73 +881,19 @@
     async function flushOfflineQueue() {
       console.log("ℹ️ 静的ホスト上で実行中です。サーバー同期をスキップします。");
     }
-
-    function prepareAddModal() {
-      try {
-        const fields = {
-          "modalTitle": "家族メンバーの追加",
-          "modalMemberId": "",
-          "modalMemberName": "",
-          "modalMemberPhone": "",
-          "modalMemberStatus": "SAFE",
-          "modalMemberLocation": ""
-        };
-    
-        for (const [id, val] of Object.entries(fields)) {
-          const el = document.getElementById(id);
-          if (el) {
-            if (el.tagName === "INPUT" || el.tagName === "SELECT") {
-              el.value = val;
-            } else {
-              el.innerText = val;
-            }
-          }
-        }
-      } catch (e) {
-        console.error("Error resetting modal fields:", e);
-      }
-    }
   
     function openAddModal() {
-      try {
-        // Reset modal title and form inputs
-        const modalTitle = document.getElementById("modalTitle");
-        if (modalTitle) modalTitle.innerText = "家族メンバーの追加";
-    
-        const idInput = document.getElementById("modalMemberId");
-        if (idInput) idInput.value = "";
-    
-        const nameInput = document.getElementById("modalMemberName");
-        if (nameInput) nameInput.value = "";
-    
-        const phoneInput = document.getElementById("modalMemberPhone");
-        if (phoneInput) phoneInput.value = "";
-    
-        const statusInput = document.getElementById("modalMemberStatus");
-        if (statusInput) statusInput.value = "SAFE";
-    
-        const locInput = document.getElementById("modalMemberLocation");
-        if (locInput) locInput.value = "";
-    
-        // Show Bootstrap Modal safely
-        const modalEl = document.getElementById('familyModal');
-        if (modalEl) {
-          // Re-initialize or reuse Bootstrap modal instance safely
-          if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            let instance = bootstrap.Modal.getInstance(modalEl);
-            if (!instance) {
-              instance = new bootstrap.Modal(modalEl);
-            }
-            familyModalInstance = instance;
-            familyModalInstance.show();
-          } else {
-            alert("Bootstrap JS is not loaded properly.");
-          }
-        } else {
-          alert("Modal HTML element 'familyModal' was not found.");
-        }
-      } catch (err) {
-        alert("Error opening modal: " + err.message);
+      document.getElementById("modalTitle").innerText = "家族メンバーの追加";
+      document.getElementById("modalMemberId").value = "";
+      document.getElementById("modalMemberName").value = "";
+      document.getElementById("modalMemberPhone").value = "";
+      document.getElementById("modalMemberStatus").value = "SAFE";
+      document.getElementById("modalMemberLocation").value = "";
+  
+      const modalEl = document.getElementById('familyModal');
+      if (modalEl) {
+        if (!familyModalInstance) familyModalInstance = new bootstrap.Modal(modalEl);
+        familyModalInstance.show();
       }
     }
   
@@ -1081,82 +916,59 @@
     }
   
     function saveFamilyMember() {
-      try {
-        // 1. Safely gather form inputs
-        const idEl = document.getElementById("modalMemberId");
-        const nameEl = document.getElementById("modalMemberName");
-        const phoneEl = document.getElementById("modalMemberPhone");
-        const statusEl = document.getElementById("modalMemberStatus");
-        const locEl = document.getElementById("modalMemberLocation");
-    
-        const id = idEl ? idEl.value : "";
-        const name = nameEl ? nameEl.value.trim() : "";
-        const rawPhone = phoneEl ? phoneEl.value.trim() : "";
-        const phone = (typeof normalizePhone === 'function') ? normalizePhone(rawPhone) : rawPhone;
-        const status = (statusEl && statusEl.value) ? statusEl.value : "SAFE";
-        const location = locEl ? locEl.value.trim() : "";
-    
-        // 2. Validation
-        if (!name) {
-          alert("お名前を入力してください。");
-          return;
+      const id = document.getElementById("modalMemberId").value;
+      const name = document.getElementById("modalMemberName").value.trim();
+      const rawPhone = document.getElementById("modalMemberPhone").value.trim();
+      const phone = normalizePhone(rawPhone); 
+      const status = document.getElementById("modalMemberStatus").value;
+      const location = document.getElementById("modalMemberLocation").value.trim();
+  
+      if (!name) return alert("お名前を入力してください。");
+  
+      const badgeClass = getBadgeClass(status);
+      const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+      if (id) {
+        const idx = familyData.findIndex(m => String(m.id) === String(id));
+        if (idx !== -1) {
+          familyData[idx] = { 
+            ...familyData[idx], 
+            name, 
+            phone, 
+            status, 
+            badgeClass, 
+            location: location || "📍 状況更新済み", 
+            time: currentTime 
+          };
         }
-    
-        // 3. Status Badge Color mapping
-        const badgeMap = {
-          'SAFE': 'bg-success',
-          'IN TRANSIT': 'bg-warning text-dark',
-          'EVACUATED': 'bg-primary',
-          'NEED HELP': 'bg-danger'
-        };
-        const badgeClass = badgeMap[status] || 'bg-secondary';
-        const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-        // 4. Update or Create Member
-        if (id) {
-          // Edit existing member
-          const idx = familyData.findIndex(m => String(m.id) === String(id));
-          if (idx !== -1) {
-            familyData[idx] = {
-              ...familyData[idx],
-              name: name,
-              phone: phone,
-              status: status,
-              badgeClass: badgeClass,
-              location: location || "📍 状況更新済み",
-              time: currentTime
-            };
-          }
-        } else {
-          // Add new member
-          familyData.push({
-            id: "mem_" + Date.now(),
-            name: name,
-            phone: phone,
-            status: status,
-            badgeClass: badgeClass,
-            location: location || "📍 位置情報不明",
-            battery: "100%",
-            time: currentTime,
-            via: "手動登録",
-            viaClass: "text-info"
-          });
-        }
-    
-        // 5. Persist & Refresh UI
-        if (typeof saveData === 'function') saveData();
-        if (typeof renderBoard === 'function') renderBoard();
-        if (typeof populateSmsRecipientDropdown === 'function') populateSmsRecipientDropdown();
-    
-        // 6. Close Modal cleanly
-        const modalEl = document.getElementById('familyModal');
-        if (modalEl && typeof bootstrap !== 'undefined') {
-          const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-          if (modalInstance) modalInstance.hide();
-        }
-      } catch (err) {
-        alert("保存中にエラーが発生しました:\n" + err.message);
+      } else {
+        familyData.push({
+          id: "mem_" + Date.now(),
+          name,
+          phone,
+          status,
+          badgeClass,
+          location: location || "📍 位置情報不明",
+          battery: "100%",
+          time: currentTime,
+          via: "手動登録",
+          viaClass: "text-info"
+        });
       }
+  
+      saveData();
+      renderBoard();
+      populateSmsRecipientDropdown();
+      if (document.activeElement) document.activeElement.blur();
+      if (familyModalInstance) familyModalInstance.hide();
+    }
+  
+    function deleteFamilyMember(id) {
+      if (!confirm("本当にこのメンバーを削除しますか？")) return;
+      familyData = familyData.filter(m => String(m.id) !== String(id));
+      saveData();
+      renderBoard();
+      populateSmsRecipientDropdown();
     }
   
     function normalizePhone(phoneStr) {
@@ -1418,31 +1230,6 @@
       console.log("🌐 ネットワーク状態: オンライン");
       flushOfflineQueue();
     });
-
-    /*--- // Paste this temporary debug function into your script
-    function testSafeButton(btnElement) {
-      console.log("1. Tap detected on SAFE button");
-      
-      try {
-        // Force active class
-        document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
-        btnElement.classList.add('active');
-        console.log("2. Class list updated successfully");
-        
-        // Update global variable
-        currentStatus = 'SAFE';
-        console.log("3. currentStatus set to SAFE");
-        
-        // Save test
-        if (typeof saveData === 'function') {
-          saveData();
-          console.log("4. saveData() completed");
-        }
-      } catch (err) {
-        alert("Error caught on tap: " + err.message);
-        console.error("SAFE Button Error:", err);
-      }
-    } ---*/
   </script>  
 </body>
 </html>
