@@ -729,10 +729,13 @@
       // Japanese status translation mapping
       const statusLabels = {
         "SAFE": "無事",
-        "IN TRANSIT": "移動中/避難中",
+        "IN TRANSIT": "移動中",
         "EVACUATED": "避難完了",
         "NEED HELP": "要救助"
       };
+      
+      // Safe lookup with fallback when rendering badge text:
+      const displayStatus = statusLabels[member.status] || member.status || "無事";
     
       // Japanese source/method translation mapping
       const viaLabels = {
