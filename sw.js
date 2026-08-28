@@ -1,11 +1,9 @@
-const CACHE_NAME = 'emergency-checkin-v4';
+const CACHE_NAME = 'emergency-checkin-en-v1';
 
 const LOCAL_URLS = [
   './',
   './index.html',
   './index_lite.html',
-  './index_ja.html',
-  './index_lite_ja.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
@@ -15,8 +13,7 @@ const LOCAL_URLS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      console.log('[SW] Pre-caching local files...');
-      // Uses individual fetches so one missing file won't break the whole offline setup
+      console.log('[SW-EN] Pre-caching local files...');
       await Promise.allSettled(
         LOCAL_URLS.map(url => 
           fetch(url).then(response => {
@@ -28,7 +25,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate Event
+// Activate Event - Clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -60,9 +57,9 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       });
     }).catch(() => {
-      // Offline fallback for navigation requests
+      // English-only offline fallback
       if (event.request.mode === 'navigate') {
-        return caches.match('./index_ja.html') || caches.match('./index.html');
+        return caches.match('./index.html');
       }
     })
   );
