@@ -1,4 +1,4 @@
-# 🚨 Emergency Family Check-In (緊急安否確認アプリ)
+# 🚨 Emergency Family Check-In 
 
 A lightweight, offline-first Progressive Web App (PWA) designed for quick family status updates during power outages, natural disasters, or network congestion. 
 
