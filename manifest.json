@@ -1,15 +1,16 @@
 {
-  "id": "emergency-checkin-en",
-  "name": "Emergency Check-In App",
-  "short_name": "EmergencyCheck",
-  "description": "Off-grid disaster emergency communication and family status board",
+  "id": "family-board-ja",
+  "name": "家族安否確認ボード",
+  "short_name": "安否確認",
+  "description": "オフライン対応 家族向け災害時安否確認ツール",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#121212",
+  "background_color": "#212529",
   "theme_color": "#0d6efd",
   "categories": ["utilities", "lifestyle"],
+  "lang": "ja",
   "icons": [
     {
       "src": "icon-192.png",
