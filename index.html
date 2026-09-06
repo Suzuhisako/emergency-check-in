@@ -883,20 +883,20 @@
     }   
 
     function populateSenderDropdown() {
-          const select = document.getElementById('smsSenderSelect');
-          if (!select) return;
+      const select = document.getElementById('smsSenderSelect');
+      if (!select) return;
       
-          select.innerHTML = '<option value="">-- Auto-detect from SMS text --</option>';
+      select.innerHTML = '<option value="">-- Auto-detect from SMS text --</option>';
       
-          familyData.forEach(member => {
-            if (member.phone) {
-              const option = document.createElement('option');
-              option.value = member.phone;
-              option.textContent = `👤 ${member.name} (${member.phone})`;
-              select.appendChild(option);
-            }
-          });
+      familyData.forEach(member => {
+        if (member.phone) {
+          const option = document.createElement('option');
+          option.value = member.phone;
+          option.textContent = `👤 ${member.name} (${member.phone})`;
+          select.appendChild(option);
         }
+      });
+    }
       
     function loadData() {
       try {
