@@ -341,7 +341,7 @@
        
     </section>
 
-    <!-- FAmily Member Modal -->
+    <!-- Family Member Modal -->
     <div class="modal fade" id="familyModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-light border-secondary">
@@ -683,32 +683,31 @@
     } 
 
     function copyAndOpenSMS() {    
-      // 1.Save data locally
+      // 1. Save data locally
       if (typeof saveData === 'function') {
         saveData();
       }
     
-      // 2. Acqurie status from UI
+      // 2. Acquire status from UI
       let selectedStatus = typeof currentStatus !== 'undefined' ? currentStatus : "SAFE";  
       const checkedRadio = document.querySelector('input[name="statusRadio"]:checked');
       if (checkedRadio) {
         selectedStatus = checkedRadio.value;
-      } 
-      else {
+      } else {
         const activeBtn = document.querySelector('.status-btn.active, .btn-check:checked + label');
         if (activeBtn) {
           selectedStatus = activeBtn.innerText.trim();
         }
       }
     
-      // 3. Acquire notes
+      // 3. Acquire notes (English fallback)
       const noteInput = document.getElementById("statusNote");
-      const noteText = noteInput && noteInput.value.trim() !== "" ? noteInput.value.trim() : "メモなし";
+      const noteText = noteInput && noteInput.value.trim() !== "" ? noteInput.value.trim() : "No note";
     
       // 4. Acquire battery level
       const batteryVal = (typeof liveBattery !== "undefined" && liveBattery !== null) ? liveBattery : "100";
     
-      // 5.Capture GPS coordinates (with fallback from localStorage)
+      // 5. Capture GPS coordinates (with fallback from localStorage)
       let gpsString = "N/A";
       let coords = (typeof currentCoords !== 'undefined' && currentCoords) ? currentCoords : null;
       if (!coords) {
@@ -723,27 +722,27 @@
         }
       }
     
-      // Generate Google maps URL
+      // Generate Google Maps URL
       if (coords && coords.lat && coords.lon) {
         gpsString = `https://maps.google.com/?q=${coords.lat},${coords.lon}`;
       }
     
-      // 6. Collect phone numbers (get selected checkboxes)
+      // 6. Collect phone numbers
       const checkedBoxes = document.querySelectorAll('.recipient-checkbox:checked');
       const phoneNumbers = Array.from(checkedBoxes).map(cb => cb.value);          
     
       if (phoneNumbers.length === 0) {
-        alert("Selectat least one recipient!)");
+        alert("Select at least one recipient!");
         return;
       }
     
-      // Switch the delimiter based on the OS. (iOS: ;, Android: ,)
+      // Switch delimiter based on OS (iOS: ;, Android: ,)
       const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const delimiter = isiOS ? ";" : ",";
       const recipientString = phoneNumbers.join(delimiter);
     
-      // 7. Construc message payload
-      const textToCopy = `【Emeregency checkin】 status: ${selectedStatus} | location: ${gpsString} | battery: ${batteryVal}% | note: ${noteText}`;
+      // 7. Construct message payload (English header)
+      const textToCopy = `【Emergency Check-In】 status: ${selectedStatus} | location: ${gpsString} | battery: ${batteryVal}% | note: ${noteText}`;
     
       // 8. Copy to clipboard and open SMS app 
       navigator.clipboard.writeText(textToCopy).then(() => {
@@ -757,12 +756,12 @@
           window.location.href = `sms:${recipientString}`;
         }, 1500); 
       }).catch(() => {
-        alert("text: " + textToCopy);
+        alert("Text copied: " + textToCopy);
       });
     }
 
     // --- 1. Centralized SMS Message Builder ---
-    function buildSmsText() {
+    /*function buildSmsText() {
       let selectedStatus = typeof currentStatus !== 'undefined' ? currentStatus : "SAFE";  
       const checkedRadio = document.querySelector('input[name="statusRadio"]:checked');
       if (checkedRadio) {
@@ -797,40 +796,9 @@
       }
     
       return `【Emergency check-in】 status: ${selectedStatus} | location: ${gpsString} | battery: ${batteryVal}% | note: ${noteText}`;
-    }
+    }*/
     
-    // --- 2. Batch Copy & Open SMS ---
-    function copyAndOpenSMS() {    
-      if (typeof saveData === 'function') saveData();
-    
-      const checkedBoxes = document.querySelectorAll('.recipient-checkbox:checked');
-      const phoneNumbers = Array.from(checkedBoxes).map(cb => cb.value);          
-    
-      if (phoneNumbers.length === 0) {
-        alert("Select at least one recipient!");
-        return;
-      }
-    
-      const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const delimiter = isiOS ? ";" : ",";
-      const recipientString = phoneNumbers.join(delimiter);
-    
-      const textToCopy = buildSmsText();
-    
-      navigator.clipboard.writeText(textToCopy).then(() => {
-        const alertElem = document.getElementById("copyAlert");
-        if (alertElem) {
-          alertElem.classList.remove("d-none");
-          setTimeout(() => alertElem.classList.add("d-none"), 4000);
-        }
-    
-        setTimeout(() => {
-          window.location.href = `sms:${recipientString}`;
-        }, 1500); 
-      }).catch(() => {
-        alert("text: " + textToCopy);
-      });
-    } 
+   
     
     // ------------------------------------------------------------------
     // 4. Family Board & Modal Logic
