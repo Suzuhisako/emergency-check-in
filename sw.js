@@ -1,9 +1,9 @@
-const CACHE_NAME = 'emergency-checkin-en-v1';
+
+const CACHE_NAME = 'emergency-checkin-en-v2';
 
 const LOCAL_URLS = [
   './',
   './index.html',
-  './index_lite.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
