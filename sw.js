@@ -1,4 +1,4 @@
-const CACHE_NAME = 'family-board-v2';
+const CACHE_NAME = 'family-board-en-v1';
 
 const STATIC_ASSETS = [
   './',
@@ -12,7 +12,7 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      console.log('[SW-JA] Pre-caching local assets...');
+      console.log('[SW-EN] Pre-caching local assets...');
       await Promise.allSettled(
         STATIC_ASSETS.map(url => 
           fetch(url).then(response => {
@@ -61,8 +61,8 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(async () => {
           const fallback = await caches.match('./index.html') 
-                        || await caches.match('./') 
-                        || await caches.match('/');
+                                || await caches.match('./') 
+                                || await caches.match('/');
           return fallback;
         })
     );
