@@ -760,46 +760,6 @@
       });
     }
 
-    // --- 1. Centralized SMS Message Builder ---
-    /*function buildSmsText() {
-      let selectedStatus = typeof currentStatus !== 'undefined' ? currentStatus : "SAFE";  
-      const checkedRadio = document.querySelector('input[name="statusRadio"]:checked');
-      if (checkedRadio) {
-        selectedStatus = checkedRadio.value;
-      } else {
-        const activeBtn = document.querySelector('.status-btn.active, .btn-check:checked + label');
-        if (activeBtn) {
-          selectedStatus = activeBtn.innerText.trim();
-        }
-      }
-    
-      const noteInput = document.getElementById("statusNote");
-      const noteText = noteInput && noteInput.value.trim() !== "" ? noteInput.value.trim() : "No note";
-      const batteryVal = (typeof liveBattery !== "undefined" && liveBattery !== null) ? liveBattery : "100";
-    
-      let gpsString = "N/A";
-      let coords = (typeof currentCoords !== 'undefined' && currentCoords) ? currentCoords : null;
-      if (!coords) {
-        const savedData = localStorage.getItem("my_emergency_status");
-        if (savedData) {
-          try {
-            const parsed = JSON.parse(savedData);
-            if (parsed.coords) coords = parsed.coords;
-          } catch (e) {
-            console.warn("Could not parse saved coords", e);
-          }
-        }
-      }
-    
-      if (coords && coords.lat && coords.lon) {
-        gpsString = `https://maps.google.com/?q=${coords.lat},${coords.lon}`;
-      }
-    
-      return `【Emergency check-in】 status: ${selectedStatus} | location: ${gpsString} | battery: ${batteryVal}% | note: ${noteText}`;
-    }*/
-    
-   
-    
     // ------------------------------------------------------------------
     // 4. Family Board & Modal Logic
     // ------------------------------------------------------------------
