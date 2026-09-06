@@ -470,6 +470,37 @@
         });
       });
     }
+
+    // --- Global Translation Dictionaries (Place near top of script) ---
+    const statusLabels = {
+      "SAFE": "SAFE",
+      "EVACUATED": "EVACUATED",
+      "NEED HELP": "NEED HELP",
+      "IN TRANSIT": "IN TRANSIT",
+      "UNKNOWN": "UNKNOWN",
+      // Japanese Fallbacks
+      "無事": "SAFE",
+      "避難": "EVACUATED",
+      "要救助": "NEED HELP",
+      "助けて": "NEED HELP",
+      "移動中": "IN TRANSIT",
+      "不明": "UNKNOWN"
+    };
+    
+    const viaLabels = {
+      "Imported SMS": "Imported SMS",
+      "Local entry": "Manual Entry",
+      "Direct contact": "Direct Contact",
+      "Mesh Transfer": "Mesh Transfer",
+      "Self Check-In": "Self Check-In",
+      // Japanese Fallbacks
+      "手動登録": "Manual Entry",
+      "手動入力": "Manual Entry",
+      "直接連絡": "Direct Contact",
+      "メッシュ転送": "Mesh Transfer",
+      "本人更新": "Self Check-In",
+      "SMS読込": "Imported SMS"
+    };
   
     function showUpdatePrompt(worker) {
       if (document.getElementById('pwa-update-toast')) return;
@@ -768,40 +799,22 @@
       if (status === 'EVACUATED') return 'bg-blue';
       if (status === 'NEED HELP') return 'btn-badge-danger';
       return 'bg-secondary';
-    }
-  
+    }  
+       
+    // --- Render Function ---
     function renderBoard() {
       const list = document.getElementById("familyList");
       if (!list) return;
     
       if (!familyData || familyData.length === 0) {
-        list.innerHTML = `<div class="text-secondary small py-2 text-center">Family member is not added. Tap <strong>+ Add</strong> above.</div>`;
+        list.innerHTML = `<div class="text-secondary small py-2 text-center">No family members added yet. Tap <strong>+ Add</strong> above.</div>`;
         return;
       }
     
-     /* // Japanese status translation mapping
-      const statusLabels = {
-        "SAFE": "無事/安全",
-        "IN TRANSIT": "移動中/避難中",
-        "EVACUATED": "避難完了",
-        "NEED HELP": "要救助"
-      };*/
-    
-      // Japanese source/method translation mapping
-     /*const viaLabels = {
-        "Imported SMS": "SMS読込",
-        "Local entry": "手動入力",
-        "Direct contact": "直接連絡",
-        "Mesh Transfer": "メッシュ転送",
-        "Self Check-In": "本人更新",
-        "手動登録": "手動登録"
-      };*/
-    
       list.innerHTML = familyData.map(m => {
-        const displayStatus = statusLabels[m.status] || m.status || "No status";
-        
-        // Map m.via to Japanese, or fallback to original/default text
-        const displayVia = viaLabels[m.via] || m.via || "Direct contact";
+        // Map status and method to English with safe fallbacks
+        const displayStatus = statusLabels[m.status] || m.status || "UNKNOWN";
+        const displayVia = viaLabels[m.via] || m.via || "Direct Contact";
     
         // Safe helper function calls
         const safePhoneNorm = (typeof normalizePhone === "function" && m.phone) ? normalizePhone(m.phone) : m.phone;
@@ -812,7 +825,7 @@
           <div class="list-group-item bg-transparent text-light border-secondary px-0 py-2">
             <div class="d-flex justify-content-between align-items-start">
               <div>
-                <span class="fw-bold fs-6">${m.name || 'Name not entered'}</span>
+                <span class="fw-bold fs-6">${m.name || 'Unnamed Member'}</span>
                 <span class="badge ${safeBadge} ms-2">${displayStatus}</span>
               </div>
               <div>
@@ -825,7 +838,9 @@
               ${m.phone ? `<a href="tel:${safePhoneNorm}" class="text-info me-2" style="text-decoration:none;">📞 ${safePhoneDisp}</a> • ` : ''}
               ${m.location || '📍 Location unknown'} • 🔋 ${m.battery || '100%'}
             </div>
-            <div class="small ${m.viaClass || 'text-secondary'} mt-1" style="font-size: 0.75rem;">${displayVia} • <span class="text-secondary">${m.time || ''}</span></div>
+            <div class="small ${m.viaClass || 'text-secondary'} mt-1" style="font-size: 0.75rem;">
+              ${displayVia} • <span class="text-secondary">${m.time || ''}</span>
+            </div>
           </div>
         `;
       }).join('');
