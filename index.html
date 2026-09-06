@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Emergency-Check-In PWA</title>
 
-  <!-- PWA & モバイル表示設定 -->
+ <!-- PWA & Mobile Display Settings -->
   <meta name="theme-color" content="#0d6efd">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="emergency-check-in">
 
-  <!-- マニフェスト & ローカルアイコン -->
+  <!-- Manifest & Local icons -->
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
@@ -21,7 +21,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
-    
+    /* Base Layout & Cards */
     body {
       background-color: #000000; 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -87,7 +87,7 @@
       box-shadow: none !important;
     }
     
-    /* --- 2. IN TRANSIT/IN EVACUATION  --- */
+    /* --- 2. IN TRANSIT / RELOCATING  --- */
     .btn-outline-warning {
       border-width: 2px !important;
     }
@@ -215,95 +215,95 @@
     <!-- System & connection header -->
     <header class="d-flex justify-content-between align-items-center p-2 mb-3 card-dark rounded-3">
       <div>
-        <h1 class="h6 m-0 fw-bold fs-4 text-soft-danger">🚨 Emeregency Check In </h1>
-        <small class="text-light" id="offlineStatus">Status: Offline capable (PWA)</small>
+        <h1 class="h6 m-0 fw-bold fs-4 text-soft-danger">🚨 Emeregency Check-In </h1>
+        <small class="text-light" id="offlineStatus">Status: Offline-Ready (PWA)</small>
       </div>
       <div class="text-end">
         <span class="badge badge-mesh rounded-pill px-2 py-1 mb-1 d-inline-flex align-items-center">
-          <span class="pulse-dot">BLE Mesh Prepared</span>
+          <span class="pulse-dot">BLE Mesh Ready</span>
         </span>
         <div class="small text-light">
-          🔋 バッテリー: <span id="displayBattery" class="text-light fw-bold">検出中...</span>
+          🔋 Battery: <span id="displayBattery" class="text-light fw-bold">Detecting...</span>
         </div>
       </div>
     </header>
 
-    <!-- 緊急音響ビーコンセクション -->
+    <!-- Emergency Sound Beacon Section -->
     <section class="card-dark rounded-3 p-4 mb-3 border border-soft-danger">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <h2 class="h6 text-uppercase text-soft-danger fs-5 fw-bold m-0">🚨 緊急救出アラーム</h2>       
+        <h2 class="h6 text-uppercase text-soft-danger fs-5 fw-bold m-0">🚨 Emergency Beacon</h2>       
       </div>
       
       <div class="form-check form-switch mb-3">
         <input class="form-check-input" type="checkbox" id="strobeToggle" checked>
         <label class="form-check-label small text-light" for="strobeToggle">
-          ⚡ 画面ストロボライト（赤色点滅）を有効化
+          ⚡ Enable Screen Strobe Light (Flashing Red)
         </label>
       </div>
       
       <button id="sirenBtn" type="button" class="btn btn-soft-siren w-100 py-3 fw-bold fs-4 shadow d-flex align-items-center justify-content-center gap-2" onclick="toggleSiren()">
-        🔊 緊急アラーム開始
+        🔊 START EMERGENCY ALARM
       </button>
       
       <div id="sirenStatus" class="form-text text-soft-danger text-center fw-bold small mt-2 d-none">
-        ⚠️ アラーム作動中: 音量を最大にし、居場所に気づいてもらいましょう！
+        ⚠️ ALARM ACTIVE: Maximize volume & point screen towards sky/open area!
       </div>
     </section>
 
     <section class="card-dark rounded-3 p-2 mb-3">
-      <h2 class="h5 text-uppercase text-light fw-bold mb-3">1. 自身の安否/状況発信</h2>      
+      <h2 class="h5 text-uppercase text-light fw-bold mb-3">1. Broadcast Your Status</h2>      
       
-      <label class="form-label fw-bold mb-2 small text-light">安否/状況を選択</label>
+      <label class="form-label fw-bold mb-2 small text-light">Select Your Status</label>
       <div class="row g-2 mb-4">
         <div class="col-6">
           <button id="btn-safe" type="button" class="btn btn-outline-success status-btn fw-bold w-100 py-2 active" onclick="selectStatus('SAFE', this)">
-            🟢 無事/安全
+            🟢 SAFE
           </button>
         </div>
         <div class="col-6">
           <button id="btn-transit" type="button" class="btn btn-outline-warning status-btn fw-bold w-100 py-2" onclick="selectStatus('IN TRANSIT', this)">
-            🟡 移動中
+            🟡 IN TRANSIT / RELOCATING
           </button>
         </div>
         <div class="col-6">
           <button id="btn-evacuated" type="button" class="btn btn-outline-blue status-btn fw-bold w-100 py-2" onclick="selectStatus('EVACUATED', this)">
-            🔵 避難完了
+            🔵 EVACUATED
           </button>
         </div>
         <div class="col-6">
           <button id="btn-needhelp" type="button" class="btn btn-outline-danger status-btn fw-bold w-100 py-2" onclick="selectStatus('NEED HELP', this)">
-            🔴 要救助
+            🔴NEED HELP
           </button>
         </div>
       </div>
 
-      <!-- メモ / 補足位置情報 (任意) -->
+     <!-- Note & Auto-GPS Input Group -->
       <div class="mb-4">
-        <label for="statusNote" class="form-label fw-bold small text-light mb-1">メモ / 補足位置情報 (任意)</label>
-        <input type="text" class="form-control bg-dark text-light border-secondary" id="statusNote" placeholder="例: 茅ヶ崎一次避難所にいます">
+        <label for="statusNote" class="form-label fw-bold small text-light mb-1">Optional Short Note / Location</label>
+        <input type="text" class="form-control bg-dark text-light border-secondary" id="statusNote" placeholder="e.g. At Primary Shelter">
       </div>
 
       <!-- Location Capture -->
       <div class="mb-4">
-        <label class="form-label fw-bold small text-light mb-1">位置情報の取得</label>
+        <label class="form-label fw-bold small text-light mb-1">Capture GPS coordinates!</label>
         <button type="button" class="btn btn-gps-cyan w-100 py-2 fw-bold" onclick="getGPSLocation()">
-          📍 GPS位置情報を自動取得
+          📍 AUTO-GPS
         </button>
         
         <div class="text-center mt-2">
-          <div id="gpsStatus" class="text-light small d-block mb-3">上のボタンを押して位置情報を添付する。</div>
+          <div id="gpsStatus" class="text-light small d-block mb-3">Press to get GPS and attach GPS Coordinates.</div>
           <!--<div id="gpsCoordsDisplay" class="font-monospace text-info fw-bold mt-1 fs-6 d-none"></div> -->
         </div>
       </div>    
 
       <div class="card card-dark p-3 mb-4 border-secondary">
-        <label class="form-label text-light fw-bold mb-2">📨 送信先の選択</label>
+        <label class="form-label text-light fw-bold mb-2">📨 Select Recipients</label>
       
         <!-- "Select All" Quick Toggle -->
         <div class="form-check mb-2 pb-2 border-bottom border-secondary">
           <input class="form-check-input" type="checkbox" id="selectAllRecipients" onchange="toggleAllRecipients(this)">
           <label class="form-check-label text-warning fw-bold" for="selectAllRecipients">
-            👥 全員を選択 
+            👥 Select All 
           </label>
         </div>
       
@@ -315,25 +315,25 @@
 
       <!-- Send Action Buttons -->
       <button type="button" class="btn btn-copy-sms btn-lg w-100 py-2 fw-bold" onclick="copyAndOpenSMS()">
-          📋 自分の安否情報をコピーしてメッセージアプリを起動
+          📋 Copy your status and Open +Message or LINE.
       </button>   
           
       <div id="copyAlert" class="alert alert-success mt-2 py-1 small d-none text-center" role="alert">
-        クリップボードにコピーしました！メッセージアプリに切り替えて長押しで貼り付けてください。
+        Copied to clipboard! Long-press in +Message or LINE to paste.
       </div>
 
       <div id="broadcastAlert" class="alert alert-success mt-2 py-2 small d-none" role="alert">
-        安否/状況をオフラインで端末に保存しました！
+        Status saved to offline LocalStorage!
       </div>
     </section>
 
-    <!-- ステップ 2: 家族の安否掲示板 -->
+    <!-- Step 2: FAmily Board -->
     <section class="card-dark rounded-3 p-2 mb-3">
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-        <h2 class="h5 text-uppercase text-light fw-bold m-2 text-nowrap">2. 家族の安否情報</h2>
+        <h2 class="h5 text-uppercase text-light fw-bold m-2 text-nowrap">2. Family Status</h2>
         <div class="d-flex flex-wrap gap-2 ms-auto">
-          <button type="button" class="btn btn-primary btn-lg btn-parse-sms py-0 px-2" onclick="openImportSMSModal()">📥 SMS取り込み</button>
-          <button type="button" class="btn btn-primary btn-lg btn-add py-0 px-5" onclick="openAddModal()">+ 追加</button>          
+          <button type="button" class="btn btn-primary btn-lg btn-parse-sms py-0 px-2" onclick="openImportSMSModal()">📥 Import SMS</button>
+          <button type="button" class="btn btn-primary btn-lg btn-add py-0 px-5" onclick="openAddModal()">+ Add</button>          
         </div>
       </div>
 
@@ -341,12 +341,12 @@
        
     </section>
 
-    <!-- 家族メンバーモーダル -->
+    <!-- FAmily Member Modal -->
     <div class="modal fade" id="familyModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-light border-secondary">
           <div class="modal-header border-secondary">
-            <h5 class="modal-title" id="modalTitle">家族メンバーを編集</h5>
+            <h5 class="modal-title" id="modalTitle">Edit Family Member</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -354,17 +354,17 @@
           </div>
             
           <div class="mb-3">
-            <label class="form-label">名前</label>
-            <input type="text" id="modalMemberName" class="form-control bg-dark text-light border-secondary" placeholder="例: 太郎">
+            <label class="form-label">Name</label>
+            <input type="text" id="modalMemberName" class="form-control bg-dark text-light border-secondary" placeholder="e.g. Emily">
           
 
           <div class="mb-3">
-            <label for="modalMemberPhone" class="form-label">携帯電話番号 (SMS用)</label>
+            <label for="modalMemberPhone" class="form-label">Phone Number (SMS)</label>
             <input 
               type="tel" 
               class="form-control" 
               id="modalMemberPhone" 
-              placeholder="例: 090-1234-5678 または +819012345678"
+              placeholder="e.g.: 090-1234-5678 or +819012345678"
               maxlength="20"
               autocomplete="tel"
             >
@@ -374,12 +374,12 @@
           </div>
             
           <div class="mb-3">
-            <label class="form-label">安否/状況</label>
+            <label class="form-label">Statu</label>
             <select id="modalMemberStatus" class="form-select bg-dark text-light border-secondary">
-              <option value="SAFE">無事/安全</option>              
-              <option value="IN TRANSIT">移動中/避難中</option>
-              <option value="EVACUATED">避難完了</option>
-              <option value="NEED HELP">要救助</option>
+              <option value="SAFE">SAFE</option>              
+              <option value="IN TRANSIT">IN TRANSIT / RELOCATING</option>
+              <option value="EVACUATED">EVACUATED</option>
+              <option value="NEED HELP">NEED HELP</option>
             </select>
           </div>
             
