@@ -242,7 +242,7 @@
       </div>
       
       <button id="sirenBtn" type="button" class="btn btn-soft-siren w-100 py-3 fw-bold fs-4 shadow d-flex align-items-center justify-content-center gap-2" onclick="toggleSiren()">
-        🔊 START EMERGENCY ALARM
+        🔊 START ALARM
       </button>
       
       <div id="sirenStatus" class="form-text text-soft-danger text-center fw-bold small mt-2 d-none">
@@ -256,23 +256,23 @@
       <label class="form-label fw-bold mb-2 small text-light">Select Your Status</label>
       <div class="row g-2 mb-4">
         <div class="col-6">
-          <button id="btn-safe" type="button" class="btn btn-outline-success status-btn fw-bold w-100 py-2 active" onclick="selectStatus('SAFE', this)">
+          <button id="btn-safe" type="button" class="btn btn-outline-success status-btn fw-bold w-100 py-2 text-nowrap px-1" onclick="selectStatus('SAFE', this)">
             🟢 SAFE
           </button>
         </div>
         <div class="col-6">
-          <button id="btn-transit" type="button" class="btn btn-outline-warning status-btn fw-bold w-100 py-2" onclick="selectStatus('IN TRANSIT', this)">
+          <button id="btn-transit" type="button" class="btn btn-outline-warning status-btn fw-bold w-100 py-2 text-nowrap px-1" onclick="selectStatus('IN TRANSIT', this)">
             🟡 IN TRANSIT
           </button>
         </div>
         <div class="col-6">
-          <button id="btn-evacuated" type="button" class="btn btn-outline-blue status-btn fw-bold w-100 py-1" onclick="selectStatus('EVACUATED', this)">
+          <button id="btn-evacuated" type="button" class="btn btn-outline-blue status-btn fw-bold w-100 py-2 text-nowrap px-1" onclick="selectStatus('EVACUATED', this)">
             🔵 EVACUATED
           </button>
         </div>
         <div class="col-6">
-          <button id="btn-needhelp" type="button" class="btn btn-outline-danger status-btn fw-bold w-100 py-2" onclick="selectStatus('NEED HELP', this)">
-            🔴NEED HELP
+          <button id="btn-needhelp" type="button" class="btn btn-outline-danger status-btn fw-bold w-100 py-2 text-nowrap px-1" onclick="selectStatus('NEED HELP', this)">
+            🔴 NEED HELP
           </button>
         </div>
       </div>
