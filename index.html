@@ -315,11 +315,11 @@
 
       <!-- Send Action Buttons -->
       <button type="button" class="btn btn-copy-sms btn-lg w-100 py-2 fw-bold" onclick="copyAndOpenSMS()">
-          📋 Copy your status and Open +Message or LINE.
+        📲 Share Status via LINE, SMS, or Apps
       </button>   
-          
+      
       <div id="copyAlert" class="alert alert-success mt-2 py-1 small d-none text-center" role="alert">
-        Copied to clipboard! Long-press in +Message or LINE to paste.
+        Copied to clipboard! Ready to paste into your messaging app.
       </div>
 
       <div id="broadcastAlert" class="alert alert-success mt-2 py-2 small d-none" role="alert">
@@ -712,7 +712,7 @@
       }
     } 
 
-    function copyAndOpenSMS() {    
+   function copyAndOpenSMS() {    
       // 1. Save data locally
       if (typeof saveData === 'function') {
         saveData();
@@ -730,14 +730,14 @@
         }
       }
     
-      // 3. Acquire notes (English fallback)
+      // 3. Acquire notes
       const noteInput = document.getElementById("statusNote");
       const noteText = noteInput && noteInput.value.trim() !== "" ? noteInput.value.trim() : "No note";
     
       // 4. Acquire battery level
       const batteryVal = (typeof liveBattery !== "undefined" && liveBattery !== null) ? liveBattery : "100";
     
-      // 5. Capture GPS coordinates (with fallback from localStorage)
+      // 5. Capture GPS coordinates
       let gpsString = "N/A";
       let coords = (typeof currentCoords !== 'undefined' && currentCoords) ? currentCoords : null;
       if (!coords) {
@@ -752,42 +752,51 @@
         }
       }
     
-      // Generate Google Maps URL
       if (coords && coords.lat && coords.lon) {
         gpsString = `https://maps.google.com/?q=${coords.lat},${coords.lon}`;
       }
     
-      // 6. Collect phone numbers
+      // 6. Collect recipient phone numbers
       const checkedBoxes = document.querySelectorAll('.recipient-checkbox:checked');
       const phoneNumbers = Array.from(checkedBoxes).map(cb => cb.value);          
     
-      if (phoneNumbers.length === 0) {
-        alert("Select at least one recipient!");
-        return;
-      }
-    
-      // Switch delimiter based on OS (iOS: ;, Android: ,)
       const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const delimiter = isiOS ? ";" : ",";
       const recipientString = phoneNumbers.join(delimiter);
     
-      // 7. Construct message payload (English header)
-      const textToCopy = `【Emergency Check-In】 status: ${selectedStatus} | location: ${gpsString} | battery: ${batteryVal}% | note: ${noteText}`;
+      // 7. Construct message payload
+      const textToShare = `【Emergency Check-In】 status: ${selectedStatus} | location: ${gpsString} | battery: ${batteryVal}% | note: ${noteText}`;
     
-      // 8. Copy to clipboard and open SMS app 
-      navigator.clipboard.writeText(textToCopy).then(() => {
-        const alertElem = document.getElementById("copyAlert");
-        if (alertElem) {
-          alertElem.classList.remove("d-none");
-          setTimeout(() => alertElem.classList.add("d-none"), 4000);
+      // 8. Trigger Native Share API or Clipboard/SMS Fallback
+      if (navigator.share) {
+        navigator.share({
+          title: 'Emergency Check-In',
+          text: textToShare
+        }).catch((err) => {
+          // User cancelled share or operation failed silently
+          console.log('Share dismissed:', err);
+        });
+      } else {
+        // Fallback for older browsers / desktop environments
+        if (phoneNumbers.length === 0) {
+          alert("Select at least one recipient!");
+          return;
         }
     
-        setTimeout(() => {
-          window.location.href = `sms:${recipientString}`;
-        }, 1500); 
-      }).catch(() => {
-        alert("Text copied: " + textToCopy);
-      });
+        navigator.clipboard.writeText(textToShare).then(() => {
+          const alertElem = document.getElementById("copyAlert");
+          if (alertElem) {
+            alertElem.classList.remove("d-none");
+            setTimeout(() => alertElem.classList.add("d-none"), 4000);
+          }
+    
+          setTimeout(() => {
+            window.location.href = `sms:${recipientString}`;
+          }, 1500); 
+        }).catch(() => {
+          alert("Text copied: " + textToShare);
+        });
+      }
     }
 
     // ------------------------------------------------------------------
