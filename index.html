@@ -293,7 +293,11 @@
         <label class="form-label fw-bold small text-light mb-1">Capture GPS coordinates</label>
         <button type="button" class="btn btn-gps-cyan w-100 py-2 fw-bold" onclick="getGPSLocation()">
           📍 AUTO-GPS
-        </button>        
+        </button>  
+        <div class="text-center mt-2">
+          <div id="gpsStatus" class="text-light small d-block mb-3"></div>
+          <!--<div id="gpsCoordsDisplay" class="font-monospace text-info fw-bold mt-1 fs-6 d-none"></div> -->
+        </div> 
       </div>    
 
      <!-- Send Action Buttons -->
@@ -622,13 +626,8 @@
     }
   
     function getGPSLocation() {
-      if (document.activeElement && document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-      }
       const gpsMsg = document.getElementById("gpsStatus");
       const coordsDisplay = document.getElementById("gpsCoordsDisplay");
-      
-      if (gpsMsg) gpsMsg.textContent = "⌛ Searching for a satellite...";
     
       const options = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
     
@@ -639,17 +638,34 @@
             lon: position.coords.longitude.toFixed(5)
           };
     
-          if (gpsMsg) gpsMsg.textContent = "📍 Successfully captured GPS coordinates!";
-          if (coordsDisplay) coordsDisplay.classList.add("d-none"); // Ensures coordinates stay hidden
+          if (gpsMsg) {
+            gpsMsg.textContent = "📍 GPS位置情報の取得に成功しました！";
+    
+            // Automatically clear success message after 3 seconds
+            setTimeout(() => {
+              gpsMsg.textContent = "";
+            }, 3000);
+          }
+    
+          if (coordsDisplay) coordsDisplay.classList.add("d-none");
         },
         (error) => {
           console.warn("GPS Error:", error);
-          if (gpsMsg) gpsMsg.textContent = "⚠️ Failed to capture GPS coordiantes.";
+          
+          if (gpsMsg) {
+            gpsMsg.textContent = "⚠️ GPS位置情報を取得できませんでした。";
+    
+            // Automatically clear error message after 5 seconds
+            setTimeout(() => {
+              gpsMsg.textContent = "";
+            }, 5000);
+          }
+    
           if (coordsDisplay) coordsDisplay.classList.add("d-none");
         },
         options
       );
-    }    
+    }   
 
     function selectStatus(statusKey, btnElement) {
       // Prevent redundant triggers if already set
