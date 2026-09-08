@@ -302,7 +302,7 @@
 
      <!-- Send Action Buttons -->
       <button type="button" class="btn btn-copy-sms btn-lg w-100 py-2 fw-bold" onclick="copyAndOpenSMS()">
-        📲 Share Status via LINE, SMS, or Apps
+        📲 Open LINE, SMS, or Apps
       </button>       
     </section>
 
@@ -639,7 +639,7 @@
           };
     
           if (gpsMsg) {
-            gpsMsg.textContent = "📍 GPS位置情報の取得に成功しました！";
+            gpsMsg.textContent = "📍 GPS succeeded！";
     
             // Automatically clear success message after 3 seconds
             setTimeout(() => {
@@ -653,7 +653,7 @@
           console.warn("GPS Error:", error);
           
           if (gpsMsg) {
-            gpsMsg.textContent = "⚠️ GPS位置情報を取得できませんでした。";
+            gpsMsg.textContent = "⚠️ GPS failed.";
     
             // Automatically clear error message after 5 seconds
             setTimeout(() => {
