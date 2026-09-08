@@ -155,19 +155,6 @@
       color: #ffffff !important;
     }
 
-    /* Touch device adjustments (GPS button only) */
-    /*@media (hover: none), (pointer: coarse) {
-      #btn-gps:focus,
-      #btn-gps:focus-visible,
-      #btn-gps:active,
-      #btn-gps:hover {
-        background-color: transparent !important;
-        color: #198754 !important;
-        border-color: #198754 !important;
-        box-shadow: none !important;
-      }
-    }*/ 
-
     .btn-gps-cyan,
     .btn-copy-sms,
     .btn-parse-sms,
@@ -1369,15 +1356,7 @@
       console.log("🌐 Network: Online");
       flushOfflineQueue();
     });
-   
-    /*if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('English SW registered:', reg.scope))
-          .catch(err => console.error('SW registration failed:', err));
-      });
-    }*/
- 
+  
   </script>  
 </body>
 </html>
