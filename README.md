@@ -1,4 +1,4 @@
-# 🚨 Emergency Family Check-In
+#  Emergency Family Check-In
 
 A lightweight, offline-first Progressive Web App (PWA) designed for quick family status updates during disasters, power outages, or network congestion.
 
@@ -6,17 +6,17 @@ When cellular networks are strained or damaged, communication channels can becom
 
 ---
 
-## ✨ Features
+##  Features
 
-- 📱 **Offline-First PWA:** Operates completely offline directly in mobile browsers without requiring active network connectivity.
-- 💬 **Multi-Channel Dispatch:** One-tap formatting and routing to SMS, LINE, Email, WhatsApp, and system sharing tools.
-- 📍 **One-Tap GPS Attachment:** Swiftly grabs accurate coordinates to help family or first responders locate you.
-- 📱 **Installable Application:** Can be installed directly onto your Android or iOS home screen for instant standalone access.
-- 🔐 **Privacy-Focused:** No central server or external tracking. All contact information and family logs remain strictly on your local device.
+-  **Offline-First PWA:** Operates completely offline directly in mobile browsers without requiring active network connectivity.
+-  **Multi-Channel Dispatch:** One-tap formatting and routing to SMS, LINE, Email, WhatsApp, and system sharing tools.
+-  **One-Tap GPS Attachment:** Swiftly grabs accurate coordinates to help family or first responders locate you.
+-  **Installable Application:** Can be installed directly onto your Android or iOS home screen for instant standalone access.
+-  **Privacy-Focused:** No central server or external tracking. All contact information and family logs remain strictly on your local device.
 
 ---
 
-## 🚀 Live Demo & Installation Guide
+##  Live Demo & Installation Guide
 
 Access and install the application directly on your smartphone:
 
@@ -26,7 +26,7 @@ Access and install the application directly on your smartphone:
 
 ---
 
-### 📲 How to Install on Smartphone
+###  How to Install on Smartphone
 
 1. **Android (Chrome):** Open `index.html` ➔ Tap the menu button (`⋮`) ➔ Select **"Install app"** or **"Add to Home screen"**.
 2. **iOS (Safari):** Open `index.html` ➔ Tap the **Share icon** (⬆️) ➔ Select **"Add to Home Screen"**.
@@ -35,7 +35,7 @@ Access and install the application directly on your smartphone:
 
 ---
 
-## 📑 Emergency Message Template & Examples
+##  Emergency Message Template & Examples
 
 To ensure fast transmission and clarity across any messaging channel, the application formats updates into a structured template.
 
@@ -44,5 +44,5 @@ To ensure fast transmission and clarity across any messaging channel, the applic
 
 ---
 
-## 📄 License
+##  License
 This project is open-source and available under the MIT License.
