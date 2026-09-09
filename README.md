@@ -1,8 +1,8 @@
-# 🚨 Emergency Family Check-In 
+# 🚨 Emergency Family Check-In
 
-A lightweight, offline-first Progressive Web App (PWA) designed for quick family status updates during power outages, natural disasters, or network congestion. 
+A lightweight, offline-first Progressive Web App (PWA) designed for quick family status updates during power outages, natural disasters, or network congestion.
 
-When cellular data (4G/5G) or Wi-Fi networks fail, traditional messaging apps (Line, WhatsApp, Email) often stop working. This application formats essential safety details into compact, standardized **SMS text messages**—which can transmit reliably even on low-bandwidth cellular voice channels.
+When cellular data (4G/5G) or Wi-Fi networks fail, traditional messaging apps (LINE, WhatsApp, Email) often stop working. This application formats essential safety details into compact, standardized **SMS text messages**—which can transmit reliably even on low-bandwidth cellular channels.
 
 ---
 
@@ -12,7 +12,6 @@ When cellular data (4G/5G) or Wi-Fi networks fail, traditional messaging apps (L
 - 💬 **SMS Fallback:** Formats location, health status, and urgent needs into structured SMS text blocks ready for instant sending.
 - ⚡ **Lite Edition (`index_lite.html`):** Ultra-lightweight standalone web app stripped of heavy assets for instant loading on older devices or congested networks.
 - 📱 **Full PWA Edition (`index.html`):** Feature-rich Progressive Web App that can be installed directly onto your device with standalone app integration.
-- 🌐 **Multi-Language Interface:** Available in dedicated English and Japanese options for clear, fast navigation.
 - 🔐 **Privacy-Focused:** No central server or data collection. All contact details remain strictly on your local device.
 
 ---
@@ -44,31 +43,13 @@ You can access and bookmark both versions directly on your smartphone:
 
 ## 📑 SMS Format & Examples
 
-To keep messages reliable during network strain, the application encodes safety status into a structured text template. 
+To keep messages reliable during network strain, the application encodes safety status into a structured text template.
 
 ### SMS Template Structure
 ```text
 [STATUS] | [NAME] | [LOCATION] | [NEEDS/NOTES] | [TIMESTAMP]
-Examples
-1. Safe Status Update
-[SAFE] | Hanako | Home (2nd Floor) | Power is out, but we have battery & water. | 10:42 AM
 
-2. Assistance Needed
-[NEED HELP] | Taro | Near Station Exit 3 | Minor injury on left leg. Need first-aid supplies. | 02:15 PM
+---
 
-3. Evacuation Notice
-[EVACUATING] | Kenji & Family | Moving to Central High School Shelter | Leaving home due to flood warning. | 08:05 AM
-
-🛠️ Repository Structure
-Plaintext
-emergency-check-in/
-├── index.html          # Full PWA Application (English)
-├── index_lite.html     # Ultra-lightweight standalone version (English)
-├── sw.js               # Service Worker for offline caching
-├── manifest.json       # PWA Configuration File (Full Edition)
-└── README.md           # Documentation
-
-
-
-📄 License
+## 📄 License
 This project is open-source and available under the MIT License.
