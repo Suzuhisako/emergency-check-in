@@ -410,8 +410,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    var currentLang = 'en';
-    
+       
     // ------------------------------------------------------------------
     // Service Worker Registration
     // ------------------------------------------------------------------
@@ -884,13 +883,7 @@
       const select = document.getElementById('smsSenderSelect');
       if (!select) return;     
     
-      // Safely check current language (handles cases where currentLang might be 'en', 'EN', or undefined)
-      const isEnglish = (typeof currentLang !== 'undefined' && String(currentLang).toLowerCase() === 'en');
-      
-      const defaultLabel = isEnglish
-        ? '-- Auto-detect from SMS text --'
-        : '-- SMS本文から自動検出 --';
-      
+      const defaultLabel = '-- Auto-detect from SMS text --';      
       select.innerHTML = `<option value="">${defaultLabel}</option>`;
       
       if (Array.isArray(familyData) && familyData.length > 0) {
