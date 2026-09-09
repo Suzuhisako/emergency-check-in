@@ -46,11 +46,6 @@ You can access and bookmark both versions directly on your smartphone:
 To keep messages reliable during network strain, the application encodes safety status into a structured text template.
 
 ### SMS Template Structure
-```text
-[STATUS] | [NAME] | [LOCATION] | [NEEDS/NOTES] | [TIMESTAMP]
----
-
----
 
 ## 📄 License 
 
