@@ -1,55 +1,44 @@
 # 🚨 Emergency Family Check-In
 
-A lightweight, offline-first Progressive Web App (PWA) designed for quick family status updates during power outages, natural disasters, or network congestion.
+A lightweight, offline-first Progressive Web App (PWA) designed for quick family status updates during disasters, power outages, or network congestion.
 
-When cellular data (4G/5G) or Wi-Fi networks fail, traditional messaging apps (LINE, WhatsApp, Email) often stop working. This application formats essential safety details into compact, standardized **SMS text messages**—which can transmit reliably even on low-bandwidth cellular channels.
+When cellular networks are strained or damaged, communication channels can become unstable. This application formats essential safety details—such as GPS location, health status, and urgent needs—into standardized, compact messages ready to share instantly across **SMS, LINE, Email, WhatsApp, or any available messaging app**.
 
 ---
 
 ## ✨ Features
 
-- 📱 **Offline-First:** Works completely offline directly in mobile browsers without requiring continuous network connectivity.
-- 💬 **SMS Fallback:** Formats location, health status, and urgent needs into structured SMS text blocks ready for instant sending.
-- ⚡ **Lite Edition (`index_lite.html`):** Ultra-lightweight standalone web app stripped of heavy assets for instant loading on older devices or congested networks.
-- 📱 **Full PWA Edition (`index.html`):** Feature-rich Progressive Web App that can be installed directly onto your device with standalone app integration.
-- 🔐 **Privacy-Focused:** No central server or data collection. All contact details remain strictly on your local device.
+- 📱 **Offline-First PWA:** Operates completely offline directly in mobile browsers without requiring active network connectivity.
+- 💬 **Multi-Channel Dispatch:** One-tap formatting and routing to SMS, LINE, Email, WhatsApp, and system sharing tools.
+- 📍 **One-Tap GPS Attachment:** Swiftly grabs accurate coordinates to help family or first responders locate you.
+- 📱 **Installable Application:** Can be installed directly onto your Android or iOS home screen for instant standalone access.
+- 🔐 **Privacy-Focused:** No central server or external tracking. All contact information and family logs remain strictly on your local device.
 
 ---
 
-## 🚀 Live Demos & Installation Guide
+## 🚀 Live Demo & Installation Guide
 
-You can access and bookmark both versions directly on your smartphone:
+Access and install the application directly on your smartphone:
 
-| Edition | Direct URL | Installation Method |
+| Application | Direct URL | Installation Method |
 | :--- | :--- | :--- |
-| **Full Edition (PWA)** | [Launch Full App](https://suzuhisako.github.io/emergency-check-in/index.html) | **Standalone PWA App** (Installs to App Drawer & Home Screen) |
-| **Lite Edition** | [Launch Lite Page](https://suzuhisako.github.io/emergency-check-in/index_lite.html) | **Home Screen Web Shortcut** (Direct web access) |
+| **Emergency Check-In App** | [Launch Application](https://suzuhisako.github.io/emergency-check-in/index.html) | **Standalone PWA** (Installs to Home Screen / App Drawer) |
 
 ---
 
 ### 📲 How to Install on Smartphone
 
-#### 1. Full Edition (Standalone PWA)
-- **Android (Chrome):** Open `index.html` ➔ Tap menu (`⋮`) ➔ Select **"Install app"**.
-- **iOS (Safari):** Open `index.html` ➔ Tap **Share icon** ➔ Select **"Add to Home Screen"**.
+1. **Android (Chrome):** Open `index.html` ➔ Tap the menu button (`⋮`) ➔ Select **"Install app"** or **"Add to Home screen"**.
+2. **iOS (Safari):** Open `index.html` ➔ Tap the **Share icon** (⬆️) ➔ Select **"Add to Home Screen"**.
 
-#### 2. Lite Edition (Home Screen Shortcut)
-- **Android (Chrome):** Open `index_lite.html` ➔ Tap menu (`⋮`) ➔ Select **"Add to Home screen"**.
-- **iOS (Safari):** Open `index_lite.html` ➔ Tap **Share icon** ➔ Select **"Add to Home Screen"**.
-
-> **Note:** Installing the Full Edition as a PWA and adding the Lite Edition as a home screen shortcut allows both apps to sit side-by-side on your home screen without conflicts, while keeping offline capability for both!
+> **Tip:** Installing the PWA ensures the app is saved locally on your smartphone so it opens instantly even when completely offline.
 
 ---
 
-## 📑 SMS Format & Examples
+## 📑 Emergency Message Template & Examples
 
-To keep messages reliable during network strain, the application encodes safety status into a structured text template.
-
-### SMS Template Structure
-
-[STATUS] | [NAME] | [LOCATION] | [NEEDS/NOTES] | [TIMESTAMP]
+To ensure fast transmission and clarity across any messaging channel, the application formats updates into a structured template.
 
 
-## 📄 License 
-
-This project is open source and released under the MIT License.
+##📄 License
+This project is open-source and available under the MIT License.
