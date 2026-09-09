@@ -47,6 +47,9 @@ To keep messages reliable during network strain, the application encodes safety 
 
 ### SMS Template Structure
 
+[STATUS] | [NAME] | [LOCATION] | [NEEDS/NOTES] | [TIMESTAMP]
+
+
 ## 📄 License 
 
 - **This project is open source and released under the MIT License.**
