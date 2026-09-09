@@ -86,7 +86,7 @@
       border-color: #045d33 !important;
       box-shadow: none !important;
     }
-    .bg-safe-custom {
+    .bg-success {
       background-color: #045d33 !important; 
       color: #ffffff !important;
     }
@@ -782,7 +782,7 @@
     // 4. Family Board & Modal Logic
     // ------------------------------------------------------------------
     function getBadgeClass(status) {
-      if (status === 'SAFE') return 'bg-safe-custom';
+      if (status === 'SAFE') return 'bg-success';
       if (status === 'IN TRANSIT') return 'bg-amber'; 
       if (status === 'EVACUATED') return 'bg-blue';
       if (status === 'NEED HELP') return 'btn-badge-danger';
