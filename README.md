@@ -49,6 +49,7 @@ To keep messages reliable during network strain, the application encodes safety 
 ```text
 [STATUS] | [NAME] | [LOCATION] | [NEEDS/NOTES] | [TIMESTAMP]
 
+
 ---
 
 ## 📄 License
