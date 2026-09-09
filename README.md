@@ -39,6 +39,10 @@ Access and install the application directly on your smartphone:
 
 To ensure fast transmission and clarity across any messaging channel, the application formats updates into a structured template.
 
+### Message Template Structure
+[STATUS] | [NAME] | [LOCATION] | [NEEDS/NOTES] | [TIMESTAMP]
 
-##📄 License
+---
+
+## 📄 License
 This project is open-source and available under the MIT License.
