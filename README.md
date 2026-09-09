@@ -52,4 +52,4 @@ To keep messages reliable during network strain, the application encodes safety 
 
 ## 📄 License 
 
-- **This project is open source and released under the MIT License.**
+This project is open source and released under the MIT License.
