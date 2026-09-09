@@ -279,7 +279,7 @@
       <div class="mb-4">
         <label class="form-label fw-bold small text-light mb-1">Capture GPS coordinates</label>
         <button type="button" class="btn btn-gps-cyan w-100 py-2 fw-bold" onclick="getGPSLocation()">
-          📍 AUTO-GPS
+          AUTO-GPS
         </button>  
         <div class="text-center mt-2">
           <div id="gpsStatus" class="text-light small d-block mb-3"></div>
@@ -885,7 +885,7 @@
       // Match language context automatically (Fallback for JS/EN)
       const defaultLabel = (typeof currentLang !== 'undefined' && currentLang === 'en')
         ? '-- Auto-detect from SMS text --'
-        : '-- SMS本文から自動検出 --';
+        //: '-- SMS本文から自動検出 --';
     
       select.innerHTML = `<option value="">${defaultLabel}</option>`;
     
