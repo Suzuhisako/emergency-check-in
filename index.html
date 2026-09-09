@@ -882,16 +882,17 @@
       const select = document.getElementById('smsSenderSelect');
       if (!select) return;     
     
-      // Match language context automatically (Fallback for JS/EN)
-      const defaultLabel = (typeof currentLang !== 'undefined' && currentLang === 'en')
+      // Safely check current language (handles cases where currentLang might be 'en', 'EN', or undefined)
+      const isEnglish = (typeof currentLang !== 'undefined' && String(currentLang).toLowerCase() === 'en');
+      
+      const defaultLabel = isEnglish
         ? '-- Auto-detect from SMS text --'
-        //: '-- SMS本文から自動検出 --';
-    
+        : '-- SMS本文から自動検出 --';
+      
       select.innerHTML = `<option value="">${defaultLabel}</option>`;
-    
+      
       if (Array.isArray(familyData) && familyData.length > 0) {
         familyData.forEach(member => {
-          // Allow rendering even if phone number is empty on mobile
           const phoneDisplay = member.phone ? ` (${member.phone})` : '';
           const option = document.createElement('option');
           option.value = member.phone || member.name;
